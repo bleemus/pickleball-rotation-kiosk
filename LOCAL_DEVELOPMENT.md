@@ -13,39 +13,40 @@ Guide for developing and testing the Pickleball Kiosk on your local machine (Mac
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
-cd pickleball-kiosk
+git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
+cd pickleball-rotation-kiosk
 
 # Install dependencies
+cd backend && npm install
+cd ../frontend && npm install
+
+# Or use make
 make install
-# Or manually:
-# cd backend && npm install
-# cd frontend && npm install
 ```
 
 ### 3. Start Development
 
+**Option 1: Use Docker Compose (Recommended)**
+
 ```bash
-# Terminal 1: Start Redis
-docker run -d -p 6379:6379 --name pickleball-redis redis:7-alpine
+# Start only Redis with Docker Compose
+docker compose up -d redis
 
-# Terminal 2: Start backend
-cd backend
-npm run dev
+# Start backend (in terminal 1)
+cd backend && npm run dev
 
-# Terminal 3: Start frontend
-cd frontend
-npm run dev
+# Start frontend (in terminal 2)
+cd frontend && npm run dev
 ```
 
-Or use the Makefile:
+**Option 2: Full Docker Compose (for testing production build)**
 
 ```bash
-# Start Redis
-docker run -d -p 6379:6379 --name pickleball-redis redis:7-alpine
+# Start all services (Redis, backend, frontend)
+docker compose up -d
 
-# Start dev servers (in separate terminals)
-make dev
+# Access at http://localhost (port 80)
+# Note: This runs production builds, not dev servers with hot-reload
 ```
 
 ### 4. Access the App

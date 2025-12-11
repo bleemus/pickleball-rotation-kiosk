@@ -1,76 +1,19 @@
 # Quick Start Guide
 
-## Local Development (Mac/Linux/Windows)
+## Docker Compose Deployment (Recommended)
 
 ### Prerequisites
-- Node.js 20+
-- Docker (for Redis)
-
-### Option 1: Using Make (Recommended)
-
-```bash
-# 1. Install dependencies
-make install
-
-# 2. Start Redis
-docker run -d -p 6379:6379 redis:7-alpine
-
-# 3. Start development servers
-make dev
-```
-
-Access:
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3001
-
-### Option 2: Manual Setup
-
-#### Start Redis
-```bash
-docker run -d -p 6379:6379 redis:7-alpine
-```
-
-#### Start Backend
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-#### Start Frontend (in new terminal)
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Environment Setup
-
-#### Backend (.env)
-Create `backend/.env`:
-```env
-PORT=3001
-REDIS_URL=redis://localhost:6379
-NODE_ENV=development
-```
-
-#### Frontend (.env)
-Create `frontend/.env`:
-```env
-VITE_API_URL=http://localhost:3001/api
-VITE_DEBUG_MODE=false  # Set to 'true' to enable auto-fill debug button
-```
-
-## Docker Compose Deployment
+- Docker & Docker Compose
 
 ### Quick Deploy
 
 ```bash
-# Build and start all services
-make up
+# Clone the repository
+git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
+cd pickleball-rotation-kiosk
 
-# Or use docker-compose directly
-docker-compose up -d
+# Start all services
+docker compose up -d
 ```
 
 Access at **http://localhost**
@@ -78,12 +21,69 @@ Access at **http://localhost**
 ### Common Commands
 
 ```bash
-make up          # Start services
-make down        # Stop services
-make logs        # View logs
-make restart     # Restart all
-make clean       # Remove everything
-make build       # Rebuild images
+docker compose up -d        # Start services in background
+docker compose down         # Stop services
+docker compose logs -f      # View logs (follow mode)
+docker compose restart      # Restart all services
+docker compose ps           # View running services
+docker compose build        # Rebuild images after code changes
+```
+
+## Local Development (Mac/Linux/Windows)
+
+## Local Development (Mac/Linux/Windows)
+
+For active development with hot-reload:
+
+### Prerequisites
+- Node.js 20+
+- Docker & Docker Compose
+
+### Quick Setup
+
+```bash
+# 1. Install dependencies
+cd backend && npm install
+cd ../frontend && npm install
+
+# 2. Start Redis only
+docker compose up -d redis
+
+# 3. Start development servers (in separate terminals)
+cd backend && npm run dev    # Backend: http://localhost:3001
+cd frontend && npm run dev   # Frontend: http://localhost:3000
+```
+
+### Using Make (Alternative)
+
+```bash
+# Install dependencies
+make install
+
+# Start Redis
+docker compose up -d redis
+
+# Start dev servers
+make dev
+```
+
+### Environment Setup (Optional)
+
+Environment variables are optional for Docker Compose (defaults are provided).
+
+For local development, create:
+
+#### Backend (`backend/.env`)
+```env
+PORT=3001
+REDIS_URL=redis://localhost:6379
+NODE_ENV=development
+```
+
+#### Frontend (`frontend/.env`)
+```env
+VITE_API_URL=http://localhost:3001/api
+VITE_DEBUG_MODE=false  # Set to 'true' to enable auto-fill debug button
 ```
 
 ## Raspberry Pi Deployment
@@ -92,11 +92,11 @@ make build       # Rebuild images
 
 ```bash
 # 1. Copy to Pi
-scp -r pickleball-kiosk pi@raspberrypi.local:~/
+scp -r pickleball-rotation-kiosk pi@raspberrypi.local:~/
 
 # 2. SSH to Pi
 ssh pi@raspberrypi.local
-cd pickleball-kiosk
+cd pickleball-rotation-kiosk
 
 # 3. Run setup
 ./raspberry-pi-setup.sh
@@ -105,8 +105,8 @@ cd pickleball-kiosk
 sudo reboot
 
 # 5. Deploy
-cd pickleball-kiosk
-docker-compose up -d
+cd pickleball-rotation-kiosk
+docker compose up -d
 ```
 
 Access at **http://raspberrypi.local**
@@ -145,33 +145,44 @@ make logs        # View logs
 # Check backend health
 curl http://localhost:3001/health
 # Should return: {"status":"ok",...}
+
+# Check Docker Compose services
+docker compose ps
 ```
 
 ### Redis not connecting
 ```bash
-# Check Redis
-docker ps | grep redis
+# Check Redis container status
+docker compose ps redis
 
-# Or with docker-compose
-docker-compose ps redis
+# View Redis logs
+docker compose logs redis
 ```
 
 ### Frontend shows blank page
 - Check browser console for errors
-- Verify `VITE_API_URL` in frontend/.env
-- Ensure backend is accessible
+- Verify services are running: `docker compose ps`
+- Check logs: `docker compose logs frontend`
 
 ### Port conflicts
 ```bash
 # Check what's using the ports
-lsof -i :80    # Frontend
-lsof -i :3000  # Frontend dev
+lsof -i :80    # Frontend (Docker)
+lsof -i :3000  # Frontend (dev)
 lsof -i :3001  # Backend
 lsof -i :6379  # Redis
 ```
 
 ### Clean restart
 ```bash
+# Stop and remove everything
+docker compose down -v
+
+# Rebuild and start
+docker compose build
+docker compose up -d
+
+# Or use make
 make clean
 make build
 make up
@@ -228,13 +239,16 @@ cd frontend && npm run typecheck
 ### Viewing Logs
 
 ```bash
-# Docker Compose
-make logs
+# All services
+docker compose logs -f
 
-# Or specific service
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f redis
+# Specific service
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f redis
+
+# Or use make
+make logs
 ```
 
 ### Debugging
@@ -255,7 +269,7 @@ npm run dev
 
 ```bash
 # Connect to Redis CLI
-docker-compose exec redis redis-cli
+docker compose exec redis redis-cli
 
 # Check keys
 KEYS *
@@ -279,9 +293,15 @@ cd frontend && rm -rf node_modules && npm install
 
 ### Docker build fails
 ```bash
-# Clean Docker cache
+# Clean Docker cache and rebuild
 docker system prune -a
+docker compose build --no-cache
+docker compose up -d
+
+# Or use make
+make clean
 make build
+make up
 ```
 
 ### Can't access from other devices

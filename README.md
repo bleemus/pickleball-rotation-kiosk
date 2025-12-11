@@ -40,58 +40,76 @@ A kiosk application for managing round-robin pickleball games across 2 courts wi
 ## Quick Start
 
 ### Prerequisites
-- Node.js 20+
 - Docker & Docker Compose
+- (Optional) Node.js 20+ for local development without Docker
 - (Optional) Raspberry Pi for kiosk deployment
 
-### Raspberry Pi Deployment (Recommended)
+### Docker Compose Deployment (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
+cd pickleball-rotation-kiosk
+
+# Start all services (Redis, backend, frontend)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+```
+
+Access at **http://localhost**
+
+**Common Commands:**
+```bash
+docker compose up -d        # Start all services
+docker compose down         # Stop all services
+docker compose logs -f      # View logs
+docker compose restart      # Restart all services
+docker compose ps           # View running services
+```
+
+### Raspberry Pi Deployment
 
 See [RASPBERRY_PI.md](RASPBERRY_PI.md) for complete guide.
 
 ```bash
 # Copy to your Pi
-scp -r pickleball-kiosk pi@raspberrypi.local:~/
+scp -r pickleball-rotation-kiosk pi@raspberrypi.local:~/
 
 # SSH to Pi
 ssh pi@raspberrypi.local
-cd pickleball-kiosk
+cd pickleball-rotation-kiosk
 
 # Run setup
 ./raspberry-pi-setup.sh
 
 # Deploy
-docker-compose up -d
+docker compose up -d
 ```
 
-Access at `http://localhost` or `http://raspberrypi.local`
+Access at `http://raspberrypi.local`
 
-### Local Development
+### Local Development (without Docker)
 
-#### 1. Start Redis
+For active development with hot-reload, see [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
 
+**Quick setup:**
 ```bash
-docker run -d -p 6379:6379 redis:7-alpine
+# Install dependencies
+cd backend && npm install
+cd ../frontend && npm install
+
+# Start all services with Docker Compose
+docker compose up -d redis  # Start only Redis
+
+# In separate terminals:
+cd backend && npm run dev    # Backend on :3001
+cd frontend && npm run dev   # Frontend on :3000
 ```
-
-#### 2. Backend Setup
-
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-The backend API will run on `http://localhost:3001`
-
-#### 3. Frontend Setup
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The frontend will run on `http://localhost:3000`
 
 ### Environment Variables
 
@@ -125,38 +143,17 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### Using Make Commands
+## Using Make Commands (Optional)
+
+Makefile provides shortcuts for common Docker Compose operations:
 
 ```bash
-# Start services
-make up
-
-# View logs
-make logs
-
-# Stop services
-make down
-
-# Restart
-make restart
-
-# Clean everything
-make clean
-```
-
-### Build Images Manually
-
-```bash
-# Build backend
-cd backend
-docker build -t pickleball-kiosk-backend:latest .
-
-# Build frontend
-cd ../frontend
-docker build -t pickleball-kiosk-frontend:latest .
-
-# Or build both
-docker-compose build
+make up          # docker compose up -d
+make down        # docker compose down
+make logs        # docker compose logs -f
+make restart     # docker compose restart
+make build       # docker compose build
+make clean       # docker compose down -v (removes volumes)
 ```
 
 ## API Documentation
@@ -339,27 +336,47 @@ The application uses a sophisticated algorithm to generate fair and varied match
 ## Troubleshooting
 
 ### Backend won't start
-- Verify Redis is running: `docker-compose ps redis`
-- Check REDIS_URL environment variable
-- Ensure port 3001 is available
+```bash
+# Check all services
+docker compose ps
+
+# Check Redis specifically
+docker compose ps redis
+
+# View logs
+docker compose logs backend
+docker compose logs redis
+```
 
 ### Frontend can't connect to backend
-- Verify backend is running and healthy: `curl http://localhost:3001/health`
-- Check VITE_API_URL in frontend/.env
-- Check browser console for CORS errors
+```bash
+# Verify backend is healthy
+curl http://localhost:3001/health
+
+# Check all services
+docker compose ps
+
+# View frontend logs
+docker compose logs frontend
+```
 
 ### Docker build issues
 ```bash
 # Clean and rebuild
-docker-compose down -v
-docker-compose build --no-cache
-docker-compose up -d
+docker compose down -v
+docker compose build --no-cache
+docker compose up -d
+
+# Or use make
+make clean
+make build
+make up
 ```
 
 ### Session data lost
-- Redis data is ephemeral by default
-- For persistence, Redis saves to volume every 60 seconds
+- Redis data persists in Docker volume `redis-data`
 - Session TTL is 24 hours by default
+- To clear all data: `docker compose down -v`
 
 ## Development
 
@@ -414,7 +431,14 @@ Already configured with:
 - Resource limits
 
 ```bash
-docker-compose up -d
+# Start all services
+docker compose up -d
+
+# View status
+docker compose ps
+
+# View logs
+docker compose logs -f
 ```
 
 ### Systemd Service (Auto-start on boot)
@@ -424,7 +448,10 @@ See [RASPBERRY_PI.md](RASPBERRY_PI.md#auto-start-on-boot) for systemd setup.
 ## Documentation
 
 - [QUICKSTART.md](QUICKSTART.md) - Quick deployment guide
+- [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) - Development guide
 - [RASPBERRY_PI.md](RASPBERRY_PI.md) - Raspberry Pi setup and kiosk mode
+- [CHANGELOG.md](CHANGELOG.md) - Feature changelog
+- [SECURITY.md](SECURITY.md) - Security audit
 
 ## License
 
