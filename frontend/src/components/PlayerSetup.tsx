@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Player } from "../types/game";
+import { APP_NAME } from "../config";
 
 const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "true";
 
@@ -62,8 +63,8 @@ export function PlayerSetup({
     };
 
     const handleAutoFill = () => {
-        const requiredPlayers = numCourts * 4;
-        const playersToAdd = requiredPlayers - players.length;
+        // Add 4 players each time the button is pressed
+        const playersToAdd = 4;
 
         const adjectives = [
             "Quick",
@@ -124,7 +125,7 @@ export function PlayerSetup({
             <div className="flex-1 flex items-center justify-center p-4 lg:p-8 pr-80 xl:pr-96">
                 <div className="bg-white rounded-3xl shadow-2xl p-6 lg:p-12 max-w-5xl w-full">
                     <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-6 lg:mb-8 text-gray-800">
-                        Pickleball Kiosk
+                        {APP_NAME}
                     </h1>
 
                     <div className="mb-6 lg:mb-8">
@@ -157,13 +158,13 @@ export function PlayerSetup({
                             >
                                 Add
                             </button>
-                            {DEBUG_MODE && !canStartGame && (
+                            {DEBUG_MODE && (
                                 <button
                                     type="button"
                                     onClick={handleAutoFill}
                                     className="px-6 lg:px-8 py-3 lg:py-4 bg-purple-500 text-white text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-purple-600 transition-colors disabled:opacity-50"
                                     disabled={loading}
-                                    title="Auto-fill remaining players (Debug Mode)"
+                                    title="Auto-fill players (Debug Mode)"
                                 >
                                     🔧 Fill
                                 </button>

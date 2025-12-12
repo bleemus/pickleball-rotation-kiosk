@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import {
   createSession,
   getSessionById,
+  getActiveSession,
   addPlayer,
   removePlayer,
   togglePlayerSitOut,
@@ -20,6 +21,20 @@ import {
 } from "../types/game";
 
 const router = Router();
+
+// Get active session
+router.get("/session/active", async (req: Request, res: Response) => {
+  try {
+    const session = await getActiveSession();
+    if (!session) {
+      res.status(404).json({ error: "No active session" });
+      return;
+    }
+    res.json(session);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
 
 // Create a new session
 router.post("/session", async (req: Request, res: Response) => {

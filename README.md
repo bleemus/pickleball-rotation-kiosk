@@ -10,7 +10,12 @@ A kiosk application for managing round-robin pickleball games across 2 courts wi
 - **Score Tracking**: Complete game history with win/loss records and point differential
 - **Player Management**: Add/remove players between rounds, manual sit-out control
 - **Score Editing**: Edit previous round scores with automatic stat recalculation
+- **Spectator Display**: Dedicated full-screen view with auto-scrolling stats and live match updates
+- **Previous Round Results**: Shows completed match scores while waiting between rounds
+- **Customizable Branding**: Configure app name via environment variable
+- **Built-in Help**: Comprehensive help modal with instructions for all features
 - **Touch-Friendly UI**: Large buttons and text optimized for kiosk displays
+- **Mobile Optimized**: Numeric keyboards for score entry on tablets and phones
 - **Real-time Updates**: Persistent session state across page refreshes
 - **Round Cancellation**: Ability to cancel and restart the current round
 - **Debug Mode**: Auto-fill players for testing (development only)
@@ -113,19 +118,28 @@ cd frontend && npm run dev   # Frontend on :3000
 
 ### Environment Variables
 
-#### Backend
-Create `backend/.env`:
+Create environment files:
+
+**Backend** (`backend/.env`):
+```bash
+cp backend/.env.example backend/.env
+```
+
 ```env
 PORT=3001
 REDIS_URL=redis://localhost:6379
 NODE_ENV=development
 ```
 
-#### Frontend
-Create `frontend/.env`:
+**Frontend** (`frontend/.env`):
+```bash
+cp frontend/.env.example frontend/.env
+```
+
 ```env
 VITE_API_URL=http://localhost:3001/api
-VITE_DEBUG_MODE=false  # Set to 'true' to enable debug features
+VITE_DEBUG_MODE=false  # Set to true to enable debug features
+VITE_APP_NAME=Pickleball Kiosk  # Customize the app name shown throughout the UI
 ```
 
 ## Docker Compose Deployment
@@ -216,6 +230,15 @@ Content-Type: application/json
   "numCourts": 3
 }
 ```
+
+### Session Management (Active Session)
+
+#### Get Active Session
+```http
+GET /api/session/active
+```
+
+Returns the currently active session without requiring a session ID.
 
 ### Game Management
 
@@ -308,6 +331,20 @@ The application uses a sophisticated algorithm to generate fair and varied match
 6. Click "Edit Previous Scores" to modify the last completed round
 7. Click "View History" to see all past games
 8. Click "Start Next Round" to generate new matchups
+
+### Spectator Display
+1. Navigate to `/spectator` on any device to view the full-screen spectator display
+2. Automatically shows the active session (no session ID required)
+3. Displays current matchups during rounds
+4. Shows previous round results while waiting between rounds
+5. Auto-scrolls player statistics for easy viewing on large displays
+6. Updates every 2 seconds automatically
+7. Ideal for TVs or secondary displays at your venue
+
+### Help System
+1. Click the **?** button (bottom right) on any screen to open help
+2. Comprehensive guide covers all features and workflows
+3. Sections include: Getting Started, During Round, Score Entry, Managing Players, Spectator Display, and Tips
 
 ### Managing Players
 - Add players mid-session - new players get priority in matchups

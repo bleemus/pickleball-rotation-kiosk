@@ -155,8 +155,9 @@ export function ScoreEntry({
                                         </p>
                                     </div>
                                     <input
-                                        type="text"
+                                        type="number"
                                         inputMode="numeric"
+                                        pattern="[0-9]*"
                                         placeholder="-"
                                         value={scores[match.id].team1Score}
                                         onChange={(e) =>
@@ -193,8 +194,9 @@ export function ScoreEntry({
                                         </p>
                                     </div>
                                     <input
-                                        type="text"
+                                        type="number"
                                         inputMode="numeric"
+                                        pattern="[0-9]*"
                                         placeholder="-"
                                         value={scores[match.id].team2Score}
                                         onChange={(e) =>

@@ -8,6 +8,9 @@ import { ScoreEntry } from "./components/ScoreEntry";
 import { ScoreHistory } from "./components/ScoreHistory";
 import { PlayerStats } from "./components/PlayerStats";
 import { PlayerManager } from "./components/PlayerManager";
+import { HelpButton } from "./components/HelpModal";
+
+const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "true";
 
 function App() {
     const {
@@ -291,65 +294,71 @@ function App() {
     // Show error if there is one
     if (error) {
         return (
-            <div className="min-h-screen bg-red-100 flex items-center justify-center p-4 lg:p-8">
-                <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-12 max-w-2xl w-full">
-                    <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-red-600 mb-4 lg:mb-6">
-                        Error
-                    </h1>
-                    <p className="text-lg lg:text-xl xl:text-2xl text-gray-800 mb-6 lg:mb-8">
-                        {error}
-                    </p>
-                    <button
-                        onClick={() => setError(null)}
-                        className="px-6 lg:px-8 py-3 lg:py-4 bg-blue-500 text-white text-base lg:text-lg xl:text-xl font-bold rounded-xl hover:bg-blue-600"
-                    >
-                        OK
-                    </button>
+            <div className={`min-h-screen bg-red-100 flex items-center justify-center p-4 lg:p-8 ${DEBUG_MODE ? 'border-4 border-red-600' : ''}`}>
+                    <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-12 max-w-2xl w-full">
+                        <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-red-600 mb-4 lg:mb-6">
+                            Error
+                        </h1>
+                        <p className="text-lg lg:text-xl xl:text-2xl text-gray-800 mb-6 lg:mb-8">
+                            {error}
+                        </p>
+                        <button
+                            onClick={() => setError(null)}
+                            className="px-6 lg:px-8 py-3 lg:py-4 bg-blue-500 text-white text-base lg:text-lg xl:text-xl font-bold rounded-xl hover:bg-blue-600"
+                        >
+                            OK
+                        </button>
+                    </div>
                 </div>
-            </div>
         );
     }
 
     // Show history view
     if (showHistory && session) {
         return (
-            <ScoreHistory
-                history={session.gameHistory}
-                onClose={handleCloseHistory}
-            />
+            <div className={DEBUG_MODE ? 'border-4 border-red-600' : ''}>
+                <ScoreHistory
+                    history={session.gameHistory}
+                    onClose={handleCloseHistory}
+                />
+            </div>
         );
     }
 
     // Setup view
     if (gameState === GameState.SETUP || !session) {
         return (
-            <PlayerSetup
-                players={session?.players || tempPlayers}
-                onAddPlayer={handleAddPlayer}
-                onRemovePlayer={handleRemovePlayer}
-                onStartGame={handleStartGame}
-                onResetSession={handleResetSession}
-                loading={loading}
-            />
+            <div className={DEBUG_MODE ? 'border-4 border-red-600' : ''}>
+                <PlayerSetup
+                    players={session?.players || tempPlayers}
+                    onAddPlayer={handleAddPlayer}
+                    onRemovePlayer={handleRemovePlayer}
+                    onStartGame={handleStartGame}
+                    onResetSession={handleResetSession}
+                    loading={loading}
+                />
+            </div>
         );
     }
 
     // Score entry view
     if (gameState === GameState.SCORING && session?.currentRound) {
         return (
-            <ScoreEntry
-                round={session.currentRound}
-                onSubmitScores={handleSubmitScores}
-                onCancel={handleCancelScoreEntry}
-                loading={loading}
-            />
+            <div className={DEBUG_MODE ? 'border-4 border-red-600' : ''}>
+                <ScoreEntry
+                    round={session.currentRound}
+                    onSubmitScores={handleSubmitScores}
+                    onCancel={handleCancelScoreEntry}
+                    loading={loading}
+                />
+            </div>
         );
     }
 
     // Playing view
     if (gameState === GameState.PLAYING && session) {
         return (
-            <div className="flex">
+            <div className={`flex ${DEBUG_MODE ? 'border-4 border-red-600' : ''}`}>
                 {/* Main Content Area */}
                 <div className="flex-1 pr-80 xl:pr-96">
                     {session.currentRound && !session.currentRound.completed ? (
@@ -366,6 +375,7 @@ function App() {
                         <PlayerManager
                             players={session.players}
                             numCourts={session.numCourts}
+                            sessionId={session.id}
                             onAddPlayer={handleAddPlayer}
                             onRemovePlayer={handleRemovePlayer}
                             onToggleSitOut={handleToggleSitOut}
@@ -384,6 +394,9 @@ function App() {
 
                 {/* Right Sidebar */}
                 <PlayerStats players={session.players} />
+                
+                {/* Help Button */}
+                <HelpButton />
             </div>
         );
     }

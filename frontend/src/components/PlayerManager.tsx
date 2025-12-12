@@ -4,6 +4,7 @@ import { Player } from "../types/game";
 interface PlayerManagerProps {
     players: Player[];
     numCourts: number;
+    sessionId?: string;
     onAddPlayer: (name: string) => void;
     onRemovePlayer: (playerId: string) => void;
     onToggleSitOut: (playerId: string) => void;
@@ -19,6 +20,7 @@ interface PlayerManagerProps {
 export function PlayerManager({
     players,
     numCourts,
+    sessionId,
     onAddPlayer,
     onRemovePlayer,
     onToggleSitOut,
@@ -269,6 +271,8 @@ export function PlayerManager({
                         return null;
                     })()}
                 </div>
+
+
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">

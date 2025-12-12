@@ -8,7 +8,7 @@ import {
   AddPlayerRequest,
   CompleteRoundRequest,
 } from "../types/game";
-import { saveSession, getSession, deleteSession } from "./redis";
+import { saveSession, getSession, deleteSession, getActiveSessionId } from "./redis";
 import { generateNextRound, updateHistory } from "./roundRobinService";
 
 /**
@@ -84,6 +84,17 @@ export async function getSessionById(sessionId: string): Promise<Session> {
     throw new Error(`Session ${sessionId} not found`);
   }
   return session;
+}
+
+/**
+ * Retrieves the currently active session
+ */
+export async function getActiveSession(): Promise<Session | null> {
+  const activeSessionId = await getActiveSessionId();
+  if (!activeSessionId) {
+    return null;
+  }
+  return await getSession(activeSessionId);
 }
 
 /**

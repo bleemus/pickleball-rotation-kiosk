@@ -16,10 +16,17 @@ export function CurrentMatchups({
     onEnterScores,
     onViewHistory,
     onCancelRound,
-    onStartNextRound,
     onResetSession,
     loading,
 }: CurrentMatchupsProps) {
+    // Determine grid columns based on number of courts
+    const numCourts = round.matches.length;
+    const gridColsClass = 
+        numCourts === 1 ? 'grid-cols-1' :
+        numCourts === 2 ? 'grid-cols-1 xl:grid-cols-2' :
+        numCourts === 3 ? 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3' :
+        'grid-cols-1 md:grid-cols-2 xl:grid-cols-4';
+    
     return (
         <div className="h-screen bg-gradient-to-br from-green-500 to-blue-600 p-3 lg:p-6 flex flex-col overflow-hidden">
             <div className="max-w-7xl mx-auto w-full flex flex-col h-full">
@@ -34,42 +41,42 @@ export function CurrentMatchups({
                 </div>
 
                 {/* Courts Grid - Flexible */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6 mb-3 lg:mb-4 flex-1 min-h-0">
+                <div className={`grid ${gridColsClass} gap-4 lg:gap-6 mb-3 lg:mb-4 flex-1 min-h-0 overflow-auto`}>
                     {round.matches.map((match) => (
                         <div
                             key={match.id}
-                            className="bg-white rounded-2xl lg:rounded-3xl shadow-2xl p-3 lg:p-6 flex flex-col"
+                            className="bg-white rounded-2xl lg:rounded-3xl shadow-2xl p-3 lg:p-4 flex flex-col min-h-0"
                         >
-                            <div className="text-center mb-3 lg:mb-4">
-                                <h2 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-800">
+                            <div className="text-center mb-2 lg:mb-3 flex-shrink-0">
+                                <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-800">
                                     Court {match.courtNumber}
                                 </h2>
                             </div>
 
-                            <div className="space-y-2 lg:space-y-4 flex-1 flex flex-col justify-center">
+                            <div className="space-y-2 lg:space-y-3 flex-1 flex flex-col justify-center min-h-0">
                                 {/* Team 1 */}
-                                <div className="bg-blue-100 rounded-xl lg:rounded-2xl p-4 lg:p-6 flex flex-col items-center justify-center">
-                                    <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-800 text-center">
+                                <div className="bg-blue-100 rounded-xl lg:rounded-2xl p-3 lg:p-4 flex flex-col items-center justify-center">
+                                    <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
                                         {match.team1.player1.name}
                                     </p>
-                                    <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-800 text-center">
+                                    <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
                                         {match.team1.player2.name}
                                     </p>
                                 </div>
 
                                 {/* VS Divider */}
-                                <div className="text-center">
-                                    <span className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-600">
+                                <div className="text-center flex-shrink-0">
+                                    <span className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-600">
                                         VS
                                     </span>
                                 </div>
 
                                 {/* Team 2 */}
-                                <div className="bg-red-100 rounded-xl lg:rounded-2xl p-4 lg:p-6 flex flex-col items-center justify-center">
-                                    <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-800 text-center">
+                                <div className="bg-red-100 rounded-xl lg:rounded-2xl p-3 lg:p-4 flex flex-col items-center justify-center">
+                                    <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
                                         {match.team2.player1.name}
                                     </p>
-                                    <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-800 text-center">
+                                    <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
                                         {match.team2.player2.name}
                                     </p>
                                 </div>

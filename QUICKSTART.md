@@ -73,17 +73,28 @@ Environment variables are optional for Docker Compose (defaults are provided).
 
 For local development, create:
 
-#### Backend (`backend/.env`)
+Create environment files:
+
+**Backend** (`backend/.env`):
+```bash
+cp backend/.env.example backend/.env
+```
+
 ```env
 PORT=3001
 REDIS_URL=redis://localhost:6379
 NODE_ENV=development
 ```
 
-#### Frontend (`frontend/.env`)
+**Frontend** (`frontend/.env`):
+```bash
+cp frontend/.env.example frontend/.env
+```
+
 ```env
 VITE_API_URL=http://localhost:3001/api
-VITE_DEBUG_MODE=false  # Set to 'true' to enable auto-fill debug button
+VITE_DEBUG_MODE=false  # Set to true to enable auto-fill debug button
+VITE_APP_NAME=Pickleball Kiosk  # Customize the app name shown in the UI
 ```
 
 ## Raspberry Pi Deployment
@@ -129,7 +140,7 @@ make logs        # View logs
 4. Click **"Start Game"**
 5. View matchups on the screen (centered player names)
 6. After games finish, click **"Enter Scores"**
-7. Input scores (ties not allowed) and submit
+7. Input scores (ties not allowed, numeric keyboard on mobile)
 8. Between rounds:
    - Add/remove players (removal requires confirmation)
    - Mark players to sit out using "Sit" button
@@ -137,6 +148,8 @@ make logs        # View logs
    - Change number of courts using "Change Courts" button
 9. Click **"Start Next Round"** to continue
 10. View statistics in the right sidebar (auto-scrolling)
+11. **Optional**: Open `/spectator` on a second screen for full-screen stats display
+12. **Need Help?**: Click the **?** button (bottom right) for comprehensive instructions
 
 ## Troubleshooting
 

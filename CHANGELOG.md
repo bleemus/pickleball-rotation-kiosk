@@ -2,6 +2,34 @@
 
 ## Recent Updates
 
+### Latest Features (December 2024)
+
+#### Spectator Display
+- **Dedicated Spectator View**: Navigate to `/spectator` for full-screen display on secondary screens
+- **Simplified Access**: No session ID required - automatically shows active session
+- **Auto-Scrolling Stats**: Player statistics scroll automatically with 2-second pauses at top/bottom
+- **Previous Round Results**: Displays completed match scores while waiting between rounds
+- **Real-time Updates**: Polls active session every 2 seconds for live data
+- **Welcome Screen**: Shows setup instructions when no active session exists
+
+#### Customizable Branding
+- **App Name Configuration**: Set `VITE_APP_NAME` environment variable to customize branding
+- **Default**: "Pickleball Kiosk"
+- **Applies To**: All UI screens, player setup, help modal, and spectator display
+- **Docker Support**: Build argument support in docker-compose.yml and Dockerfile
+
+#### Help System
+- **Built-in Help Modal**: Comprehensive instructions accessible via **?** button
+- **Coverage**: Getting Started, During Round, Score Entry, Managing Players, Spectator Display, Tips
+- **Positioning**: Bottom-right corner, accessible from all screens
+- **Mobile Friendly**: Responsive design for tablets and phones
+
+#### Mobile Optimization
+- **Numeric Keyboards**: Score entry fields trigger numeric-only keyboards on mobile devices
+- **Input Types**: Uses `type="number"`, `pattern="[0-9]*"`, and `inputMode="numeric"`
+- **iOS Compatibility**: Pattern attribute ensures iOS shows numeric keypad (not telephone pad)
+- **Faster Score Entry**: Reduces errors and improves speed on tablets
+
 ### Features Added
 
 #### Configurable Courts
@@ -75,6 +103,7 @@
 ### API Changes
 
 #### New Endpoints
+- `GET /api/session/active` - Get currently active session without requiring session ID
 - `PATCH /api/session/:id/sitout/:playerId` - Toggle player sit-out status
 - `PATCH /api/session/:id/courts` - Update number of courts
 - `DELETE /api/session/:id/round` - Cancel current round
@@ -92,11 +121,16 @@
 
 #### Services
 - `gameService.ts`:
+  - `getActiveSession()` - Retrieve currently active session
   - `updateNumCourts()` - Change courts between rounds
   - `togglePlayerSitOut()` - Manual sit-out control
   - `cancelCurrentRound()` - Cancel incomplete rounds with stat reversal
   - Enhanced `completeCurrentRound()` - Reverses old stats on re-submission
   - Player name length validation (30 chars)
+
+- `redis.ts`:
+  - `getActiveSessionId()` - Retrieve active session ID from Redis
+  - Modified `saveSession()` - Tracks active session via "active-session-id" key with 24h TTL
 
 - `roundRobinService.ts`:
   - Filters `forceSitOut` players before matchup generation
@@ -104,19 +138,43 @@
   - Dynamic court count support
 
 #### Routes
+- Added GET `/session/active` endpoint
 - Added PATCH `/session/:id/courts` endpoint
 - Added PATCH `/session/:id/sitout/:playerId` endpoint
 - Added DELETE `/session/:id/round` endpoint
+- Added `/spectator` route (simplified from `/spectator/:sessionId`)
 
 ### Frontend Changes
 
 #### Components
+- `SpectatorDisplay.tsx`:
+  - **New Component**: Full-screen spectator view
+  - Fetches active session via `/api/session/active` endpoint
+  - Auto-scrolling player statistics (2px/20ms with 2s pauses)
+  - Displays previous round results between rounds
+  - Welcome screen when no session exists
+  - 2-second polling interval for live updates
+
+- `HelpModal.tsx`:
+  - **New Component**: Comprehensive help system
+  - Modal popup with close button
+  - Sections for all major features
+  - HelpButton component with **?** icon
+  
+- `config.ts`:
+  - **New File**: Centralized configuration constants
+  - Exports `APP_NAME` from `VITE_APP_NAME` environment variable
+
 - `PlayerSetup.tsx`:
   - Court selector in sidebar
   - Reset button upper left
   - Debug mode auto-fill button
   - 30-character maxLength on input
   - Removal confirmation dialog
+  - Uses `APP_NAME` from config
+
+- `App.tsx`:
+  - Added HelpButton to playing view (bottom-right positioning)
 
 - `PlayerManager.tsx`:
   - "Change Courts" button (lower left) with popup selector
@@ -135,6 +193,7 @@
   - Pre-fills existing scores
   - Inline error messages per court
   - Tie prevention validation
+  - Numeric keyboard support: `type="number"`, `pattern="[0-9]*"`, `inputMode="numeric"`
 
 - `PlayerStats.tsx`:
   - Right sidebar placement
@@ -152,7 +211,12 @@
 
 #### Environment Variables
 - `VITE_DEBUG_MODE` - Enable debug features (frontend)
+- `VITE_APP_NAME` - Customize app name throughout UI (default: "Pickleball Kiosk")
 - `numCourts` - Optional parameter in session creation (default: 2)
+
+#### Docker Configuration
+- Added `VITE_APP_NAME` build argument to docker-compose.yml
+- Added `VITE_APP_NAME` ARG and ENV to frontend Dockerfile
 
 ### Bug Fixes
 - Fixed player addition error (temporary storage before session creation)

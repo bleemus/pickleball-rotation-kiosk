@@ -77,24 +77,34 @@ cd frontend && npm run typecheck
 
 ### Environment Variables
 
-#### Backend (`backend/.env`)
+Create environment files for backend and frontend:
+
+**Backend** (`backend/.env`):
+```bash
+cp backend/.env.example backend/.env
+```
+
 ```env
 PORT=3001
 REDIS_URL=redis://localhost:6379
 NODE_ENV=development
 ```
 
-#### Frontend (`frontend/.env`)
+**Frontend** (`frontend/.env`):
+```bash
+cp frontend/.env.example frontend/.env
+```
+
 ```env
 VITE_API_URL=http://localhost:3001/api
-VITE_DEBUG_MODE=false  # Set to 'true' to enable debug features (auto-fill players)
+VITE_DEBUG_MODE=true  # Set to false to disable debug features
 ```
 
 ### Debug Mode
 
 Enable debug mode for faster testing:
 
-1. Create `frontend/.env` with `VITE_DEBUG_MODE=true`
+1. Edit `frontend/.env` and set `VITE_DEBUG_MODE=true`
 2. Restart the frontend dev server
 3. A purple \"🔧 Fill\" button appears on the initial screen
 4. Click it to auto-generate random player names up to the required amount

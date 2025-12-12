@@ -34,6 +34,15 @@ export async function saveSession(session: Session): Promise<void> {
   await client.set(key, JSON.stringify(session));
   // Set expiration to 24 hours
   await client.expire(key, 86400);
+  
+  // Set this as the active session
+  await client.set("active-session-id", session.id);
+  await client.expire("active-session-id", 86400);
+}
+
+export async function getActiveSessionId(): Promise<string | null> {
+  const client = getRedisClient();
+  return await client.get("active-session-id");
 }
 
 export async function getSession(sessionId: string): Promise<Session | null> {
