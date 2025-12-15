@@ -79,24 +79,48 @@ docker compose ps           # View running services
 
 ### Raspberry Pi Deployment
 
-See [RASPBERRY_PI.md](RASPBERRY_PI.md) for complete guide.
+**Complete Guide**: See [RASPBERRY_PI_GUIDE.md](RASPBERRY_PI_GUIDE.md) for full documentation
 
+**Quick Start:**
+
+```bash
+# 1. Flash Raspberry Pi OS using Raspberry Pi Imager
+# 2. Boot the Pi and complete setup wizard
+# 3. Clone and install:
+
+git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
+cd pickleball-rotation-kiosk
+./install.sh
+
+# 4. Reboot
+sudo reboot
+```
+
+After reboot, the spectator display launches automatically on the HDMI display.
+Access admin interface from any device: **http://raspberrypi.local**
+
+After 2-5 minutes auto-setup completes. Deploy:
+```bash
+ssh pi@pickleball.local "cd pickleball-rotation-kiosk && make build && make up"
+```
+
+**Quick Start - Option 2: Configure after first boot**
 ```bash
 # Copy to your Pi
 scp -r pickleball-rotation-kiosk pi@raspberrypi.local:~/
 
-# SSH to Pi
+# SSH to Pi and run setup
 ssh pi@raspberrypi.local
 cd pickleball-rotation-kiosk
+./pi-setup.sh
 
-# Run setup
-./raspberry-pi-setup.sh
-
-# Deploy
-docker compose up -d
+# Deploy application
+make build && make up
 ```
 
-Access at `http://raspberrypi.local`
+**Access**:
+- Admin Interface: `http://pickleball.local/`
+- Spectator View (auto-displays on Pi): `http://pickleball.local/spectator`
 
 ### Local Development (without Docker)
 
@@ -433,7 +457,7 @@ pickleball-kiosk/
 │   │   └── types/        # TypeScript types
 │   └── Dockerfile
 ├── docker-compose.yml    # Docker Compose config
-└── RASPBERRY_PI.md       # Pi deployment guide
+└── RASPBERRY_PI_GUIDE.md # Complete Pi setup guide
 ```
 
 ### Adding Features
@@ -480,13 +504,13 @@ docker compose logs -f
 
 ### Systemd Service (Auto-start on boot)
 
-See [RASPBERRY_PI.md](RASPBERRY_PI.md#auto-start-on-boot) for systemd setup.
+See [RASPBERRY_PI_GUIDE.md](RASPBERRY_PI_GUIDE.md#auto-start-on-boot) for systemd setup.
 
 ## Documentation
 
+- [RASPBERRY_PI_GUIDE.md](RASPBERRY_PI_GUIDE.md) - **Complete Raspberry Pi setup guide** (hardware, setup, deployment, troubleshooting)
 - [QUICKSTART.md](QUICKSTART.md) - Quick deployment guide
 - [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) - Development guide
-- [RASPBERRY_PI.md](RASPBERRY_PI.md) - Raspberry Pi setup and kiosk mode
 - [CHANGELOG.md](CHANGELOG.md) - Feature changelog
 - [SECURITY.md](SECURITY.md) - Security audit
 

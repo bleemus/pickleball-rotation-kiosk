@@ -121,25 +121,56 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     }
 
     if (!session || error === "No active game session") {
+        // Get the base URL (without /spectator)
+        const baseUrl = window.location.origin;
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
         return (
             <div className="h-screen bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center p-8">
-                <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-3xl text-center">
+                <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-4xl text-center">
                     <h1 className="text-5xl font-bold text-gray-800 mb-6">Welcome to {APP_NAME}</h1>
+
+                    {/* Localhost Warning */}
+                    {isLocalhost && (
+                        <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-xl">
+                            <p className="text-lg text-yellow-800 font-semibold">
+                                ⚠️ Detected localhost access
+                            </p>
+                            <p className="text-sm text-yellow-700 mt-2">
+                                Other devices won't be able to connect to "localhost".
+                                Use your device's hostname (e.g., pickleball.local) or IP address instead.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Prominent URL Display */}
+                    <div className={`mb-8 p-6 rounded-2xl shadow-lg ${isLocalhost ? 'bg-gradient-to-r from-yellow-500 to-orange-600' : 'bg-gradient-to-r from-green-500 to-blue-600'}`}>
+                        <p className="text-2xl font-bold text-white mb-3">
+                            To start a game, connect to:
+                        </p>
+                        <div className="bg-white rounded-xl p-4 shadow-inner">
+                            <code className="text-3xl font-bold text-gray-800 break-all">
+                                {baseUrl}
+                            </code>
+                        </div>
+                        <p className="text-lg text-white mt-3 opacity-90">
+                            {isLocalhost
+                                ? "⚠️ Replace 'localhost' with your network hostname or IP"
+                                : "Open this URL on your phone, tablet, or computer"
+                            }
+                        </p>
+                    </div>
+
                     <div className="text-left space-y-4 mb-8">
                         <p className="text-2xl text-gray-700">
-                            <strong>To get started:</strong>
+                            <strong>Setup Instructions:</strong>
                         </p>
                         <ol className="list-decimal list-inside space-y-3 text-xl text-gray-700 ml-4">
-                            <li>Open the main app on another device or browser tab</li>
+                            <li>Connect to the URL above from another device</li>
                             <li>Add at least 4 players per court (e.g., 8 for 2 courts, 12 for 3 courts)</li>
                             <li>Click "Start Next Round" to begin</li>
                             <li>This spectator screen will automatically update</li>
                         </ol>
-                        <div className="mt-6 p-4 bg-blue-50 rounded-xl border-2 border-blue-300">
-                            <p className="text-lg text-blue-800">
-                                💡 <strong>Tip:</strong> Navigate to the root URL (<code className="bg-white px-2 py-1 rounded">/</code>) on your tablet or phone to manage the game
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>

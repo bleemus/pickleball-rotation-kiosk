@@ -517,7 +517,7 @@ Create `.vscode/settings.json`:
 ## Next Steps
 
 - See [README.md](README.md) for API documentation
-- See [RASPBERRY_PI.md](RASPBERRY_PI.md) for deployment
+- See [RASPBERRY_PI_GUIDE.md](RASPBERRY_PI_GUIDE.md) for deployment
 - See [QUICKSTART.md](QUICKSTART.md) for quick commands
 
 ## Getting Help

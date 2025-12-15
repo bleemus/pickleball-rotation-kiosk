@@ -99,36 +99,55 @@ VITE_APP_NAME=Pickleball Kiosk  # Customize the app name shown in the UI
 
 ## Raspberry Pi Deployment
 
-### One-Command Setup
+### Quick Setup (Recommended)
+
+**Prerequisites:**
+- Raspberry Pi OS installed (use Raspberry Pi Imager)
+- Complete the initial setup wizard
+- Pi connected to network
+
+**Installation:**
 
 ```bash
-# 1. Copy to Pi
-scp -r pickleball-rotation-kiosk pi@raspberrypi.local:~/
-
-# 2. SSH to Pi
-ssh pi@raspberrypi.local
+# 1. Clone repository on the Pi
+git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
 cd pickleball-rotation-kiosk
 
-# 3. Run setup
-./raspberry-pi-setup.sh
+# 2. Run the installer
+./install.sh
 
-# 4. Reboot (when prompted)
+# 3. Reboot
 sudo reboot
-
-# 5. Deploy
-cd pickleball-rotation-kiosk
-docker compose up -d
 ```
 
-Access at **http://raspberrypi.local**
+After reboot, the spectator display launches automatically in fullscreen!
 
-### Using Make Commands
+**What the installer does:**
+- Installs system packages (avahi, chromium, etc.)
+- Installs Docker & Docker Compose
+- Builds and starts the application
+- Configures kiosk mode (spectator auto-launches)
+- Sets up auto-start on boot
+- Optionally changes hostname
+
+**Access:**
+- Admin interface: `http://raspberrypi.local/` (or your hostname)
+- Spectator display: Automatically launches on HDMI
+
+**Management:**
 
 ```bash
-# On your Pi
-make pi-setup    # Run setup script
-make pi-deploy   # Build and start services
-make logs        # View logs
+cd ~/pickleball-rotation-kiosk
+
+# Stop/start application
+docker-compose down
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Restart
+docker-compose restart
 ```
 
 ## First Time Use
@@ -227,7 +246,7 @@ make up
 ## Next Steps
 
 - See [README.md](README.md) for complete documentation
-- See [RASPBERRY_PI.md](RASPBERRY_PI.md) for kiosk mode setup
+- See [RASPBERRY_PI_GUIDE.md](RASPBERRY_PI_GUIDE.md) for kiosk mode setup
 - Check API docs in README for integration
 
 ## Development Tips
