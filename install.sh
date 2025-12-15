@@ -38,49 +38,12 @@ fi
 echo -e "${GREEN}✓ Found application files${NC}"
 echo ""
 
-# Get hostname (optional)
-echo "Step 1: Configure Hostname (Optional)"
-echo "--------------------------------------"
+# Get current hostname
 CURRENT_HOSTNAME=$(hostname)
-echo "Current hostname: $CURRENT_HOSTNAME"
-echo ""
-read -p "Change hostname? (y/n): " -n 1 -r
-echo
+MDNS_NAME="${CURRENT_HOSTNAME}.local"
 
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo ""
-    echo "Choose a hostname for network access (e.g., 'pickleball')"
-    echo "Requirements: lowercase letters, numbers, hyphens only"
-    echo ""
-
-    while true; do
-        read -p "Enter new hostname: " NEW_HOSTNAME
-        if [[ "$NEW_HOSTNAME" =~ ^[a-z][a-z0-9-]*$ ]]; then
-            break
-        else
-            echo -e "${RED}Invalid hostname. Use lowercase letters, numbers, and hyphens only.${NC}"
-        fi
-    done
-
-    echo ""
-    echo "Setting hostname to $NEW_HOSTNAME..."
-    echo "$NEW_HOSTNAME" | sudo tee /etc/hostname > /dev/null
-    sudo sed -i "s/127.0.1.1.*$CURRENT_HOSTNAME/127.0.1.1\t$NEW_HOSTNAME/" /etc/hosts
-    if ! grep -q "127.0.1.1" /etc/hosts; then
-        echo "127.0.1.1	$NEW_HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
-    fi
-    sudo hostnamectl set-hostname "$NEW_HOSTNAME" 2>/dev/null || true
-    echo -e "${GREEN}✓ Hostname updated to $NEW_HOSTNAME${NC}"
-    MDNS_NAME="${NEW_HOSTNAME}.local"
-else
-    NEW_HOSTNAME=$CURRENT_HOSTNAME
-    MDNS_NAME="${NEW_HOSTNAME}.local"
-fi
-
-echo ""
-echo "Installation will proceed with:"
-echo "  Hostname: $NEW_HOSTNAME"
-echo "  Network: http://$MDNS_NAME"
+echo "Installing on: $CURRENT_HOSTNAME"
+echo "Access at: http://$MDNS_NAME"
 echo ""
 read -p "Continue? (y/n): " -n 1 -r
 echo
@@ -94,33 +57,23 @@ echo "Starting installation..."
 echo ""
 
 # Update system
-echo "[STEP 1/7] Updating system packages..."
+echo "[STEP 1/6] Updating system packages..."
 sudo apt-get update -qq
 echo -e "${GREEN}✓ System updated${NC}"
 echo ""
 
 # Install required packages
-echo "[STEP 2/7] Installing required packages..."
-echo "This may take 5-10 minutes..."
-sudo apt-get install -y avahi-daemon chromium-browser unclutter curl git
-sudo systemctl enable avahi-daemon
-sudo systemctl start avahi-daemon
-echo -e "${GREEN}✓ Packages installed${NC}"
-echo ""
-
-# Unblock WiFi (in case of rfkill)
-echo "[STEP 3/7] Configuring WiFi..."
-sudo rfkill unblock wifi 2>/dev/null || true
-sudo rfkill unblock all 2>/dev/null || true
-echo -e "${GREEN}✓ WiFi unblocked${NC}"
+echo "[STEP 2/6] Installing unclutter (cursor hiding)..."
+sudo apt-get install -y unclutter
+echo -e "${GREEN}✓ Package installed${NC}"
 echo ""
 
 # Install Docker
 if command -v docker &> /dev/null; then
-    echo "[STEP 4/7] Docker already installed"
+    echo "[STEP 3/6] Docker already installed"
     echo -e "${GREEN}✓ Docker version: $(docker --version)${NC}"
 else
-    echo "[STEP 4/7] Installing Docker..."
+    echo "[STEP 3/6] Installing Docker..."
     echo "This may take 5-10 minutes..."
     curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
     sudo sh /tmp/get-docker.sh
@@ -134,10 +87,10 @@ echo ""
 
 # Install Docker Compose
 if command -v docker-compose &> /dev/null; then
-    echo "[STEP 5/7] Docker Compose already installed"
+    echo "[STEP 4/6] Docker Compose already installed"
     echo -e "${GREEN}✓ Docker Compose version: $(docker-compose --version)${NC}"
 else
-    echo "[STEP 5/7] Installing Docker Compose..."
+    echo "[STEP 4/6] Installing Docker Compose..."
     COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d'"' -f4)
     sudo curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
@@ -146,7 +99,7 @@ fi
 echo ""
 
 # Build and start application
-echo "[STEP 6/7] Building and starting application..."
+echo "[STEP 5/6] Building and starting application..."
 echo "This may take 5-10 minutes..."
 cd "$SCRIPT_DIR"
 
@@ -164,7 +117,7 @@ echo -e "${GREEN}✓ Application built and started${NC}"
 echo ""
 
 # Create systemd service for auto-start
-echo "[STEP 7/7] Configuring auto-start..."
+echo "[STEP 6/6] Configuring auto-start..."
 
 sudo tee /etc/systemd/system/pickleball-kiosk.service > /dev/null <<SERVICE
 [Unit]
@@ -239,7 +192,7 @@ echo "         INSTALLATION COMPLETE! ✓"
 echo "============================================"
 echo ""
 echo "Summary:"
-echo "  ✓ System packages installed"
+echo "  ✓ Unclutter installed (cursor hiding)"
 echo "  ✓ Docker and Docker Compose installed"
 echo "  ✓ Application built and running"
 echo "  ✓ Kiosk mode configured"

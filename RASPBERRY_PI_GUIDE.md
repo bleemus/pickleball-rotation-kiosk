@@ -94,38 +94,14 @@ After reboot:
 The `install.sh` script automatically:
 
 1. ✅ Updates system packages
-2. ✅ Installs required packages (avahi-daemon, chromium-browser, unclutter, curl, git)
-3. ✅ Unblocks WiFi (fixes common rfkill issue)
-4. ✅ Installs Docker
-5. ✅ Installs Docker Compose
-6. ✅ Builds and starts the application
-7. ✅ Configures kiosk mode (spectator display auto-launches)
-8. ✅ Sets up auto-start on boot
-9. ✅ Optionally changes hostname
+2. ✅ Installs unclutter (for cursor hiding in kiosk mode)
+3. ✅ Installs Docker
+4. ✅ Installs Docker Compose
+5. ✅ Builds and starts the application
+6. ✅ Configures kiosk mode (spectator display auto-launches)
+7. ✅ Sets up auto-start on boot
 
-**Installation time:** 15-20 minutes (requires internet connection)
-
----
-
-## Installation Options
-
-During installation, you'll be prompted:
-
-### Hostname Configuration
-```
-Current hostname: raspberrypi
-Change hostname? (y/n):
-```
-
-- **Press `y`** to change hostname (e.g., to `pickleball`, `court1`, etc.)
-- **Press `n`** to keep current hostname
-
-If changing:
-```
-Enter new hostname: pickleball
-```
-
-Requirements: lowercase letters, numbers, and hyphens only
+**Installation time:** 10-15 minutes (requires internet connection)
 
 ---
 

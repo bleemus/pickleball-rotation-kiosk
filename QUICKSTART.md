@@ -123,12 +123,11 @@ sudo reboot
 After reboot, the spectator display launches automatically in fullscreen!
 
 **What the installer does:**
-- Installs system packages (avahi, chromium, etc.)
+- Installs unclutter (cursor hiding)
 - Installs Docker & Docker Compose
 - Builds and starts the application
 - Configures kiosk mode (spectator auto-launches)
 - Sets up auto-start on boot
-- Optionally changes hostname
 
 **Access:**
 - Admin interface: `http://raspberrypi.local/` (or your hostname)
