@@ -119,6 +119,12 @@ echo ""
 # Create systemd service for auto-start
 echo "[STEP 6/6] Configuring auto-start..."
 
+# Detect docker-compose path
+DOCKER_COMPOSE_PATH=$(command -v docker-compose)
+if [ -z "$DOCKER_COMPOSE_PATH" ]; then
+    DOCKER_COMPOSE_PATH="/usr/local/bin/docker-compose"
+fi
+
 sudo tee /etc/systemd/system/pickleball-kiosk.service > /dev/null <<SERVICE
 [Unit]
 Description=Pickleball Kiosk Application
@@ -129,8 +135,8 @@ Requires=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$SCRIPT_DIR
-ExecStart=/usr/local/bin/docker-compose up -d
-ExecStop=/usr/local/bin/docker-compose down
+ExecStart=$DOCKER_COMPOSE_PATH up -d
+ExecStop=$DOCKER_COMPOSE_PATH down
 User=$USER
 
 [Install]
