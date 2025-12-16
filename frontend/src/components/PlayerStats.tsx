@@ -88,7 +88,7 @@ export function PlayerStats({ players }: PlayerStatsProps) {
     return (
         <div
             ref={scrollContainerRef}
-            className="fixed right-0 top-0 bottom-0 w-80 xl:w-96 bg-white border-l-2 lg:border-l-4 border-gray-300 shadow-2xl overflow-y-auto"
+            className="w-full lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:w-80 xl:w-96 bg-white lg:border-l-2 lg:border-l-4 border-t-2 lg:border-t-0 border-gray-300 shadow-2xl overflow-y-auto max-h-96 lg:max-h-none"
             style={{ scrollBehavior: "auto" }}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}

@@ -358,9 +358,9 @@ function App() {
     // Playing view
     if (gameState === GameState.PLAYING && session) {
         return (
-            <div className={`flex ${DEBUG_MODE ? 'border-4 border-red-600' : ''}`}>
+            <div className={`flex flex-col lg:flex-row ${DEBUG_MODE ? 'border-4 border-red-600' : ''}`}>
                 {/* Main Content Area */}
-                <div className="flex-1 pr-80 xl:pr-96">
+                <div className="flex-1 lg:pr-80 xl:pr-96">
                     {session.currentRound && !session.currentRound.completed ? (
                         <CurrentMatchups
                             round={session.currentRound}
@@ -392,7 +392,7 @@ function App() {
                     )}
                 </div>
 
-                {/* Right Sidebar */}
+                {/* Player Stats - Right Sidebar on Desktop, Below on Mobile */}
                 <PlayerStats players={session.players} />
                 
                 {/* Help Button */}

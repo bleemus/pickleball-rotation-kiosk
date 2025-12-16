@@ -122,11 +122,45 @@ export function PlayerSetup({
             </button>
 
             {/* Main Content */}
-            <div className="flex-1 flex items-center justify-center p-4 lg:p-8 pr-80 xl:pr-96">
+            <div className="flex-1 flex items-center justify-center p-4 lg:p-8 lg:pr-80 xl:pr-96">
                 <div className="bg-white rounded-3xl shadow-2xl p-6 lg:p-12 max-w-5xl w-full">
                     <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-6 lg:mb-8 text-gray-800">
                         {APP_NAME}
                     </h1>
+
+                    {/* Court Selection - Mobile Only (Top) */}
+                    <div className="lg:hidden mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl p-4 border-2 border-blue-300">
+                        <h3 className="text-lg font-bold mb-3 text-gray-800 text-center">
+                            Number of Courts
+                        </h3>
+                        <div className="flex items-center justify-center gap-4">
+                            <button
+                                onClick={() => setNumCourts(Math.max(1, numCourts - 1))}
+                                disabled={loading}
+                                className="w-12 h-12 bg-gray-300 text-gray-800 text-2xl font-bold rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
+                            >
+                                −
+                            </button>
+                            <div className="text-center">
+                                <div className="text-5xl font-bold text-gray-800">
+                                    {numCourts}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                    {numCourts === 1 ? "Court" : "Courts"}
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setNumCourts(numCourts + 1)}
+                                disabled={loading}
+                                className="w-12 h-12 bg-gray-300 text-gray-800 text-2xl font-bold rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
+                            >
+                                +
+                            </button>
+                        </div>
+                        <p className="text-center text-gray-600 mt-2 text-xs">
+                            Need at least {numCourts * 4} players
+                        </p>
+                    </div>
 
                     <div className="mb-6 lg:mb-8">
                         <h2 className="text-2xl lg:text-3xl font-semibold mb-3 lg:mb-4 text-gray-700">
@@ -233,41 +267,43 @@ export function PlayerSetup({
                 </div>
             </div>
 
-            {/* Right Sidebar - Court Selection */}
-            <div className="fixed right-0 top-0 bottom-0 w-80 xl:w-96 bg-white border-l-2 lg:border-l-4 border-gray-300 shadow-2xl flex items-center justify-center p-6">
-                <div className="text-center">
-                    <h3 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-800">
-                        Number of Courts
-                    </h3>
-                    <div className="flex flex-col items-center gap-6">
-                        <button
-                            onClick={() => setNumCourts(numCourts + 1)}
-                            disabled={loading}
-                            className="w-20 h-20 bg-gray-300 text-gray-800 text-4xl font-bold rounded-2xl hover:bg-gray-400 transition-colors disabled:opacity-50"
-                        >
-                            +
-                        </button>
-                        <div className="text-center">
-                            <div className="text-8xl lg:text-9xl font-bold text-gray-800">
-                                {numCourts}
+            {/* Right Sidebar - Court Selection (Desktop Only) */}
+            <div className="hidden lg:flex fixed right-0 top-0 bottom-0 w-80 xl:w-96 bg-white border-l-2 lg:border-l-4 border-gray-300 shadow-2xl flex-col">
+                <div className="flex-1 flex items-center justify-center p-6">
+                    <div className="text-center">
+                        <h3 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-800">
+                            Number of Courts
+                        </h3>
+                        <div className="flex flex-col items-center gap-6">
+                            <button
+                                onClick={() => setNumCourts(numCourts + 1)}
+                                disabled={loading}
+                                className="w-20 h-20 bg-gray-300 text-gray-800 text-4xl font-bold rounded-2xl hover:bg-gray-400 transition-colors disabled:opacity-50"
+                            >
+                                +
+                            </button>
+                            <div className="text-center">
+                                <div className="text-8xl lg:text-9xl font-bold text-gray-800">
+                                    {numCourts}
+                                </div>
+                                <div className="text-xl lg:text-2xl text-gray-600 mt-2">
+                                    {numCourts === 1 ? "Court" : "Courts"}
+                                </div>
                             </div>
-                            <div className="text-xl lg:text-2xl text-gray-600 mt-2">
-                                {numCourts === 1 ? "Court" : "Courts"}
-                            </div>
+                            <button
+                                onClick={() =>
+                                    setNumCourts(Math.max(1, numCourts - 1))
+                                }
+                                disabled={loading}
+                                className="w-20 h-20 bg-gray-300 text-gray-800 text-4xl font-bold rounded-2xl hover:bg-gray-400 transition-colors disabled:opacity-50"
+                            >
+                                −
+                            </button>
                         </div>
-                        <button
-                            onClick={() =>
-                                setNumCourts(Math.max(1, numCourts - 1))
-                            }
-                            disabled={loading}
-                            className="w-20 h-20 bg-gray-300 text-gray-800 text-4xl font-bold rounded-2xl hover:bg-gray-400 transition-colors disabled:opacity-50"
-                        >
-                            −
-                        </button>
+                        <p className="text-center text-gray-600 mt-6 text-base lg:text-lg">
+                            Need at least {numCourts * 4} players
+                        </p>
                     </div>
-                    <p className="text-center text-gray-600 mt-6 text-base lg:text-lg">
-                        Need at least {numCourts * 4} players
-                    </p>
                 </div>
             </div>
         </div>

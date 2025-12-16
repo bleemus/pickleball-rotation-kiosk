@@ -20,7 +20,6 @@ interface PlayerManagerProps {
 export function PlayerManager({
     players,
     numCourts,
-    sessionId,
     onAddPlayer,
     onRemovePlayer,
     onToggleSitOut,

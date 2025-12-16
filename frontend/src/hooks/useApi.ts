@@ -1,7 +1,7 @@
 import { Session, Player, Round, GameHistory } from "../types/game";
 
 const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+    import.meta.env.VITE_API_URL || "/api";
 
 interface CreateSessionRequest {
     playerNames: string[];
