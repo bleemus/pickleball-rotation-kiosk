@@ -28,55 +28,55 @@ export function CurrentMatchups({
         'grid-cols-1 md:grid-cols-2 xl:grid-cols-4';
     
     return (
-        <div className="h-screen bg-gradient-to-br from-green-500 to-blue-600 p-3 lg:p-6 flex flex-col overflow-hidden">
-            <div className="max-w-7xl mx-auto w-full flex flex-col h-full">
+        <div className="lg:h-screen bg-gradient-to-br from-green-500 to-blue-600 p-2 lg:p-6 flex flex-col lg:overflow-hidden">
+            <div className="max-w-7xl mx-auto w-full flex flex-col lg:h-full">
                 {/* Header - Fixed height */}
-                <div className="text-center mb-3 lg:mb-4 flex-shrink-0">
-                    <h1 className="text-3xl lg:text-5xl xl:text-6xl font-bold text-white mb-1 lg:mb-2">
+                <div className="text-center mb-2 lg:mb-4 flex-shrink-0">
+                    <h1 className="text-2xl lg:text-5xl xl:text-6xl font-bold text-white mb-1 lg:mb-2">
                         Round {round.roundNumber}
                     </h1>
-                    <p className="text-lg lg:text-xl xl:text-2xl text-white opacity-90">
+                    <p className="text-base lg:text-xl xl:text-2xl text-white opacity-90">
                         Current Matchups
                     </p>
                 </div>
 
                 {/* Courts Grid - Flexible */}
-                <div className={`grid ${gridColsClass} gap-4 lg:gap-6 mb-3 lg:mb-4 flex-1 min-h-0 overflow-auto`}>
+                <div className={`grid ${gridColsClass} gap-2 lg:gap-6 mb-2 lg:mb-4 lg:flex-1 lg:min-h-0 lg:overflow-auto`}>
                     {round.matches.map((match) => (
                         <div
                             key={match.id}
-                            className="bg-white rounded-2xl lg:rounded-3xl shadow-2xl p-3 lg:p-4 flex flex-col min-h-0"
+                            className="bg-white rounded-xl lg:rounded-3xl shadow-2xl p-2 lg:p-4 flex flex-col lg:min-h-0"
                         >
-                            <div className="text-center mb-2 lg:mb-3 flex-shrink-0">
-                                <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-800">
+                            <div className="text-center mb-1 lg:mb-3 flex-shrink-0">
+                                <h2 className="text-lg lg:text-2xl xl:text-3xl font-bold text-gray-800">
                                     Court {match.courtNumber}
                                 </h2>
                             </div>
 
-                            <div className="space-y-2 lg:space-y-3 flex-1 flex flex-col justify-center min-h-0">
+                            <div className="space-y-1 lg:space-y-3 flex-1 flex flex-col justify-center lg:min-h-0">
                                 {/* Team 1 */}
-                                <div className="bg-blue-100 rounded-xl lg:rounded-2xl p-3 lg:p-4 flex flex-col items-center justify-center">
-                                    <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                                <div className="bg-blue-100 rounded-lg lg:rounded-2xl p-2 lg:p-4 flex flex-col items-center justify-center">
+                                    <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
                                         {match.team1.player1.name}
                                     </p>
-                                    <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                                    <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
                                         {match.team1.player2.name}
                                     </p>
                                 </div>
 
                                 {/* VS Divider */}
                                 <div className="text-center flex-shrink-0">
-                                    <span className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-600">
+                                    <span className="text-sm lg:text-xl xl:text-2xl font-bold text-gray-600">
                                         VS
                                     </span>
                                 </div>
 
                                 {/* Team 2 */}
-                                <div className="bg-red-100 rounded-xl lg:rounded-2xl p-3 lg:p-4 flex flex-col items-center justify-center">
-                                    <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                                <div className="bg-red-100 rounded-lg lg:rounded-2xl p-2 lg:p-4 flex flex-col items-center justify-center">
+                                    <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
                                         {match.team2.player1.name}
                                     </p>
-                                    <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                                    <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
                                         {match.team2.player2.name}
                                     </p>
                                 </div>
@@ -86,40 +86,46 @@ export function CurrentMatchups({
                 </div>
 
                 {/* Bottom Section - Fixed height */}
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 pb-0 lg:pb-0">
                     {/* Bench Display */}
                     {round.benchedPlayers.length > 0 && (
-                        <div className="mb-3 lg:mb-4">
+                        <div className="mb-2 lg:mb-4">
                             <BenchDisplay players={round.benchedPlayers} />
                         </div>
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3 lg:gap-4 justify-center">
-                        <button
-                            onClick={onCancelRound}
-                            disabled={loading}
-                            className="px-6 lg:px-8 py-3 lg:py-4 bg-gray-500 text-white text-base lg:text-lg xl:text-xl font-bold rounded-xl hover:bg-gray-600 transition-colors shadow-xl disabled:opacity-50"
-                        >
-                            Back to Manage
-                        </button>
-                        <button
-                            onClick={onViewHistory}
-                            disabled={loading}
-                            className="px-6 lg:px-8 py-3 lg:py-4 bg-indigo-500 text-white text-base lg:text-lg xl:text-xl font-bold rounded-xl hover:bg-indigo-600 transition-colors shadow-xl disabled:opacity-50"
-                        >
-                            View History
-                        </button>
+                    <div className="flex flex-col lg:flex-row gap-2 lg:gap-4 justify-center lg:flex-wrap">
+                        {/* Enter Scores - Full width on mobile, inline on desktop */}
                         <button
                             onClick={onEnterScores}
-                            className="px-8 lg:px-12 py-3 lg:py-4 bg-yellow-400 text-gray-900 text-xl lg:text-2xl xl:text-3xl font-bold rounded-xl lg:rounded-2xl hover:bg-yellow-500 transition-colors shadow-xl"
+                            className="w-full lg:w-auto px-8 lg:px-12 py-3 lg:py-4 bg-yellow-400 text-gray-900 text-xl lg:text-2xl xl:text-3xl font-bold rounded-xl lg:rounded-2xl hover:bg-yellow-500 transition-colors shadow-xl order-1 lg:order-3"
                         >
                             Enter Scores
                         </button>
+
+                        {/* Other buttons in a row on mobile */}
+                        <div className="flex gap-2 lg:gap-4 order-2 lg:order-none">
+                            <button
+                                onClick={onCancelRound}
+                                disabled={loading}
+                                className="flex-1 lg:flex-none px-6 lg:px-8 py-3 lg:py-4 bg-gray-500 text-white text-base lg:text-lg xl:text-xl font-bold rounded-xl hover:bg-gray-600 transition-colors shadow-xl disabled:opacity-50"
+                            >
+                                Back to Manage
+                            </button>
+                            <button
+                                onClick={onViewHistory}
+                                disabled={loading}
+                                className="flex-1 lg:flex-none px-6 lg:px-8 py-3 lg:py-4 bg-indigo-500 text-white text-base lg:text-lg xl:text-xl font-bold rounded-xl hover:bg-indigo-600 transition-colors shadow-xl disabled:opacity-50"
+                            >
+                                View History
+                            </button>
+                        </div>
+
                         <button
                             onClick={onResetSession}
                             disabled={loading}
-                            className="px-6 lg:px-8 py-3 lg:py-4 bg-red-500 text-white text-base lg:text-lg xl:text-xl font-bold rounded-xl hover:bg-red-600 transition-colors shadow-xl disabled:opacity-50"
+                            className="hidden lg:block px-6 lg:px-8 py-3 lg:py-4 bg-red-500 text-white text-base lg:text-lg xl:text-xl font-bold rounded-xl hover:bg-red-600 transition-colors shadow-xl disabled:opacity-50"
                         >
                             Reset
                         </button>

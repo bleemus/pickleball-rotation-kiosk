@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Player } from "../types/game";
+import { HelpButton } from "./HelpModal";
 import { APP_NAME } from "../config";
 
 const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "true";
@@ -111,11 +112,11 @@ export function PlayerSetup({
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex">
-            {/* Reset Button - Upper Left */}
+            {/* Reset Button - Upper Left on Desktop, Bottom on Mobile */}
             <button
                 onClick={onResetSession}
                 disabled={loading}
-                className="fixed top-4 left-4 z-10 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors shadow-lg disabled:opacity-50"
+                className="hidden lg:block fixed top-4 left-4 z-10 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors shadow-lg disabled:opacity-50"
                 title="Reset session"
             >
                 Reset
@@ -174,7 +175,7 @@ export function PlayerSetup({
 
                         <form
                             onSubmit={handleAddPlayer}
-                            className="flex gap-3 lg:gap-4 mb-4 lg:mb-6"
+                            className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-4 lg:mb-6"
                         >
                             <input
                                 type="text"
@@ -185,24 +186,26 @@ export function PlayerSetup({
                                 className="flex-1 px-4 lg:px-6 py-3 lg:py-4 text-lg lg:text-xl xl:text-2xl border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
                                 disabled={loading}
                             />
-                            <button
-                                type="submit"
-                                className="px-6 lg:px-8 py-3 lg:py-4 bg-blue-500 text-white text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
-                                disabled={loading}
-                            >
-                                Add
-                            </button>
-                            {DEBUG_MODE && (
+                            <div className="flex gap-2 sm:gap-3 lg:gap-4">
                                 <button
-                                    type="button"
-                                    onClick={handleAutoFill}
-                                    className="px-6 lg:px-8 py-3 lg:py-4 bg-purple-500 text-white text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-purple-600 transition-colors disabled:opacity-50"
+                                    type="submit"
+                                    className="flex-1 sm:flex-none px-4 sm:px-6 lg:px-8 py-3 lg:py-4 bg-blue-500 text-white text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
                                     disabled={loading}
-                                    title="Auto-fill players (Debug Mode)"
                                 >
-                                    🔧 Fill
+                                    Add
                                 </button>
-                            )}
+                                {DEBUG_MODE && (
+                                    <button
+                                        type="button"
+                                        onClick={handleAutoFill}
+                                        className="flex-1 sm:flex-none px-4 sm:px-6 lg:px-8 py-3 lg:py-4 bg-purple-500 text-white text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-purple-600 transition-colors disabled:opacity-50"
+                                        disabled={loading}
+                                        title="Auto-fill players (Debug Mode)"
+                                    >
+                                        🔧 Fill
+                                    </button>
+                                )}
+                            </div>
                         </form>
 
                         {error && (
@@ -264,6 +267,27 @@ export function PlayerSetup({
                             start
                         </p>
                     )}
+
+                    {/* Bottom Buttons - Mobile: Reset + Help side-by-side, Desktop: Help only */}
+                    <div className="mt-6 lg:mt-8">
+                        {/* Mobile: Both buttons */}
+                        <div className="flex lg:hidden gap-2">
+                            <button
+                                onClick={onResetSession}
+                                disabled={loading}
+                                className="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                            >
+                                Reset
+                            </button>
+                            <div className="flex-1">
+                                <HelpButton />
+                            </div>
+                        </div>
+                        {/* Desktop: Help only (Reset is top-left) */}
+                        <div className="hidden lg:block">
+                            <HelpButton />
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import QRCode from "react-qr-code";
 import { Session } from "../types/game";
 import { BenchDisplay } from "./BenchDisplay";
 import { APP_NAME } from "../config";
@@ -10,8 +11,57 @@ interface SpectatorDisplayProps {
 export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     const [session, setSession] = useState<Session | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [networkInfo, setNetworkInfo] = useState<{ hostname: string; ip: string | null; port: string; allIPs?: { interface: string; ip: string }[] } | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [isHovering, setIsHovering] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+    const [darkMode, setDarkMode] = useState(() => {
+        const saved = localStorage.getItem('spectatorDarkMode');
+        return saved === 'true';
+    });
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    // Save dark mode preference
+    useEffect(() => {
+        localStorage.setItem('spectatorDarkMode', darkMode.toString());
+    }, [darkMode]);
+
+    // Track mobile screen size
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Track window size for auto-scroll behavior
+    useEffect(() => {
+        const handleResize = () => {
+            setIsDesktop(window.innerWidth >= 1024);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Fetch network info on mount
+    useEffect(() => {
+        const fetchNetworkInfo = async () => {
+            try {
+                const response = await fetch(`${apiUrl}/network-info`);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("Network info received:", data);
+                    console.log("All detected IPs:", data.allIPs);
+                    console.log("Selected IP:", data.ip);
+                    setNetworkInfo(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch network info:", err);
+            }
+        };
+        fetchNetworkInfo();
+    }, [apiUrl]);
 
     // Poll for active session updates every 2 seconds
     useEffect(() => {
@@ -40,10 +90,10 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         return () => clearInterval(interval);
     }, [apiUrl]);
 
-    // Auto-scroll effect for player stats
+    // Auto-scroll effect for player stats (desktop only)
     useEffect(() => {
         const container = scrollContainerRef.current;
-        if (!container || !session) return;
+        if (!container || !session || !isDesktop) return;
 
         const SCROLL_SPEED = 2; // pixels per interval - smooth but faster
         const INTERVAL_MS = 20; // milliseconds between scrolls - frequent updates
@@ -107,65 +157,154 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         return () => {
             clearInterval(intervalId);
         };
-    }, [isHovering, session?.players.length]);
+    }, [isHovering, isDesktop, session?.players.length]);
+
+    // Show mobile redirect message
+    if (isMobile) {
+        const entryUrl = window.location.origin + window.location.pathname.replace(/\/spectator$/, '');
+        return (
+            <div className={`h-screen flex items-center justify-center p-6 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-500 to-blue-600'}`}>
+                {/* Dark Mode Toggle Button */}
+                <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className={`fixed top-4 left-4 z-50 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                        darkMode
+                            ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                            : 'bg-white text-gray-800 hover:bg-gray-100'
+                    } shadow-lg`}
+                    title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                    {darkMode ? '☀️ Light' : '🌙 Dark'}
+                </button>
+                <div className={`rounded-3xl shadow-2xl p-8 max-w-lg text-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <div className="text-6xl mb-4">📱</div>
+                    <h1 className={`text-3xl font-bold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                        Mobile Device Detected
+                    </h1>
+                    <p className={`text-lg mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        The spectator view is designed for larger displays like TVs and monitors.
+                        Please use the main entry screen to manage games on mobile devices.
+                    </p>
+                    <a
+                        href={entryUrl}
+                        className={`inline-block px-8 py-4 rounded-xl font-bold text-lg transition-colors ${
+                            darkMode
+                                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                        }`}
+                    >
+                        Go to Entry Screen
+                    </a>
+                </div>
+            </div>
+        );
+    }
 
     if (error && error !== "No active game session") {
         return (
-            <div className="h-screen bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center p-8">
-                <div className="bg-white rounded-3xl shadow-2xl p-12 text-center">
-                    <h1 className="text-4xl font-bold text-red-600 mb-4">Error</h1>
-                    <p className="text-2xl text-gray-800">{error}</p>
+            <div className={`h-screen flex items-center justify-center p-8 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-red-500 to-pink-600'}`}>
+                {/* Dark Mode Toggle Button */}
+                <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className={`fixed top-4 left-4 z-50 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                        darkMode
+                            ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                            : 'bg-white text-gray-800 hover:bg-gray-100'
+                    } shadow-lg`}
+                    title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                    {darkMode ? '☀️ Light' : '🌙 Dark'}
+                </button>
+                <div className={`rounded-3xl shadow-2xl p-12 text-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <h1 className={`text-4xl font-bold mb-4 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>Error</h1>
+                    <p className={`text-2xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{error}</p>
                 </div>
             </div>
         );
     }
 
     if (!session || error === "No active game session") {
-        // Get the base URL (without /spectator)
-        const baseUrl = window.location.origin;
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        // Determine the best URL to show
+        const currentHostname = window.location.hostname;
+        const isLocalhost = currentHostname === 'localhost' || currentHostname === '127.0.0.1';
+
+        // Construct the URL to display
+        let displayUrl = window.location.origin;
+        let urlSource = 'current';
+
+        if (isLocalhost && networkInfo) {
+            // If accessing via localhost, show the network IP or hostname instead
+            const networkAddress = networkInfo.ip || networkInfo.hostname;
+            const protocol = window.location.protocol;
+            const port = window.location.port ? `:${window.location.port}` : '';
+            displayUrl = `${protocol}//${networkAddress}${port}`;
+            urlSource = 'network';
+        }
+
+        // Remove /spectator from the URL if present
+        const baseUrl = displayUrl.replace(/\/spectator$/, '');
 
         return (
-            <div className="h-screen bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center p-8">
-                <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-4xl text-center">
-                    <h1 className="text-5xl font-bold text-gray-800 mb-6">Welcome to {APP_NAME}</h1>
+            <div className={`h-screen flex items-center justify-center p-8 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-500 to-blue-600'}`}>
+                {/* Dark Mode Toggle Button */}
+                <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className={`fixed top-4 left-4 z-50 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                        darkMode
+                            ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                            : 'bg-white text-gray-800 hover:bg-gray-100'
+                    } shadow-lg`}
+                    title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                    {darkMode ? '☀️ Light' : '🌙 Dark'}
+                </button>
+                <div className={`rounded-3xl shadow-2xl p-12 max-w-4xl text-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <h1 className={`text-5xl font-bold mb-6 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Welcome to {APP_NAME}</h1>
 
-                    {/* Localhost Warning */}
-                    {isLocalhost && (
-                        <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-xl">
-                            <p className="text-lg text-yellow-800 font-semibold">
-                                ⚠️ Detected localhost access
+                    {/* Localhost Info - Changed from warning to informational */}
+                    {isLocalhost && urlSource === 'network' && (
+                        <div className={`mb-6 p-4 border-2 rounded-xl ${darkMode ? 'bg-blue-900 border-blue-500' : 'bg-blue-50 border-blue-400'}`}>
+                            <p className={`text-lg font-semibold ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+                                ℹ️ Network Address Detected
                             </p>
-                            <p className="text-sm text-yellow-700 mt-2">
-                                Other devices won't be able to connect to "localhost".
-                                Use your device's hostname (e.g., pickleball.local) or IP address instead.
+                            <p className={`text-sm mt-2 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>
+                                You're viewing this page locally, but we've detected your network address below.
+                                Other devices should connect using that address.
                             </p>
                         </div>
                     )}
 
-                    {/* Prominent URL Display */}
-                    <div className={`mb-8 p-6 rounded-2xl shadow-lg ${isLocalhost ? 'bg-gradient-to-r from-yellow-500 to-orange-600' : 'bg-gradient-to-r from-green-500 to-blue-600'}`}>
-                        <p className="text-2xl font-bold text-white mb-3">
+                    {/* Prominent URL Display with QR Code */}
+                    <div className={`mb-8 p-6 rounded-2xl shadow-lg ${darkMode ? 'bg-gray-700' : 'bg-gradient-to-r from-green-500 to-blue-600'}`}>
+                        <p className={`text-2xl font-bold mb-4 ${darkMode ? 'text-gray-200' : 'text-white'}`}>
                             To start a game, connect to:
                         </p>
+
+                        {/* QR Code */}
+                        <div className="bg-white rounded-xl p-6 shadow-inner mb-4 flex justify-center">
+                            <QRCode
+                                value={baseUrl}
+                                size={200}
+                                level="M"
+                            />
+                        </div>
+
+                        {/* URL Text */}
                         <div className="bg-white rounded-xl p-4 shadow-inner">
-                            <code className="text-3xl font-bold text-gray-800 break-all">
+                            <code className="text-2xl lg:text-3xl font-bold text-gray-800 break-all">
                                 {baseUrl}
                             </code>
                         </div>
-                        <p className="text-lg text-white mt-3 opacity-90">
-                            {isLocalhost
-                                ? "⚠️ Replace 'localhost' with your network hostname or IP"
-                                : "Open this URL on your phone, tablet, or computer"
-                            }
+                        <p className={`text-lg mt-3 opacity-90 ${darkMode ? 'text-gray-300' : 'text-white'}`}>
+                            Scan the QR code or open the URL on your device
                         </p>
                     </div>
 
                     <div className="text-left space-y-4 mb-8">
-                        <p className="text-2xl text-gray-700">
+                        <p className={`text-2xl ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                             <strong>Setup Instructions:</strong>
                         </p>
-                        <ol className="list-decimal list-inside space-y-3 text-xl text-gray-700 ml-4">
+                        <ol className={`list-decimal list-inside space-y-3 text-xl ml-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                             <li>Connect to the URL above from another device</li>
                             <li>Add at least 4 players per court (e.g., 8 for 2 courts, 12 for 3 courts)</li>
                             <li>Click "Start Next Round" to begin</li>
@@ -185,35 +324,48 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         : [];
 
     return (
-        <div className="h-screen bg-gradient-to-br from-green-500 to-blue-600 flex">
+        <div className={`h-screen flex ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-green-500 to-blue-600'}`}>
+            {/* Dark Mode Toggle Button */}
+            <button
+                onClick={() => setDarkMode(!darkMode)}
+                className={`fixed top-4 left-4 z-50 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                    darkMode
+                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                        : 'bg-white text-gray-800 hover:bg-gray-100'
+                } shadow-lg`}
+                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+                {darkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
+
             {/* Main Content - Courts and Bench */}
             <div className="flex-1 p-6 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="text-center mb-6 flex-shrink-0">
                     {hasActiveRound && round ? (
                         <>
-                            <h1 className="text-6xl font-bold text-white mb-2">
+                            <h1 className={`text-6xl font-bold mb-2 ${darkMode ? 'text-gray-200' : 'text-white'}`}>
                                 Round {round.roundNumber}
                             </h1>
-                            <p className="text-3xl text-white opacity-90">
+                            <p className={`text-3xl opacity-90 ${darkMode ? 'text-gray-300' : 'text-white'}`}>
                                 Current Matchups
                             </p>
                         </>
                     ) : lastCompletedRound ? (
                         <>
-                            <h1 className="text-6xl font-bold text-white mb-2">
+                            <h1 className={`text-6xl font-bold mb-2 ${darkMode ? 'text-gray-200' : 'text-white'}`}>
                                 Round {lastCompletedRound.roundNumber} Results
                             </h1>
-                            <p className="text-3xl text-white opacity-90">
+                            <p className={`text-3xl opacity-90 ${darkMode ? 'text-gray-300' : 'text-white'}`}>
                                 Start the next round to continue
                             </p>
                         </>
                     ) : (
                         <>
-                            <h1 className="text-6xl font-bold text-white mb-2">
+                            <h1 className={`text-6xl font-bold mb-2 ${darkMode ? 'text-gray-200' : 'text-white'}`}>
                                 Waiting for Round
                             </h1>
-                            <p className="text-3xl text-white opacity-90">
+                            <p className={`text-3xl opacity-90 ${darkMode ? 'text-gray-300' : 'text-white'}`}>
                                 Start the next round to begin
                             </p>
                         </>
@@ -227,36 +379,36 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                             {round.matches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col min-h-0"
+                                    className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
                                 >
                                     <div className="text-center mb-4 flex-shrink-0">
-                                        <h2 className="text-4xl font-bold text-gray-800">
+                                        <h2 className={`text-4xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                             Court {match.courtNumber}
                                         </h2>
                                     </div>
 
                                     <div className="space-y-4 flex-1 flex flex-col justify-center">
                                         {/* Team 1 */}
-                                        <div className="bg-blue-100 rounded-2xl p-6 flex flex-col items-center justify-center">
-                                            <p className="text-3xl font-bold text-gray-800 text-center">
+                                        <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-blue-100'}`}>
+                                            <p className={`text-3xl font-bold text-center ${darkMode ? 'text-blue-300' : 'text-gray-800'}`}>
                                                 {match.team1.player1.name}
                                             </p>
-                                            <p className="text-3xl font-bold text-gray-800 text-center">
+                                            <p className={`text-3xl font-bold text-center ${darkMode ? 'text-blue-300' : 'text-gray-800'}`}>
                                                 {match.team1.player2.name}
                                             </p>
                                         </div>
 
                                         {/* VS Divider */}
                                         <div className="text-center flex-shrink-0">
-                                            <span className="text-3xl font-bold text-gray-600">VS</span>
+                                            <span className={`text-3xl font-bold ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>VS</span>
                                         </div>
 
                                         {/* Team 2 */}
-                                        <div className="bg-red-100 rounded-2xl p-6 flex flex-col items-center justify-center">
-                                            <p className="text-3xl font-bold text-gray-800 text-center">
+                                        <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-red-100'}`}>
+                                            <p className={`text-3xl font-bold text-center ${darkMode ? 'text-red-300' : 'text-gray-800'}`}>
                                                 {match.team2.player1.name}
                                             </p>
-                                            <p className="text-3xl font-bold text-gray-800 text-center">
+                                            <p className={`text-3xl font-bold text-center ${darkMode ? 'text-red-300' : 'text-gray-800'}`}>
                                                 {match.team2.player2.name}
                                             </p>
                                         </div>
@@ -277,46 +429,54 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                         {previousRoundHistory.map((game) => {
                             const team1Won = game.team1Score > game.team2Score;
                             const team2Won = game.team2Score > game.team1Score;
-                            
+
                             return (
                                 <div
                                     key={game.matchId}
-                                    className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col min-h-0"
+                                    className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
                                 >
                                     <div className="text-center mb-4 flex-shrink-0">
-                                        <h2 className="text-4xl font-bold text-gray-800">
+                                        <h2 className={`text-4xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                             Court {game.courtNumber}
                                         </h2>
-                                        <p className="text-lg text-gray-600">Final Score</p>
+                                        <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Final Score</p>
                                     </div>
 
                                     <div className="space-y-4 flex-1 flex flex-col justify-center">
                                         {/* Team 1 */}
-                                        <div className={`rounded-2xl p-6 flex items-center justify-between ${team1Won ? 'bg-green-100 border-4 border-green-500' : 'bg-gray-100'}`}>
+                                        <div className={`rounded-2xl p-6 flex items-center justify-between ${
+                                            team1Won
+                                                ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-100 border-4 border-green-500'
+                                                : darkMode ? 'bg-gray-700' : 'bg-gray-100'
+                                        }`}>
                                             <div className="flex-1">
-                                                <p className="text-2xl font-bold text-gray-800 text-center">
+                                                <p className={`text-2xl font-bold text-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                     {game.team1Players[0]}
                                                 </p>
-                                                <p className="text-2xl font-bold text-gray-800 text-center">
+                                                <p className={`text-2xl font-bold text-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                     {game.team1Players[1]}
                                                 </p>
                                             </div>
-                                            <div className={`text-5xl font-bold ml-4 ${team1Won ? 'text-green-700' : 'text-gray-700'}`}>
+                                            <div className={`text-5xl font-bold ml-4 ${team1Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
                                                 {game.team1Score}
                                             </div>
                                         </div>
 
                                         {/* Team 2 */}
-                                        <div className={`rounded-2xl p-6 flex items-center justify-between ${team2Won ? 'bg-green-100 border-4 border-green-500' : 'bg-gray-100'}`}>
+                                        <div className={`rounded-2xl p-6 flex items-center justify-between ${
+                                            team2Won
+                                                ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-100 border-4 border-green-500'
+                                                : darkMode ? 'bg-gray-700' : 'bg-gray-100'
+                                        }`}>
                                             <div className="flex-1">
-                                                <p className="text-2xl font-bold text-gray-800 text-center">
+                                                <p className={`text-2xl font-bold text-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                     {game.team2Players[0]}
                                                 </p>
-                                                <p className="text-2xl font-bold text-gray-800 text-center">
+                                                <p className={`text-2xl font-bold text-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                     {game.team2Players[1]}
                                                 </p>
                                             </div>
-                                            <div className={`text-5xl font-bold ml-4 ${team2Won ? 'text-green-700' : 'text-gray-700'}`}>
+                                            <div className={`text-5xl font-bold ml-4 ${team2Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
                                                 {game.team2Score}
                                             </div>
                                         </div>
@@ -329,14 +489,14 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
             </div>
 
             {/* Sidebar - Player Stats */}
-            <div 
+            <div
                 ref={scrollContainerRef}
-                className="w-80 xl:w-96 bg-gray-800 bg-opacity-90 p-6 overflow-y-auto"
+                className={`w-80 xl:w-96 p-6 overflow-y-auto ${darkMode ? 'bg-gray-950 bg-opacity-95' : 'bg-gray-800 bg-opacity-90'}`}
                 style={{ scrollBehavior: "auto" }}
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={() => setIsHovering(false)}
             >
-                <h2 className="text-3xl font-bold text-white mb-6 text-center">
+                <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? 'text-gray-200' : 'text-white'}`}>
                     Player Stats
                 </h2>
                 <div className="space-y-3">
@@ -349,40 +509,40 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                         .map((player, index) => (
                             <div
                                 key={player.id}
-                                className="bg-white rounded-xl p-4 shadow-lg"
+                                className={`rounded-xl p-4 shadow-lg ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-3">
-                                        <span className="text-2xl font-bold text-gray-600">
+                                        <span className={`text-2xl font-bold ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                             #{index + 1}
                                         </span>
-                                        <span className="text-xl font-bold text-gray-800">
+                                        <span className={`text-xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                             {player.name}
                                         </span>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div className="bg-green-100 rounded-lg p-2 text-center">
-                                        <div className="text-xs text-gray-600">Wins</div>
-                                        <div className="text-lg font-bold text-green-700">
+                                    <div className={`rounded-lg p-2 text-center ${darkMode ? 'bg-green-900' : 'bg-green-100'}`}>
+                                        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Wins</div>
+                                        <div className={`text-lg font-bold ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
                                             {player.wins}
                                         </div>
                                     </div>
-                                    <div className="bg-red-100 rounded-lg p-2 text-center">
-                                        <div className="text-xs text-gray-600">Losses</div>
-                                        <div className="text-lg font-bold text-red-700">
+                                    <div className={`rounded-lg p-2 text-center ${darkMode ? 'bg-red-900' : 'bg-red-100'}`}>
+                                        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Losses</div>
+                                        <div className={`text-lg font-bold ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
                                             {player.losses}
                                         </div>
                                     </div>
-                                    <div className="bg-orange-100 rounded-lg p-2 text-center">
-                                        <div className="text-xs text-gray-600">Sat</div>
-                                        <div className="text-lg font-bold text-orange-700">
+                                    <div className={`rounded-lg p-2 text-center ${darkMode ? 'bg-orange-900' : 'bg-orange-100'}`}>
+                                        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Sat</div>
+                                        <div className={`text-lg font-bold ${darkMode ? 'text-orange-400' : 'text-orange-700'}`}>
                                             {player.roundsSatOut}
                                         </div>
                                     </div>
-                                    <div className="bg-purple-100 rounded-lg p-2 text-center">
-                                        <div className="text-xs text-gray-600">Diff</div>
-                                        <div className="text-lg font-bold text-purple-700">
+                                    <div className={`rounded-lg p-2 text-center ${darkMode ? 'bg-purple-900' : 'bg-purple-100'}`}>
+                                        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Diff</div>
+                                        <div className={`text-lg font-bold ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>
                                             {player.pointDifferential > 0 ? "+" : ""}
                                             {player.pointDifferential}
                                         </div>

@@ -73,21 +73,21 @@ export function PlayerManager({
     };
 
     return (
-        <div className="h-screen bg-gradient-to-br from-teal-500 to-blue-600 p-3 lg:p-6 flex items-center justify-center overflow-hidden">
-            {/* Reset Button - Upper Left */}
+        <div className="bg-gradient-to-br from-teal-500 to-blue-600 p-3 lg:p-6 lg:h-screen lg:flex lg:items-center lg:justify-center lg:overflow-hidden">
+            {/* Reset Button - Upper Left (Desktop only, Mobile at bottom via App.tsx) */}
             <button
                 onClick={onResetSession}
                 disabled={loading}
-                className="fixed top-4 left-4 px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 shadow-lg z-10"
+                className="hidden lg:block fixed top-4 left-4 px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 shadow-lg z-10"
             >
                 Reset
             </button>
 
-            {/* Change Courts Button - Lower Left */}
+            {/* Change Courts Button - Lower Left (Desktop only) */}
             <button
                 onClick={() => setShowCourtSelector(!showCourtSelector)}
                 disabled={loading}
-                className="fixed bottom-4 left-4 px-4 py-2 bg-indigo-500 text-white text-sm font-bold rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 shadow-lg z-10"
+                className="hidden lg:block fixed bottom-4 left-4 px-4 py-2 bg-indigo-500 text-white text-sm font-bold rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 shadow-lg z-10"
             >
                 {showCourtSelector ? "Hide Courts" : "Change Courts"}
             </button>
@@ -121,10 +121,30 @@ export function PlayerManager({
                 </div>
             )}
 
-            <div className="bg-white rounded-3xl shadow-2xl p-6 lg:p-10 max-w-5xl w-full max-h-full overflow-y-auto">
+            <div className="bg-white rounded-3xl shadow-2xl p-6 lg:p-10 max-w-5xl w-full lg:max-h-full lg:overflow-y-auto">
                 <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-4 lg:mb-6 text-center">
                     Manage Players
                 </h1>
+
+                {/* Start Next Round Button - Prominent at Top */}
+                <div className="mb-6 lg:mb-8">
+                    <button
+                        onClick={onStartNextRound}
+                        disabled={
+                            loading ||
+                            players.filter((p) => !p.forceSitOut).length <
+                                numCourts * 4
+                        }
+                        className="w-full px-8 py-5 lg:py-6 bg-green-500 text-white text-2xl lg:text-3xl xl:text-4xl font-bold rounded-2xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
+                    >
+                        {loading ? "Starting..." : "Start Next Round"}
+                    </button>
+                    {players.filter((p) => !p.forceSitOut).length < numCourts * 4 && (
+                        <p className="text-center text-red-600 mt-2 text-sm lg:text-base font-semibold">
+                            Need at least {numCourts * 4} active players ({players.filter((p) => !p.forceSitOut).length} currently active)
+                        </p>
+                    )}
+                </div>
 
                 {/* Add Player Form */}
                 <div className="mb-6 lg:mb-8">
@@ -202,7 +222,7 @@ export function PlayerManager({
                                             onClick={() =>
                                                 onToggleSitOut(player.id)
                                             }
-                                            className={`px-2 py-1 text-xs font-semibold rounded ${
+                                            className={`px-4 py-1.5 text-xs lg:text-sm font-semibold rounded-lg ${
                                                 player.forceSitOut
                                                     ? "bg-green-500 text-white hover:bg-green-600"
                                                     : "bg-orange-500 text-white hover:bg-orange-600"
@@ -275,6 +295,15 @@ export function PlayerManager({
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
+                    {/* Change Courts Button - Mobile only (Desktop has floating button) */}
+                    <button
+                        onClick={() => setShowCourtSelector(!showCourtSelector)}
+                        disabled={loading}
+                        className="lg:hidden flex-1 px-6 py-3 bg-purple-500 text-white text-base font-bold rounded-xl hover:bg-purple-600 transition-colors disabled:opacity-50"
+                    >
+                        {showCourtSelector ? "Hide Courts" : "Change Courts"}
+                    </button>
+
                     <button
                         onClick={onViewHistory}
                         disabled={loading}
@@ -293,17 +322,6 @@ export function PlayerManager({
                         }
                     >
                         Edit Previous Scores
-                    </button>
-                    <button
-                        onClick={onStartNextRound}
-                        disabled={
-                            loading ||
-                            players.filter((p) => !p.forceSitOut).length <
-                                numCourts * 4
-                        }
-                        className="flex-1 px-6 py-3 lg:py-4 bg-green-500 text-white text-lg lg:text-xl font-bold rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? "Starting..." : "Start Next Round"}
                     </button>
                 </div>
             </div>

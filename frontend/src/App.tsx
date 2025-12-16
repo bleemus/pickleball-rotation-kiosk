@@ -40,12 +40,11 @@ function App() {
                     const loadedSession = await api.getSession(savedSessionId);
                     setSession(loadedSession);
 
-                    if (
-                        loadedSession.currentRound &&
-                        !loadedSession.currentRound.completed
-                    ) {
+                    // If session has game history or a completed round, it's an active session
+                    if (loadedSession.gameHistory.length > 0 || loadedSession.currentRound) {
                         setGameState(GameState.PLAYING);
                     } else if (loadedSession.players.length >= 4) {
+                        // Session exists with players but no rounds started yet
                         setGameState(GameState.SETUP);
                     }
                 } catch (err) {
@@ -360,43 +359,65 @@ function App() {
         return (
             <div className={`flex flex-col lg:flex-row ${DEBUG_MODE ? 'border-4 border-red-600' : ''}`}>
                 {/* Main Content Area */}
-                <div className="flex-1 lg:pr-80 xl:pr-96">
-                    {session.currentRound && !session.currentRound.completed ? (
-                        <CurrentMatchups
-                            round={session.currentRound}
-                            onEnterScores={handleEnterScores}
-                            onViewHistory={handleViewHistory}
-                            onCancelRound={handleCancelRound}
-                            onStartNextRound={handleStartNextRound}
-                            onResetSession={handleResetSession}
-                            loading={loading}
-                        />
-                    ) : (
-                        <PlayerManager
-                            players={session.players}
-                            numCourts={session.numCourts}
-                            sessionId={session.id}
-                            onAddPlayer={handleAddPlayer}
-                            onRemovePlayer={handleRemovePlayer}
-                            onToggleSitOut={handleToggleSitOut}
-                            onUpdateNumCourts={handleUpdateNumCourts}
-                            onStartNextRound={handleStartNextRound}
-                            onViewHistory={handleViewHistory}
-                            onEditPreviousScores={handleEditPreviousScores}
-                            onResetSession={handleResetSession}
-                            hasCompletedRound={
-                                !!session.currentRound?.completed
-                            }
-                            loading={loading}
-                        />
-                    )}
+                <div className="flex-1 lg:pr-80 xl:pr-96 flex flex-col">
+                    <div className="flex-1">
+                        {session.currentRound && !session.currentRound.completed ? (
+                            <CurrentMatchups
+                                round={session.currentRound}
+                                onEnterScores={handleEnterScores}
+                                onViewHistory={handleViewHistory}
+                                onCancelRound={handleCancelRound}
+                                onStartNextRound={handleStartNextRound}
+                                onResetSession={handleResetSession}
+                                loading={loading}
+                            />
+                        ) : (
+                            <PlayerManager
+                                players={session.players}
+                                numCourts={session.numCourts}
+                                sessionId={session.id}
+                                onAddPlayer={handleAddPlayer}
+                                onRemovePlayer={handleRemovePlayer}
+                                onToggleSitOut={handleToggleSitOut}
+                                onUpdateNumCourts={handleUpdateNumCourts}
+                                onStartNextRound={handleStartNextRound}
+                                onViewHistory={handleViewHistory}
+                                onEditPreviousScores={handleEditPreviousScores}
+                                onResetSession={handleResetSession}
+                                hasCompletedRound={
+                                    !!session.currentRound?.completed
+                                }
+                                loading={loading}
+                            />
+                        )}
+                    </div>
+
+                    {/* Bottom Buttons - Desktop only: Help button */}
+                    <div className="hidden lg:block p-2 lg:p-8">
+                        <HelpButton />
+                    </div>
                 </div>
 
-                {/* Player Stats - Right Sidebar on Desktop, Below on Mobile */}
-                <PlayerStats players={session.players} />
-                
-                {/* Help Button */}
-                <HelpButton />
+                {/* Player Stats - Right Sidebar on Desktop, Flows below on Mobile */}
+                <div className="lg:hidden">
+                    <PlayerStats players={session.players} />
+                    {/* Mobile: Reset + Help buttons below stats */}
+                    <div className="p-4 flex gap-2">
+                        <button
+                            onClick={handleResetSession}
+                            disabled={loading}
+                            className="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                        >
+                            Reset
+                        </button>
+                        <div className="flex-1">
+                            <HelpButton />
+                        </div>
+                    </div>
+                </div>
+                <div className="hidden lg:block">
+                    <PlayerStats players={session.players} />
+                </div>
             </div>
         );
     }
