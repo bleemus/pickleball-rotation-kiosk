@@ -40,7 +40,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:3001/api}
+        - VITE_API_URL=${VITE_API_URL:-}
         - VITE_DEBUG_MODE=${VITE_DEBUG_MODE:-false}
         - VITE_APP_NAME=${VITE_APP_NAME:-Pickleball Kiosk}
     container_name: pickleball-frontend

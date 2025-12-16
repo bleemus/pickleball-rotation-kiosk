@@ -16,10 +16,21 @@ export function PlayerStats({ players }: PlayerStatsProps) {
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [isHovering, setIsHovering] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
+    // Track window size for auto-scroll behavior
+    useEffect(() => {
+        const handleResize = () => {
+            setIsDesktop(window.innerWidth >= 1024);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Auto-scroll effect (desktop only)
     useEffect(() => {
         const container = scrollContainerRef.current;
-        if (!container) return;
+        if (!container || !isDesktop) return;
 
         const SCROLL_SPEED = 2; // pixels per interval
         const INTERVAL_MS = 30; // milliseconds between scrolls
@@ -83,12 +94,12 @@ export function PlayerStats({ players }: PlayerStatsProps) {
         return () => {
             clearInterval(intervalId);
         };
-    }, [isHovering, players.length]);
+    }, [isHovering, isDesktop, players.length]);
 
     return (
         <div
             ref={scrollContainerRef}
-            className="fixed right-0 top-0 bottom-0 w-80 xl:w-96 bg-white border-l-2 lg:border-l-4 border-gray-300 shadow-2xl overflow-y-auto"
+            className="w-full lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:w-80 xl:w-96 bg-white lg:border-l-2 lg:border-l-4 lg:border-gray-300 lg:shadow-2xl lg:overflow-y-auto"
             style={{ scrollBehavior: "auto" }}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}

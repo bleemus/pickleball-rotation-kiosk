@@ -29,10 +29,10 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                         <section>
                             <h2 className="text-2xl font-bold text-blue-600 mb-3">Getting Started</h2>
                             <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                                <li className="text-lg">Add players using the "Add New Player" form</li>
                                 <li className="text-lg">Set the number of courts (default is 2)</li>
-                                <li className="text-lg">You need at least 4 players per court (e.g., 8 for 2 courts, 12 for 3 courts)</li>
-                                <li className="text-lg">Click "Start Next Round" when ready to begin</li>
+                                <li className="text-lg">Add players using the input field - you need at least 4 players per court</li>
+                                <li className="text-lg">Click "Start Game" when ready to begin your first round</li>
+                                <li className="text-lg">Court assignments are automatically generated for fair play</li>
                             </ol>
                         </section>
 
@@ -40,10 +40,10 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                         <section>
                             <h2 className="text-2xl font-bold text-blue-600 mb-3">During a Round</h2>
                             <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                <li className="text-lg">Players will be assigned to courts or the bench automatically</li>
-                                <li className="text-lg">The algorithm ensures fair rotation - everyone plays with and against different people</li>
-                                <li className="text-lg">Benched players are rotated to minimize sitting out</li>
-                                <li className="text-lg">Enter scores for each court when games complete</li>
+                                <li className="text-lg">Players are automatically assigned to courts or the bench</li>
+                                <li className="text-lg">The algorithm ensures variety - everyone plays with and against different people</li>
+                                <li className="text-lg">Benched players get priority in the next round</li>
+                                <li className="text-lg">Click "Enter Scores" when all courts finish playing</li>
                             </ul>
                         </section>
 
@@ -51,10 +51,10 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                         <section>
                             <h2 className="text-2xl font-bold text-blue-600 mb-3">Entering Scores</h2>
                             <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                <li className="text-lg">Click on a court to enter the final score</li>
-                                <li className="text-lg">Games are played to 11 points (win by 2)</li>
-                                <li className="text-lg">Once all scores are entered, complete the round</li>
-                                <li className="text-lg">Stats will update automatically (wins, losses, point differential)</li>
+                                <li className="text-lg">Enter the final score for each court</li>
+                                <li className="text-lg">Games are typically played to 11 points (win by 2)</li>
+                                <li className="text-lg">Once submitted, stats update automatically</li>
+                                <li className="text-lg">Use "Edit Previous Scores" if you need to correct the last round</li>
                             </ul>
                         </section>
 
@@ -62,22 +62,10 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                         <section>
                             <h2 className="text-2xl font-bold text-blue-600 mb-3">Managing Players</h2>
                             <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                <li className="text-lg"><strong>Sit Button:</strong> Force a player to sit out the next round</li>
-                                <li className="text-lg"><strong>Remove (×):</strong> Permanently remove a player from the session</li>
-                                <li className="text-lg">Add new players at any time between rounds</li>
-                                <li className="text-lg">Players marked to sit will show in orange</li>
-                            </ul>
-                        </section>
-
-                        {/* Other Features */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-blue-600 mb-3">Other Features</h2>
-                            <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                <li className="text-lg"><strong>View History:</strong> See all completed rounds and scores</li>
-                                <li className="text-lg"><strong>Edit Previous Scores:</strong> Correct scores from the last round</li>
-                                <li className="text-lg"><strong>Change Courts:</strong> Adjust number of courts between rounds</li>
-                                <li className="text-lg"><strong>Reset:</strong> Start a completely new session (top-left button)</li>
-                                <li className="text-lg"><strong>Player Stats:</strong> View on the right side - shows wins, losses, sat rounds, and point differential</li>
+                                <li className="text-lg"><strong>Add Players:</strong> Add new players between rounds at any time</li>
+                                <li className="text-lg"><strong>Sit Out:</strong> Mark a player to sit out the next round (shows in orange)</li>
+                                <li className="text-lg"><strong>Remove:</strong> Permanently remove a player from the session (cannot remove during active round)</li>
+                                <li className="text-lg"><strong>Change Courts:</strong> Adjust the number of courts between rounds</li>
                             </ul>
                         </section>
 
@@ -85,10 +73,22 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                         <section>
                             <h2 className="text-2xl font-bold text-blue-600 mb-3">Spectator Display</h2>
                             <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                <li className="text-lg">Navigate to <code className="bg-gray-100 px-2 py-1 rounded">/spectator</code> for a big screen display</li>
-                                <li className="text-lg">Shows current court assignments and player stats</li>
-                                <li className="text-lg">Automatically updates every 2 seconds</li>
-                                <li className="text-lg">Perfect for displaying on a TV or large monitor</li>
+                                <li className="text-lg">Navigate to <code className="bg-gray-100 px-2 py-1 rounded">/spectator</code> for a TV/large monitor display</li>
+                                <li className="text-lg">Shows a QR code and URL that others can scan to join and manage the session</li>
+                                <li className="text-lg">Displays current court assignments and live player stats</li>
+                                <li className="text-lg">Automatically updates every 2 seconds - perfect for passive viewing</li>
+                                <li className="text-lg">Stats auto-scroll on desktop displays</li>
+                            </ul>
+                        </section>
+
+                        {/* Mobile Features */}
+                        <section>
+                            <h2 className="text-2xl font-bold text-blue-600 mb-3">Mobile Features</h2>
+                            <ul className="list-disc list-inside space-y-2 text-gray-700">
+                                <li className="text-lg">Fully optimized for phones and tablets</li>
+                                <li className="text-lg">Help and Reset buttons are at the bottom of the screen</li>
+                                <li className="text-lg">Player stats flow naturally below the main content (no auto-scrolling)</li>
+                                <li className="text-lg">Compact layout minimizes scrolling</li>
                             </ul>
                         </section>
 
@@ -96,10 +96,11 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                         <section>
                             <h2 className="text-2xl font-bold text-green-600 mb-3">💡 Tips</h2>
                             <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                <li className="text-lg">The rotation algorithm optimizes for fair partnerships and matchups</li>
-                                <li className="text-lg">Players who've sat out more will be prioritized for courts</li>
-                                <li className="text-lg">Stats auto-scroll on the right side - hover to pause</li>
-                                <li className="text-lg">Use debug mode (VITE_DEBUG_MODE=true) to quickly fill test players</li>
+                                <li className="text-lg">The rotation algorithm prioritizes variety and fairness</li>
+                                <li className="text-lg">Player stats show: wins, losses, point differential, and rounds sat out</li>
+                                <li className="text-lg">On desktop, stats auto-scroll - hover to pause</li>
+                                <li className="text-lg">Use "View History" to see all past rounds and scores</li>
+                                <li className="text-lg">Session state is automatically saved - refresh the page to restore your session</li>
                             </ul>
                         </section>
                     </div>
@@ -126,10 +127,11 @@ export function HelpButton() {
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-[22rem] xl:right-[26rem] w-16 h-16 bg-blue-500 text-white rounded-full shadow-2xl hover:bg-blue-600 transition-all hover:scale-110 flex items-center justify-center z-40"
+                className="w-full px-4 py-2 bg-blue-500 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
                 title="Help"
             >
-                <span className="text-3xl font-bold">?</span>
+                <span className="text-xl">?</span>
+                <span>Help</span>
             </button>
             <HelpModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
         </>

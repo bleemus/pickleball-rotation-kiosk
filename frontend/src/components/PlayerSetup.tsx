@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Player } from "../types/game";
+import { HelpButton } from "./HelpModal";
 import { APP_NAME } from "../config";
 
 const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "true";
@@ -111,22 +112,56 @@ export function PlayerSetup({
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex">
-            {/* Reset Button - Upper Left */}
+            {/* Reset Button - Upper Left on Desktop, Bottom on Mobile */}
             <button
                 onClick={onResetSession}
                 disabled={loading}
-                className="fixed top-4 left-4 z-10 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors shadow-lg disabled:opacity-50"
+                className="hidden lg:block fixed top-4 left-4 z-10 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors shadow-lg disabled:opacity-50"
                 title="Reset session"
             >
                 Reset
             </button>
 
             {/* Main Content */}
-            <div className="flex-1 flex items-center justify-center p-4 lg:p-8 pr-80 xl:pr-96">
+            <div className="flex-1 flex items-center justify-center p-4 lg:p-8 lg:pr-80 xl:pr-96">
                 <div className="bg-white rounded-3xl shadow-2xl p-6 lg:p-12 max-w-5xl w-full">
                     <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-center mb-6 lg:mb-8 text-gray-800">
                         {APP_NAME}
                     </h1>
+
+                    {/* Court Selection - Mobile Only (Top) */}
+                    <div className="lg:hidden mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl p-4 border-2 border-blue-300">
+                        <h3 className="text-lg font-bold mb-3 text-gray-800 text-center">
+                            Number of Courts
+                        </h3>
+                        <div className="flex items-center justify-center gap-4">
+                            <button
+                                onClick={() => setNumCourts(Math.max(1, numCourts - 1))}
+                                disabled={loading}
+                                className="w-12 h-12 bg-gray-300 text-gray-800 text-2xl font-bold rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
+                            >
+                                −
+                            </button>
+                            <div className="text-center">
+                                <div className="text-5xl font-bold text-gray-800">
+                                    {numCourts}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                    {numCourts === 1 ? "Court" : "Courts"}
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setNumCourts(numCourts + 1)}
+                                disabled={loading}
+                                className="w-12 h-12 bg-gray-300 text-gray-800 text-2xl font-bold rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
+                            >
+                                +
+                            </button>
+                        </div>
+                        <p className="text-center text-gray-600 mt-2 text-xs">
+                            Need at least {numCourts * 4} players
+                        </p>
+                    </div>
 
                     <div className="mb-6 lg:mb-8">
                         <h2 className="text-2xl lg:text-3xl font-semibold mb-3 lg:mb-4 text-gray-700">
@@ -140,7 +175,7 @@ export function PlayerSetup({
 
                         <form
                             onSubmit={handleAddPlayer}
-                            className="flex gap-3 lg:gap-4 mb-4 lg:mb-6"
+                            className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-4 lg:mb-6"
                         >
                             <input
                                 type="text"
@@ -151,24 +186,26 @@ export function PlayerSetup({
                                 className="flex-1 px-4 lg:px-6 py-3 lg:py-4 text-lg lg:text-xl xl:text-2xl border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
                                 disabled={loading}
                             />
-                            <button
-                                type="submit"
-                                className="px-6 lg:px-8 py-3 lg:py-4 bg-blue-500 text-white text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
-                                disabled={loading}
-                            >
-                                Add
-                            </button>
-                            {DEBUG_MODE && (
+                            <div className="flex gap-2 sm:gap-3 lg:gap-4">
                                 <button
-                                    type="button"
-                                    onClick={handleAutoFill}
-                                    className="px-6 lg:px-8 py-3 lg:py-4 bg-purple-500 text-white text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-purple-600 transition-colors disabled:opacity-50"
+                                    type="submit"
+                                    className="flex-1 sm:flex-none px-4 sm:px-6 lg:px-8 py-3 lg:py-4 bg-blue-500 text-white text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
                                     disabled={loading}
-                                    title="Auto-fill players (Debug Mode)"
                                 >
-                                    🔧 Fill
+                                    Add
                                 </button>
-                            )}
+                                {DEBUG_MODE && (
+                                    <button
+                                        type="button"
+                                        onClick={handleAutoFill}
+                                        className="flex-1 sm:flex-none px-4 sm:px-6 lg:px-8 py-3 lg:py-4 bg-purple-500 text-white text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-purple-600 transition-colors disabled:opacity-50"
+                                        disabled={loading}
+                                        title="Auto-fill players (Debug Mode)"
+                                    >
+                                        🔧 Fill
+                                    </button>
+                                )}
+                            </div>
                         </form>
 
                         {error && (
@@ -230,44 +267,67 @@ export function PlayerSetup({
                             start
                         </p>
                     )}
+
+                    {/* Bottom Buttons - Mobile: Reset + Help side-by-side, Desktop: Help only */}
+                    <div className="mt-6 lg:mt-8">
+                        {/* Mobile: Both buttons */}
+                        <div className="flex lg:hidden gap-2">
+                            <button
+                                onClick={onResetSession}
+                                disabled={loading}
+                                className="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                            >
+                                Reset
+                            </button>
+                            <div className="flex-1">
+                                <HelpButton />
+                            </div>
+                        </div>
+                        {/* Desktop: Help only (Reset is top-left) */}
+                        <div className="hidden lg:block">
+                            <HelpButton />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Right Sidebar - Court Selection */}
-            <div className="fixed right-0 top-0 bottom-0 w-80 xl:w-96 bg-white border-l-2 lg:border-l-4 border-gray-300 shadow-2xl flex items-center justify-center p-6">
-                <div className="text-center">
-                    <h3 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-800">
-                        Number of Courts
-                    </h3>
-                    <div className="flex flex-col items-center gap-6">
-                        <button
-                            onClick={() => setNumCourts(numCourts + 1)}
-                            disabled={loading}
-                            className="w-20 h-20 bg-gray-300 text-gray-800 text-4xl font-bold rounded-2xl hover:bg-gray-400 transition-colors disabled:opacity-50"
-                        >
-                            +
-                        </button>
-                        <div className="text-center">
-                            <div className="text-8xl lg:text-9xl font-bold text-gray-800">
-                                {numCourts}
+            {/* Right Sidebar - Court Selection (Desktop Only) */}
+            <div className="hidden lg:flex fixed right-0 top-0 bottom-0 w-80 xl:w-96 bg-white border-l-2 lg:border-l-4 border-gray-300 shadow-2xl flex-col">
+                <div className="flex-1 flex items-center justify-center p-6">
+                    <div className="text-center">
+                        <h3 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-800">
+                            Number of Courts
+                        </h3>
+                        <div className="flex flex-col items-center gap-6">
+                            <button
+                                onClick={() => setNumCourts(numCourts + 1)}
+                                disabled={loading}
+                                className="w-20 h-20 bg-gray-300 text-gray-800 text-4xl font-bold rounded-2xl hover:bg-gray-400 transition-colors disabled:opacity-50"
+                            >
+                                +
+                            </button>
+                            <div className="text-center">
+                                <div className="text-8xl lg:text-9xl font-bold text-gray-800">
+                                    {numCourts}
+                                </div>
+                                <div className="text-xl lg:text-2xl text-gray-600 mt-2">
+                                    {numCourts === 1 ? "Court" : "Courts"}
+                                </div>
                             </div>
-                            <div className="text-xl lg:text-2xl text-gray-600 mt-2">
-                                {numCourts === 1 ? "Court" : "Courts"}
-                            </div>
+                            <button
+                                onClick={() =>
+                                    setNumCourts(Math.max(1, numCourts - 1))
+                                }
+                                disabled={loading}
+                                className="w-20 h-20 bg-gray-300 text-gray-800 text-4xl font-bold rounded-2xl hover:bg-gray-400 transition-colors disabled:opacity-50"
+                            >
+                                −
+                            </button>
                         </div>
-                        <button
-                            onClick={() =>
-                                setNumCourts(Math.max(1, numCourts - 1))
-                            }
-                            disabled={loading}
-                            className="w-20 h-20 bg-gray-300 text-gray-800 text-4xl font-bold rounded-2xl hover:bg-gray-400 transition-colors disabled:opacity-50"
-                        >
-                            −
-                        </button>
+                        <p className="text-center text-gray-600 mt-6 text-base lg:text-lg">
+                            Need at least {numCourts * 4} players
+                        </p>
                     </div>
-                    <p className="text-center text-gray-600 mt-6 text-base lg:text-lg">
-                        Need at least {numCourts * 4} players
-                    </p>
                 </div>
             </div>
         </div>

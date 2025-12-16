@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { networkInterfaces } from "os";
 import {
   createSession,
   getSessionById,
@@ -21,6 +22,74 @@ import {
 } from "../types/game";
 
 const router = Router();
+
+// Helper function to get the server's local network IP
+function getLocalNetworkIP(): string | null {
+  const nets = networkInterfaces();
+  const candidates: string[] = [];
+
+  // Skip virtual/docker interfaces
+  const skipInterfaces = ['docker', 'veth', 'virbr', 'vmnet', 'vboxnet', 'br-'];
+
+  for (const name of Object.keys(nets)) {
+    // Skip virtual interfaces
+    if (skipInterfaces.some(skip => name.toLowerCase().startsWith(skip))) {
+      continue;
+    }
+
+    const netList = nets[name];
+    if (!netList) continue;
+
+    for (const net of netList) {
+      // Skip internal (loopback), non-IPv4, and link-local addresses
+      if (net.family === "IPv4" && !net.internal && !net.address.startsWith("169.254.")) {
+        candidates.push(net.address);
+      }
+    }
+  }
+
+  // Prioritize common private network ranges
+  // 1. 192.168.x.x (most common home/office networks)
+  // 2. 10.x.x.x (common corporate networks)
+  // 3. 172.16-31.x.x (less common private range)
+  const preferred = candidates.find(ip => ip.startsWith("192.168.")) ||
+                    candidates.find(ip => ip.startsWith("10.")) ||
+                    candidates.find(ip => {
+                      const second = parseInt(ip.split(".")[1]);
+                      return ip.startsWith("172.") && second >= 16 && second <= 31;
+                    }) ||
+                    candidates[0]; // Fallback to first candidate
+
+  return preferred || null;
+}
+
+// Get server network info
+router.get("/network-info", (req: Request, res: Response) => {
+  const nets = networkInterfaces();
+  const allIPs: { interface: string; ip: string }[] = [];
+
+  // Collect all non-internal IPv4 addresses for debugging
+  for (const name of Object.keys(nets)) {
+    const netList = nets[name];
+    if (!netList) continue;
+
+    for (const net of netList) {
+      if (net.family === "IPv4" && !net.internal) {
+        allIPs.push({ interface: name, ip: net.address });
+      }
+    }
+  }
+
+  const networkIP = getLocalNetworkIP();
+  const hostname = require("os").hostname();
+
+  res.json({
+    hostname,
+    ip: networkIP,
+    port: process.env.PORT || 3001,
+    allIPs, // For debugging
+  });
+});
 
 // Get active session
 router.get("/session/active", async (req: Request, res: Response) => {
