@@ -27,16 +27,45 @@ echo ""
 
 # 1. Check autostart configuration
 echo -e "${BLUE}[1] Checking autostart configuration...${NC}"
-AUTOSTART_FILE="$ACTUAL_HOME/.config/lxsession/LXDE-pi/autostart"
-if [ -f "$AUTOSTART_FILE" ]; then
-    echo -e "${GREEN}✓ Autostart file exists${NC}"
+
+# Check Labwc (Wayland - newer Pi OS)
+LABWC_FILE="$ACTUAL_HOME/.config/labwc/autostart"
+if [ -f "$LABWC_FILE" ]; then
+    echo -e "${GREEN}✓ Labwc autostart file exists${NC}"
+    echo "Location: $LABWC_FILE"
     echo "Contents:"
-    cat "$AUTOSTART_FILE"
+    cat "$LABWC_FILE"
     echo ""
 else
-    echo -e "${RED}✗ Autostart file NOT found at: $AUTOSTART_FILE${NC}"
+    echo -e "${YELLOW}⚠ Labwc autostart NOT found at: $LABWC_FILE${NC}"
     echo ""
 fi
+
+# Check LXDE (X11 - older Pi OS)
+LXDE_FILE="$ACTUAL_HOME/.config/lxsession/LXDE-pi/autostart"
+if [ -f "$LXDE_FILE" ]; then
+    echo -e "${GREEN}✓ LXDE autostart file exists${NC}"
+    echo "Location: $LXDE_FILE"
+    echo "Contents:"
+    cat "$LXDE_FILE"
+    echo ""
+else
+    echo -e "${YELLOW}⚠ LXDE autostart NOT found at: $LXDE_FILE${NC}"
+    echo ""
+fi
+
+# Show which desktop session is active
+echo "Current desktop session:"
+if [ -n "$XDG_CURRENT_DESKTOP" ]; then
+    echo "  XDG_CURRENT_DESKTOP=$XDG_CURRENT_DESKTOP"
+fi
+if [ -n "$DESKTOP_SESSION" ]; then
+    echo "  DESKTOP_SESSION=$DESKTOP_SESSION"
+fi
+if [ -n "$XDG_SESSION_TYPE" ]; then
+    echo "  XDG_SESSION_TYPE=$XDG_SESSION_TYPE"
+fi
+echo ""
 
 # 2. Check Docker services
 echo -e "${BLUE}[2] Checking Docker services...${NC}"

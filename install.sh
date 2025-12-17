@@ -159,14 +159,44 @@ echo ""
 # Configure kiosk mode
 echo "Configuring kiosk mode..."
 
-AUTOSTART_DIR="$ACTUAL_HOME/.config/lxsession/LXDE-pi"
-mkdir -p "$AUTOSTART_DIR"
+# Detect desktop environment (Labwc for newer Pi OS, LXDE for older)
+# Configure both to be safe, as the active one depends on lightdm config
 
-if [ -f "$AUTOSTART_DIR/autostart" ]; then
-    cp "$AUTOSTART_DIR/autostart" "$AUTOSTART_DIR/autostart.backup"
+# Configure for Labwc (Wayland - newer Raspberry Pi OS)
+echo "Setting up Labwc (Wayland) autostart..."
+LABWC_DIR="$ACTUAL_HOME/.config/labwc"
+mkdir -p "$LABWC_DIR"
+
+if [ -f "$LABWC_DIR/autostart" ]; then
+    cp "$LABWC_DIR/autostart" "$LABWC_DIR/autostart.backup"
 fi
 
-cat > "$AUTOSTART_DIR/autostart" <<EOF
+cat > "$LABWC_DIR/autostart" <<'LABWC_EOF'
+#!/bin/bash
+
+# Wait for Docker containers to be ready
+sleep 20
+
+# Launch Firefox in kiosk mode
+firefox-esr --kiosk http://MDNS_PLACEHOLDER/spectator &
+LABWC_EOF
+
+# Replace placeholder with actual hostname
+sed -i "s|MDNS_PLACEHOLDER|$MDNS_NAME|g" "$LABWC_DIR/autostart"
+chmod +x "$LABWC_DIR/autostart"
+
+echo -e "${GREEN}✓ Labwc autostart configured${NC}"
+
+# Configure for LXDE (X11 - older Raspberry Pi OS)
+echo "Setting up LXDE (X11) autostart..."
+LXDE_DIR="$ACTUAL_HOME/.config/lxsession/LXDE-pi"
+mkdir -p "$LXDE_DIR"
+
+if [ -f "$LXDE_DIR/autostart" ]; then
+    cp "$LXDE_DIR/autostart" "$LXDE_DIR/autostart.backup"
+fi
+
+cat > "$LXDE_DIR/autostart" <<EOF
 @lxpanel --profile LXDE-pi
 @pcmanfm --desktop --profile LXDE-pi
 @xscreensaver -no-splash
@@ -180,13 +210,13 @@ cat > "$AUTOSTART_DIR/autostart" <<EOF
 @unclutter -idle 0.5 -root
 
 # Wait for application to start
-@bash -c "sleep 15"
+@bash -c "sleep 20"
 
 # Launch spectator view in kiosk mode
 @firefox-esr --kiosk http://$MDNS_NAME/spectator
 EOF
 
-echo -e "${GREEN}✓ Kiosk mode configured${NC}"
+echo -e "${GREEN}✓ LXDE autostart configured${NC}"
 echo ""
 
 # Disable screen blanking in lightdm
@@ -210,7 +240,7 @@ echo "Summary:"
 echo "  ✓ Required packages installed (unclutter, firefox-esr)"
 echo "  ✓ Docker and Docker Compose installed"
 echo "  ✓ Application built and running"
-echo "  ✓ Kiosk mode configured"
+echo "  ✓ Kiosk mode configured (Labwc + LXDE)"
 echo "  ✓ Auto-start enabled"
 echo ""
 echo "Access URLs:"

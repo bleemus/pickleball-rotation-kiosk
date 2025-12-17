@@ -58,15 +58,37 @@ echo ""
 
 # 3. Fix autostart configuration
 echo -e "${BLUE}[3/6] Fixing autostart configuration...${NC}"
-AUTOSTART_DIR="$ACTUAL_HOME/.config/lxsession/LXDE-pi"
-mkdir -p "$AUTOSTART_DIR"
 
-# Backup existing file
-if [ -f "$AUTOSTART_DIR/autostart" ]; then
-    cp "$AUTOSTART_DIR/autostart" "$AUTOSTART_DIR/autostart.backup.$(date +%s)"
+# Configure for Labwc (Wayland - newer Raspberry Pi OS)
+LABWC_DIR="$ACTUAL_HOME/.config/labwc"
+mkdir -p "$LABWC_DIR"
+
+if [ -f "$LABWC_DIR/autostart" ]; then
+    cp "$LABWC_DIR/autostart" "$LABWC_DIR/autostart.backup.$(date +%s)"
 fi
 
-cat > "$AUTOSTART_DIR/autostart" <<EOF
+cat > "$LABWC_DIR/autostart" <<'LABWC_EOF'
+#!/bin/bash
+
+# Wait for Docker containers to be ready
+sleep 30
+
+# Launch Firefox in kiosk mode
+firefox-esr --kiosk http://MDNS_PLACEHOLDER/spectator &
+LABWC_EOF
+
+sed -i "s|MDNS_PLACEHOLDER|$MDNS_NAME|g" "$LABWC_DIR/autostart"
+chmod +x "$LABWC_DIR/autostart"
+
+# Configure for LXDE (X11 - older Raspberry Pi OS)
+LXDE_DIR="$ACTUAL_HOME/.config/lxsession/LXDE-pi"
+mkdir -p "$LXDE_DIR"
+
+if [ -f "$LXDE_DIR/autostart" ]; then
+    cp "$LXDE_DIR/autostart" "$LXDE_DIR/autostart.backup.$(date +%s)"
+fi
+
+cat > "$LXDE_DIR/autostart" <<EOF
 @lxpanel --profile LXDE-pi
 @pcmanfm --desktop --profile LXDE-pi
 @xscreensaver -no-splash
@@ -86,7 +108,7 @@ cat > "$AUTOSTART_DIR/autostart" <<EOF
 @firefox-esr --kiosk http://$MDNS_NAME/spectator
 EOF
 
-echo -e "${GREEN}✓ Autostart configured${NC}"
+echo -e "${GREEN}✓ Autostart configured (Labwc + LXDE)${NC}"
 echo "  Wait time: 30 seconds"
 echo "  URL: http://$MDNS_NAME/spectator"
 echo ""
