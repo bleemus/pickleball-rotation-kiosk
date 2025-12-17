@@ -4,6 +4,15 @@
 
 set -e
 
+# Get the actual user's home directory (handles sudo correctly)
+if [ -n "$SUDO_USER" ]; then
+    ACTUAL_USER="$SUDO_USER"
+    ACTUAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+    ACTUAL_USER="$USER"
+    ACTUAL_HOME="$HOME"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -81,16 +90,29 @@ echo ""
 
 # Step 4: Restore autostart configuration
 echo "[STEP 4/7] Restoring autostart configuration..."
-AUTOSTART_DIR="$HOME/.config/lxsession/LXDE-pi"
-if [ -f "$AUTOSTART_DIR/autostart.backup" ]; then
-    mv "$AUTOSTART_DIR/autostart.backup" "$AUTOSTART_DIR/autostart"
-    echo -e "${GREEN}✓ Autostart configuration restored from backup${NC}"
-elif [ -f "$AUTOSTART_DIR/autostart" ]; then
-    # If no backup exists, remove the file we created
-    rm "$AUTOSTART_DIR/autostart"
-    echo -e "${GREEN}✓ Autostart configuration removed${NC}"
+
+# Restore Labwc autostart (Wayland)
+LABWC_DIR="$ACTUAL_HOME/.config/labwc"
+if [ -f "$LABWC_DIR/autostart.backup" ]; then
+    mv "$LABWC_DIR/autostart.backup" "$LABWC_DIR/autostart"
+    echo -e "${GREEN}✓ Labwc autostart restored from backup${NC}"
+elif [ -f "$LABWC_DIR/autostart" ]; then
+    rm "$LABWC_DIR/autostart"
+    echo -e "${GREEN}✓ Labwc autostart removed${NC}"
 else
-    echo -e "${YELLOW}⊘ No autostart configuration to restore${NC}"
+    echo -e "${YELLOW}⊘ No Labwc autostart to restore${NC}"
+fi
+
+# Restore LXDE autostart (X11)
+LXDE_DIR="$ACTUAL_HOME/.config/lxsession/LXDE-pi"
+if [ -f "$LXDE_DIR/autostart.backup" ]; then
+    mv "$LXDE_DIR/autostart.backup" "$LXDE_DIR/autostart"
+    echo -e "${GREEN}✓ LXDE autostart restored from backup${NC}"
+elif [ -f "$LXDE_DIR/autostart" ]; then
+    rm "$LXDE_DIR/autostart"
+    echo -e "${GREEN}✓ LXDE autostart removed${NC}"
+else
+    echo -e "${YELLOW}⊘ No LXDE autostart to restore${NC}"
 fi
 echo ""
 
@@ -130,7 +152,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     sudo rm -rf /var/lib/containerd
 
     # Remove user from docker group
-    sudo deluser $USER docker 2>/dev/null || true
+    sudo deluser $ACTUAL_USER docker 2>/dev/null || true
 
     echo -e "${GREEN}✓ Docker removed${NC}"
 else
@@ -138,16 +160,16 @@ else
 fi
 echo ""
 
-# Step 7: Remove unclutter (optional)
-echo "[STEP 7/7] Unclutter removal..."
-read -p "Remove unclutter package? (y/n): " -n 1 -r
+# Step 7: Remove packages (optional)
+echo "[STEP 7/7] Package removal..."
+read -p "Remove installed packages (unclutter, firefox-esr)? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    sudo apt-get remove -y unclutter 2>/dev/null || true
+    sudo apt-get remove -y unclutter firefox-esr 2>/dev/null || true
     sudo apt-get autoremove -y 2>/dev/null || true
-    echo -e "${GREEN}✓ Unclutter removed${NC}"
+    echo -e "${GREEN}✓ Packages removed${NC}"
 else
-    echo -e "${YELLOW}⊘ Skipped unclutter removal${NC}"
+    echo -e "${YELLOW}⊘ Skipped package removal${NC}"
 fi
 echo ""
 
