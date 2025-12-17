@@ -232,12 +232,12 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         let displayUrl = window.location.origin;
         let urlSource = 'current';
 
-        if (isLocalhost && networkInfo) {
-            // If accessing via localhost, show the network IP or hostname instead
-            const networkAddress = networkInfo.ip || networkInfo.hostname;
+        // Always prefer showing the network IP address if available
+        // This ensures .local hostnames don't get displayed (better for cross-device connectivity)
+        if (networkInfo && networkInfo.ip) {
             const protocol = window.location.protocol;
             const port = window.location.port ? `:${window.location.port}` : '';
-            displayUrl = `${protocol}//${networkAddress}${port}`;
+            displayUrl = `${protocol}//${networkInfo.ip}${port}`;
             urlSource = 'network';
         }
 
