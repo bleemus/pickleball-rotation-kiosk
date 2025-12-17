@@ -4,6 +4,15 @@
 
 set -e
 
+# Get the actual user's home directory (handles sudo correctly)
+if [ -n "$SUDO_USER" ]; then
+    ACTUAL_USER="$SUDO_USER"
+    ACTUAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+    ACTUAL_USER="$USER"
+    ACTUAL_HOME="$HOME"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -18,7 +27,7 @@ echo ""
 
 # 1. Check autostart configuration
 echo -e "${BLUE}[1] Checking autostart configuration...${NC}"
-AUTOSTART_FILE="$HOME/.config/lxsession/LXDE-pi/autostart"
+AUTOSTART_FILE="$ACTUAL_HOME/.config/lxsession/LXDE-pi/autostart"
 if [ -f "$AUTOSTART_FILE" ]; then
     echo -e "${GREEN}✓ Autostart file exists${NC}"
     echo "Contents:"
@@ -42,8 +51,11 @@ if command -v docker &> /dev/null; then
 
     echo ""
     echo "Docker Compose status:"
-    cd "$HOME/pickleball-rotation-kiosk"
-    docker-compose ps
+    if cd "$ACTUAL_HOME/pickleball-rotation-kiosk" 2>/dev/null; then
+        docker-compose ps
+    else
+        echo -e "${RED}✗ Could not find project directory at $ACTUAL_HOME/pickleball-rotation-kiosk${NC}"
+    fi
     echo ""
 else
     echo -e "${RED}✗ Docker is NOT installed${NC}"
@@ -129,10 +141,10 @@ echo ""
 echo "Common Issues and Solutions:"
 echo ""
 echo "1. If autostart file is missing or incorrect:"
-echo "   cd ~/pickleball-rotation-kiosk && ./install.sh"
+echo "   cd $ACTUAL_HOME/pickleball-rotation-kiosk && ./install.sh"
 echo ""
 echo "2. If Docker services are not running:"
-echo "   cd ~/pickleball-rotation-kiosk"
+echo "   cd $ACTUAL_HOME/pickleball-rotation-kiosk"
 echo "   docker-compose down"
 echo "   docker-compose up -d"
 echo ""

@@ -4,6 +4,15 @@
 
 set -e
 
+# Get the actual user's home directory (handles sudo correctly)
+if [ -n "$SUDO_USER" ]; then
+    ACTUAL_USER="$SUDO_USER"
+    ACTUAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+    ACTUAL_USER="$USER"
+    ACTUAL_HOME="$HOME"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -49,7 +58,7 @@ echo ""
 
 # 3. Fix autostart configuration
 echo -e "${BLUE}[3/6] Fixing autostart configuration...${NC}"
-AUTOSTART_DIR="$HOME/.config/lxsession/LXDE-pi"
+AUTOSTART_DIR="$ACTUAL_HOME/.config/lxsession/LXDE-pi"
 mkdir -p "$AUTOSTART_DIR"
 
 # Backup existing file
@@ -102,7 +111,7 @@ echo ""
 
 # 5. Restart Docker services
 echo -e "${BLUE}[5/6] Restarting Docker services...${NC}"
-cd "$HOME/pickleball-rotation-kiosk"
+cd "$ACTUAL_HOME/pickleball-rotation-kiosk"
 
 if docker-compose ps | grep -q "Up"; then
     echo "Restarting services..."
