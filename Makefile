@@ -53,7 +53,7 @@ build:
 
 up:
 	@echo "🚀 Starting services..."
-	@docker-compose up -d
+	@export HOST_IP=$$(./get-host-ip.sh) && docker-compose up -d
 	@echo "✅ Services started!"
 	@echo ""
 	@echo "Frontend: http://localhost"
@@ -83,6 +83,6 @@ pi-setup:
 pi-deploy:
 	@echo "🥧 Deploying to Raspberry Pi..."
 	@docker-compose build
-	@docker-compose up -d
+	@export HOST_IP=$$(./get-host-ip.sh) && docker-compose up -d
 	@echo "✅ Deployed on Raspberry Pi!"
 	@echo "Access at: http://localhost"

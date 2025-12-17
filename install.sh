@@ -137,14 +137,15 @@ fi
 sudo tee /etc/systemd/system/pickleball-kiosk.service > /dev/null <<SERVICE
 [Unit]
 Description=Pickleball Kiosk Application
-After=docker.service
+After=docker.service network-online.target
 Requires=docker.service
+Wants=network-online.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$SCRIPT_DIR
-ExecStart=$DOCKER_COMPOSE_PATH up -d
+ExecStart=/bin/bash -c 'export HOST_IP=\$(./get-host-ip.sh) && $DOCKER_COMPOSE_PATH up -d'
 ExecStop=$DOCKER_COMPOSE_PATH down
 User=$ACTUAL_USER
 

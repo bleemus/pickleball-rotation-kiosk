@@ -80,7 +80,9 @@ router.get("/network-info", (req: Request, res: Response) => {
     }
   }
 
-  const networkIP = getLocalNetworkIP();
+  // Use HOST_IP from environment if available (set by docker-compose for host machine IP)
+  // Otherwise fall back to detection logic (for non-Docker environments)
+  const networkIP = process.env.HOST_IP || getLocalNetworkIP();
   const hostname = require("os").hostname();
 
   res.json({

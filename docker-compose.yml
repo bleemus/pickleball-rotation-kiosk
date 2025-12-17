@@ -25,6 +25,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - PORT=${PORT:-3001}
       - NODE_ENV=${NODE_ENV:-production}
+      - HOST_IP=${HOST_IP:-}
     depends_on:
       redis:
         condition: service_healthy
