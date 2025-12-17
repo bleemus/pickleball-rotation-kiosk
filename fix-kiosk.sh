@@ -73,11 +73,10 @@ cat > "$LABWC_DIR/autostart" <<'LABWC_EOF'
 # Wait for Docker containers to be ready
 sleep 30
 
-# Launch Firefox in kiosk mode
-firefox-esr --kiosk http://MDNS_PLACEHOLDER/spectator &
+# Launch Firefox in kiosk mode (use localhost since we're on the Pi itself)
+firefox-esr --kiosk http://localhost/spectator &
 LABWC_EOF
 
-sed -i "s|MDNS_PLACEHOLDER|$MDNS_NAME|g" "$LABWC_DIR/autostart"
 chmod +x "$LABWC_DIR/autostart"
 
 # Configure for LXDE (X11 - older Raspberry Pi OS)
@@ -104,13 +103,13 @@ cat > "$LXDE_DIR/autostart" <<EOF
 # Wait for application to start (increased to 30 seconds for reliability)
 @bash -c "sleep 30"
 
-# Launch spectator view in kiosk mode
-@firefox-esr --kiosk http://$MDNS_NAME/spectator
+# Launch spectator view in kiosk mode (use localhost since we're on the Pi itself)
+@firefox-esr --kiosk http://localhost/spectator
 EOF
 
 echo -e "${GREEN}✓ Autostart configured (Labwc + LXDE)${NC}"
 echo "  Wait time: 30 seconds"
-echo "  URL: http://$MDNS_NAME/spectator"
+echo "  URL: http://localhost/spectator"
 echo ""
 
 # 4. Fix screen blanking in lightdm

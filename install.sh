@@ -178,12 +178,10 @@ cat > "$LABWC_DIR/autostart" <<'LABWC_EOF'
 # Wait for Docker containers to be ready
 sleep 20
 
-# Launch Firefox in kiosk mode
-firefox-esr --kiosk http://MDNS_PLACEHOLDER/spectator &
+# Launch Firefox in kiosk mode (use localhost since we're on the Pi itself)
+firefox-esr --kiosk http://localhost/spectator &
 LABWC_EOF
 
-# Replace placeholder with actual hostname
-sed -i "s|MDNS_PLACEHOLDER|$MDNS_NAME|g" "$LABWC_DIR/autostart"
 chmod +x "$LABWC_DIR/autostart"
 
 echo -e "${GREEN}✓ Labwc autostart configured${NC}"
@@ -213,8 +211,8 @@ cat > "$LXDE_DIR/autostart" <<EOF
 # Wait for application to start
 @bash -c "sleep 20"
 
-# Launch spectator view in kiosk mode
-@firefox-esr --kiosk http://$MDNS_NAME/spectator
+# Launch spectator view in kiosk mode (use localhost since we're on the Pi itself)
+@firefox-esr --kiosk http://localhost/spectator
 EOF
 
 echo -e "${GREEN}✓ LXDE autostart configured${NC}"
