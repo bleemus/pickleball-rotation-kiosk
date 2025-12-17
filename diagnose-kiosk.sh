@@ -90,13 +90,17 @@ else
 fi
 echo ""
 
-# 4. Check Chromium installation
-echo -e "${BLUE}[4] Checking Chromium browser...${NC}"
-if command -v chromium-browser &> /dev/null; then
-    echo -e "${GREEN}✓ Chromium is installed${NC}"
-    chromium-browser --version
+# 4. Check Firefox installation
+echo -e "${BLUE}[4] Checking Firefox browser...${NC}"
+if command -v firefox-esr &> /dev/null || command -v firefox &> /dev/null; then
+    echo -e "${GREEN}✓ Firefox is installed${NC}"
+    if command -v firefox-esr &> /dev/null; then
+        firefox-esr --version
+    else
+        firefox --version
+    fi
 else
-    echo -e "${RED}✗ Chromium is NOT installed${NC}"
+    echo -e "${RED}✗ Firefox is NOT installed${NC}"
 fi
 echo ""
 
@@ -153,8 +157,8 @@ echo "   Edit autostart file and increase sleep time:"
 echo "   nano ~/.config/lxsession/LXDE-pi/autostart"
 echo "   Change: @bash -c \"sleep 15\" to @bash -c \"sleep 30\""
 echo ""
-echo "4. If Chromium is not installed:"
-echo "   sudo apt-get install -y chromium-browser"
+echo "4. If Firefox is not installed:"
+echo "   sudo apt-get install -y firefox-esr"
 echo ""
 echo "5. Always reboot after making changes:"
 echo "   sudo reboot"

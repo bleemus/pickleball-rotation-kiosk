@@ -63,9 +63,9 @@ echo -e "${GREEN}✓ System updated${NC}"
 echo ""
 
 # Install required packages
-echo "[STEP 2/6] Installing unclutter (cursor hiding)..."
-sudo apt-get install -y unclutter
-echo -e "${GREEN}✓ Package installed${NC}"
+echo "[STEP 2/6] Installing required packages..."
+sudo apt-get install -y unclutter firefox-esr
+echo -e "${GREEN}✓ Packages installed (unclutter, firefox-esr)${NC}"
 echo ""
 
 # Install Docker
@@ -174,7 +174,7 @@ cat > "$AUTOSTART_DIR/autostart" <<EOF
 @bash -c "sleep 15"
 
 # Launch spectator view in kiosk mode
-@chromium-browser --noerrdialogs --disable-infobars --kiosk http://$MDNS_NAME/spectator
+@firefox-esr --kiosk http://$MDNS_NAME/spectator
 EOF
 
 echo -e "${GREEN}✓ Kiosk mode configured${NC}"
@@ -198,7 +198,7 @@ echo "         INSTALLATION COMPLETE! ✓"
 echo "============================================"
 echo ""
 echo "Summary:"
-echo "  ✓ Unclutter installed (cursor hiding)"
+echo "  ✓ Required packages installed (unclutter, firefox-esr)"
 echo "  ✓ Docker and Docker Compose installed"
 echo "  ✓ Application built and running"
 echo "  ✓ Kiosk mode configured"

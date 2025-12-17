@@ -213,7 +213,7 @@ docker-compose ps
    ```bash
    cat ~/.config/lxsession/LXDE-pi/autostart
    ```
-   Should include chromium-browser line
+   Should include firefox-esr line
 
 3. **Re-run installer:**
    ```bash
@@ -380,7 +380,7 @@ nano ~/.config/lxsession/LXDE-pi/autostart
 
 **Change spectator URL to admin interface:**
 ```bash
-@chromium-browser --kiosk http://pickleball.local/
+@firefox-esr --kiosk http://pickleball.local/
 ```
 
 **Change wait time before launch:**

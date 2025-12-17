@@ -33,15 +33,15 @@ echo "Hostname: $CURRENT_HOSTNAME"
 echo "mDNS Name: $MDNS_NAME"
 echo ""
 
-# 1. Install Chromium if missing
-echo -e "${BLUE}[1/6] Checking Chromium installation...${NC}"
-if ! command -v chromium-browser &> /dev/null; then
-    echo "Installing Chromium..."
+# 1. Install Firefox if missing
+echo -e "${BLUE}[1/6] Checking Firefox installation...${NC}"
+if ! command -v firefox-esr &> /dev/null && ! command -v firefox &> /dev/null; then
+    echo "Installing Firefox..."
     sudo apt-get update -qq
-    sudo apt-get install -y chromium-browser
-    echo -e "${GREEN}✓ Chromium installed${NC}"
+    sudo apt-get install -y firefox-esr
+    echo -e "${GREEN}✓ Firefox installed${NC}"
 else
-    echo -e "${GREEN}✓ Chromium already installed${NC}"
+    echo -e "${GREEN}✓ Firefox already installed${NC}"
 fi
 echo ""
 
@@ -83,7 +83,7 @@ cat > "$AUTOSTART_DIR/autostart" <<EOF
 @bash -c "sleep 30"
 
 # Launch spectator view in kiosk mode
-@chromium-browser --noerrdialogs --disable-infobars --kiosk http://$MDNS_NAME/spectator
+@firefox-esr --kiosk http://$MDNS_NAME/spectator
 EOF
 
 echo -e "${GREEN}✓ Autostart configured${NC}"
@@ -150,7 +150,7 @@ echo "         FIX COMPLETE! ✓"
 echo "============================================"
 echo ""
 echo "Summary of changes:"
-echo "  ✓ Chromium installed (if needed)"
+echo "  ✓ Firefox installed (if needed)"
 echo "  ✓ unclutter installed (if needed)"
 echo "  ✓ Autostart configured with 30-second delay"
 echo "  ✓ Screen blanking disabled"
@@ -177,5 +177,5 @@ echo ""
 echo "If it still doesn't work after reboot:"
 echo "  1. Run diagnostics: ./diagnose-kiosk.sh"
 echo "  2. Check logs: docker-compose logs -f"
-echo "  3. Manually test: chromium-browser --kiosk http://$MDNS_NAME/spectator"
+echo "  3. Manually test: firefox-esr --kiosk http://$MDNS_NAME/spectator"
 echo ""
