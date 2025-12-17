@@ -4,6 +4,15 @@
 
 set -e
 
+# Get the actual user's home directory (handles sudo correctly)
+if [ -n "$SUDO_USER" ]; then
+    ACTUAL_USER="$SUDO_USER"
+    ACTUAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+    ACTUAL_USER="$USER"
+    ACTUAL_HOME="$HOME"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -77,7 +86,7 @@ else
     echo "This may take 5-10 minutes..."
     curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
     sudo sh /tmp/get-docker.sh
-    sudo usermod -aG docker $USER
+    sudo usermod -aG docker $ACTUAL_USER
     rm /tmp/get-docker.sh
     sudo systemctl enable docker
     sudo systemctl start docker
@@ -137,7 +146,7 @@ RemainAfterExit=yes
 WorkingDirectory=$SCRIPT_DIR
 ExecStart=$DOCKER_COMPOSE_PATH up -d
 ExecStop=$DOCKER_COMPOSE_PATH down
-User=$USER
+User=$ACTUAL_USER
 
 [Install]
 WantedBy=multi-user.target
@@ -150,7 +159,7 @@ echo ""
 # Configure kiosk mode
 echo "Configuring kiosk mode..."
 
-AUTOSTART_DIR="$HOME/.config/lxsession/LXDE-pi"
+AUTOSTART_DIR="$ACTUAL_HOME/.config/lxsession/LXDE-pi"
 mkdir -p "$AUTOSTART_DIR"
 
 if [ -f "$AUTOSTART_DIR/autostart" ]; then
