@@ -156,18 +156,6 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         const entryUrl = window.location.origin + window.location.pathname.replace(/\/spectator$/, '');
         return (
             <div className={`h-screen flex items-center justify-center p-6 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-500 to-blue-600'}`}>
-                {/* Dark Mode Toggle Button */}
-                <button
-                    onClick={() => setDarkMode(!darkMode)}
-                    className={`fixed top-4 left-4 z-50 px-4 py-2 rounded-lg font-semibold transition-colors ${
-                        darkMode
-                            ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                            : 'bg-white text-gray-800 hover:bg-gray-100'
-                    } shadow-lg`}
-                    title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                >
-                    {darkMode ? '☀️ Light' : '🌙 Dark'}
-                </button>
                 <div className={`rounded-3xl shadow-2xl p-8 max-w-lg text-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <div className="text-6xl mb-4">📱</div>
                     <h1 className={`text-3xl font-bold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -292,7 +280,6 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         : [];
 
     // Determine the best URL to show for the QR code
-    const currentHostname = window.location.hostname;
     let displayUrl = window.location.origin;
 
     // Always prefer showing the network IP address if available
