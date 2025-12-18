@@ -74,6 +74,21 @@ export function useApi() {
         return response.json();
     };
 
+    const getActiveSession = async (): Promise<Session | null> => {
+        const response = await fetch(`${API_BASE_URL}/session/active`);
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                // No active session exists, return null
+                return null;
+            }
+            const error = await response.json();
+            throw new Error(error.error || "Failed to get active session");
+        }
+
+        return response.json();
+    };
+
     const deleteSession = async (sessionId: string): Promise<void> => {
         const response = await fetch(`${API_BASE_URL}/session/${sessionId}`, {
             method: "DELETE",
@@ -240,6 +255,7 @@ export function useApi() {
         createSession,
         updateNumCourts,
         getSession,
+        getActiveSession,
         deleteSession,
         addPlayer,
         removePlayer,

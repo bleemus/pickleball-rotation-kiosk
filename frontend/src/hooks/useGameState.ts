@@ -19,7 +19,7 @@ const initialState: State = {
     session: null,
     gameState: GameState.SETUP,
     error: null,
-    loading: false,
+    loading: true, // Start with loading true to prevent flash while checking for session
 };
 
 function reducer(state: State, action: Action): State {

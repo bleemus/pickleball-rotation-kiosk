@@ -38,11 +38,14 @@ export async function saveSession(session: Session): Promise<void> {
   // Set this as the active session
   await client.set("active-session-id", session.id);
   await client.expire("active-session-id", 86400);
+  console.log(`Set active session ID to: ${session.id}`);
 }
 
 export async function getActiveSessionId(): Promise<string | null> {
   const client = getRedisClient();
-  return await client.get("active-session-id");
+  const activeId = await client.get("active-session-id");
+  console.log(`getActiveSessionId returned: ${activeId}`);
+  return activeId;
 }
 
 export async function getSession(sessionId: string): Promise<Session | null> {
@@ -61,6 +64,13 @@ export async function deleteSession(sessionId: string): Promise<void> {
   const client = getRedisClient();
   const key = `session:${sessionId}`;
   await client.del(key);
+  
+  // If this was the active session, clear the active session ID
+  const activeSessionId = await client.get("active-session-id");
+  if (activeSessionId === sessionId) {
+    await client.del("active-session-id");
+    console.log(`Cleared active session ID for deleted session: ${sessionId}`);
+  }
 }
 
 export async function getAllSessionIds(): Promise<string[]> {

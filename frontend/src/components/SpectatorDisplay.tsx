@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import QRCode from "react-qr-code";
 import { Session } from "../types/game";
 import { BenchDisplay } from "./BenchDisplay";
-import { APP_NAME } from "../config";
+import { APP_NAME, SPECTATOR_DARK_MODE } from "../config";
 
 interface SpectatorDisplayProps {
     apiUrl: string;
@@ -15,16 +15,8 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [isHovering, setIsHovering] = useState(false);
     const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
-    const [darkMode, setDarkMode] = useState(() => {
-        const saved = localStorage.getItem('spectatorDarkMode');
-        return saved === 'true';
-    });
+    const darkMode = SPECTATOR_DARK_MODE;
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-    // Save dark mode preference
-    useEffect(() => {
-        localStorage.setItem('spectatorDarkMode', darkMode.toString());
-    }, [darkMode]);
 
     // Track mobile screen size
     useEffect(() => {
@@ -203,18 +195,6 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     if (error && error !== "No active game session") {
         return (
             <div className={`h-screen flex items-center justify-center p-8 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-red-500 to-pink-600'}`}>
-                {/* Dark Mode Toggle Button */}
-                <button
-                    onClick={() => setDarkMode(!darkMode)}
-                    className={`fixed top-4 left-4 z-50 px-4 py-2 rounded-lg font-semibold transition-colors ${
-                        darkMode
-                            ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                            : 'bg-white text-gray-800 hover:bg-gray-100'
-                    } shadow-lg`}
-                    title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                >
-                    {darkMode ? '☀️ Light' : '🌙 Dark'}
-                </button>
                 <div className={`rounded-3xl shadow-2xl p-12 text-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <h1 className={`text-4xl font-bold mb-4 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>Error</h1>
                     <p className={`text-2xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{error}</p>
@@ -246,18 +226,6 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
 
         return (
             <div className={`h-screen flex items-center justify-center p-8 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-500 to-blue-600'}`}>
-                {/* Dark Mode Toggle Button */}
-                <button
-                    onClick={() => setDarkMode(!darkMode)}
-                    className={`fixed top-4 left-4 z-50 px-4 py-2 rounded-lg font-semibold transition-colors ${
-                        darkMode
-                            ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                            : 'bg-white text-gray-800 hover:bg-gray-100'
-                    } shadow-lg`}
-                    title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                >
-                    {darkMode ? '☀️ Light' : '🌙 Dark'}
-                </button>
                 <div className={`rounded-3xl shadow-2xl p-12 max-w-4xl text-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <h1 className={`text-5xl font-bold mb-6 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Welcome to {APP_NAME}</h1>
 
@@ -323,20 +291,36 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         ? session.gameHistory.filter(h => h.roundNumber === lastCompletedRound.roundNumber)
         : [];
 
+    // Determine the best URL to show for the QR code
+    const currentHostname = window.location.hostname;
+    let displayUrl = window.location.origin;
+
+    // Always prefer showing the network IP address if available
+    if (networkInfo && networkInfo.ip) {
+        const protocol = window.location.protocol;
+        const port = window.location.port ? `:${window.location.port}` : '';
+        displayUrl = `${protocol}//${networkInfo.ip}${port}`;
+    }
+
+    // Remove /spectator from the URL if present
+    const baseUrl = displayUrl.replace(/\/spectator$/, '');
+
     return (
         <div className={`h-screen flex ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-green-500 to-blue-600'}`}>
-            {/* Dark Mode Toggle Button */}
-            <button
-                onClick={() => setDarkMode(!darkMode)}
-                className={`fixed top-4 left-4 z-50 px-4 py-2 rounded-lg font-semibold transition-colors ${
-                    darkMode
-                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                        : 'bg-white text-gray-800 hover:bg-gray-100'
-                } shadow-lg`}
-                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-                {darkMode ? '☀️ Light' : '🌙 Dark'}
-            </button>
+            {/* Top Left - QR Code */}
+            <div className="fixed top-4 left-4 z-50">
+                {/* QR Code with Connect label */}
+                <div className={`rounded-lg shadow-lg p-2 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <div className="flex flex-col items-center">
+                        <p className={`text-xs font-semibold mb-1 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Connect</p>
+                        <QRCode
+                            value={baseUrl}
+                            size={80}
+                            level="M"
+                        />
+                    </div>
+                </div>
+            </div>
 
             {/* Main Content - Courts and Bench */}
             <div className="flex-1 p-6 flex flex-col overflow-hidden">
@@ -382,7 +366,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                     className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
                                 >
                                     <div className="text-center mb-4 flex-shrink-0">
-                                        <h2 className={`text-4xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                        <h2 className={`font-bold ${getCourtTitleSize(round.matches.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                             Court {match.courtNumber}
                                         </h2>
                                     </div>
@@ -390,25 +374,25 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                     <div className="space-y-4 flex-1 flex flex-col justify-center">
                                         {/* Team 1 */}
                                         <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-blue-100'}`}>
-                                            <p className={`text-3xl font-bold text-center ${darkMode ? 'text-blue-300' : 'text-gray-800'}`}>
+                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-blue-300' : 'text-gray-800'}`}>
                                                 {match.team1.player1.name}
                                             </p>
-                                            <p className={`text-3xl font-bold text-center ${darkMode ? 'text-blue-300' : 'text-gray-800'}`}>
+                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-blue-300' : 'text-gray-800'}`}>
                                                 {match.team1.player2.name}
                                             </p>
                                         </div>
 
                                         {/* VS Divider */}
                                         <div className="text-center flex-shrink-0">
-                                            <span className={`text-3xl font-bold ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>VS</span>
+                                            <span className={`font-bold ${getVsSize(round.matches.length)} ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>VS</span>
                                         </div>
 
                                         {/* Team 2 */}
                                         <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-red-100'}`}>
-                                            <p className={`text-3xl font-bold text-center ${darkMode ? 'text-red-300' : 'text-gray-800'}`}>
+                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-red-300' : 'text-gray-800'}`}>
                                                 {match.team2.player1.name}
                                             </p>
-                                            <p className={`text-3xl font-bold text-center ${darkMode ? 'text-red-300' : 'text-gray-800'}`}>
+                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-red-300' : 'text-gray-800'}`}>
                                                 {match.team2.player2.name}
                                             </p>
                                         </div>
@@ -436,7 +420,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                     className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
                                 >
                                     <div className="text-center mb-4 flex-shrink-0">
-                                        <h2 className={`text-4xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                        <h2 className={`font-bold ${getCourtTitleSize(previousRoundHistory.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                             Court {game.courtNumber}
                                         </h2>
                                         <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Final Score</p>
@@ -449,15 +433,15 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                                 ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-100 border-4 border-green-500'
                                                 : darkMode ? 'bg-gray-700' : 'bg-gray-100'
                                         }`}>
-                                            <div className="flex-1">
-                                                <p className={`text-2xl font-bold text-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`font-bold text-center break-words ${getPlayerNameSize(previousRoundHistory.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                     {game.team1Players[0]}
                                                 </p>
-                                                <p className={`text-2xl font-bold text-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                                <p className={`font-bold text-center break-words ${getPlayerNameSize(previousRoundHistory.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                     {game.team1Players[1]}
                                                 </p>
                                             </div>
-                                            <div className={`text-5xl font-bold ml-4 ${team1Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                                            <div className={`font-bold ml-4 flex-shrink-0 ${getScoreSize(previousRoundHistory.length)} ${team1Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
                                                 {game.team1Score}
                                             </div>
                                         </div>
@@ -468,15 +452,15 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                                 ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-100 border-4 border-green-500'
                                                 : darkMode ? 'bg-gray-700' : 'bg-gray-100'
                                         }`}>
-                                            <div className="flex-1">
-                                                <p className={`text-2xl font-bold text-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`font-bold text-center break-words ${getPlayerNameSize(previousRoundHistory.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                     {game.team2Players[0]}
                                                 </p>
-                                                <p className={`text-2xl font-bold text-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                                <p className={`font-bold text-center break-words ${getPlayerNameSize(previousRoundHistory.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                     {game.team2Players[1]}
                                                 </p>
                                             </div>
-                                            <div className={`text-5xl font-bold ml-4 ${team2Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                                            <div className={`font-bold ml-4 flex-shrink-0 ${getScoreSize(previousRoundHistory.length)} ${team2Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
                                                 {game.team2Score}
                                             </div>
                                         </div>
@@ -557,8 +541,36 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
 }
 
 function getGridCols(numCourts: number): string {
-    if (numCourts === 1) return "grid-cols-1";
-    if (numCourts === 2) return "grid-cols-1 xl:grid-cols-2";
+    if (numCourts === 1) return "grid-cols-1 justify-items-center";
+    if (numCourts === 2) return "grid-cols-1 xl:grid-cols-2 justify-items-center";
     if (numCourts === 3) return "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3";
     return "grid-cols-1 md:grid-cols-2 xl:grid-cols-4";
+}
+
+function getCourtTitleSize(numCourts: number): string {
+    if (numCourts === 1) return "text-6xl xl:text-7xl 2xl:text-8xl";
+    if (numCourts === 2) return "text-5xl xl:text-6xl";
+    if (numCourts === 3) return "text-4xl xl:text-5xl";
+    return "text-3xl xl:text-4xl";
+}
+
+function getPlayerNameSize(numCourts: number): string {
+    if (numCourts === 1) return "text-4xl xl:text-5xl 2xl:text-6xl";
+    if (numCourts === 2) return "text-3xl xl:text-4xl";
+    if (numCourts === 3) return "text-2xl xl:text-3xl";
+    return "text-xl xl:text-2xl";
+}
+
+function getVsSize(numCourts: number): string {
+    if (numCourts === 1) return "text-5xl xl:text-6xl 2xl:text-7xl";
+    if (numCourts === 2) return "text-4xl xl:text-5xl";
+    if (numCourts === 3) return "text-3xl xl:text-4xl";
+    return "text-2xl xl:text-3xl";
+}
+
+function getScoreSize(numCourts: number): string {
+    if (numCourts === 1) return "text-7xl xl:text-8xl 2xl:text-9xl";
+    if (numCourts === 2) return "text-6xl xl:text-7xl";
+    if (numCourts === 3) return "text-5xl xl:text-6xl";
+    return "text-4xl xl:text-5xl";
 }

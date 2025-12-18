@@ -96,7 +96,7 @@ cd pickleball-rotation-kiosk
 sudo reboot
 ```
 
-After reboot, the spectator display launches automatically on the HDMI display.
+After reboot, the spectator display launches automatically in fullscreen (Firefox ESR) on the HDMI display.
 Access admin interface from any device: **http://raspberrypi.local**
 
 After 2-5 minutes auto-setup completes. Deploy:

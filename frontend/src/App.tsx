@@ -34,10 +34,34 @@ function App() {
     useEffect(() => {
         const loadSession = async () => {
             const savedSessionId = getSavedSessionId();
-            if (savedSessionId) {
-                try {
-                    setLoading(true);
-                    const loadedSession = await api.getSession(savedSessionId);
+
+            try {
+                setLoading(true);
+                let loadedSession = null;
+
+                // First, try to load from saved session ID
+                if (savedSessionId) {
+                    try {
+                        loadedSession = await api.getSession(savedSessionId);
+                    } catch (err) {
+                        console.error("Failed to load saved session:", err);
+                        // Session ID in localStorage is invalid, clear it
+                        reset();
+                    }
+                }
+
+                // If no saved session or it failed to load, check for active session
+                if (!loadedSession) {
+                    try {
+                        loadedSession = await api.getActiveSession();
+                    } catch (err) {
+                        // No active session exists, that's okay
+                        console.log("No active session found");
+                    }
+                }
+
+                // If we found a session (either saved or active), set it
+                if (loadedSession) {
                     setSession(loadedSession);
 
                     // If session has game history or a completed round, it's an active session
@@ -47,17 +71,100 @@ function App() {
                         // Session exists with players but no rounds started yet
                         setGameState(GameState.SETUP);
                     }
-                } catch (err) {
-                    console.error("Failed to load session:", err);
-                    reset();
-                } finally {
-                    setLoading(false);
                 }
+            } catch (err) {
+                console.error("Failed to load session:", err);
+            } finally {
+                setLoading(false);
             }
         };
 
         loadSession();
     }, []);
+
+    // Poll for active sessions when no session is loaded
+    // This allows new browsers to detect sessions started in other browsers
+    useEffect(() => {
+        if (session) {
+            // Already have a session, no need to poll for new sessions
+            console.log("[Poll] Session already loaded, skipping poll for new sessions");
+            return;
+        }
+
+        console.log("[Poll] Starting to poll for active sessions (no session loaded)");
+
+        const pollForActiveSession = async () => {
+            try {
+                console.log("[Poll] Checking for active session...");
+                const activeSession = await api.getActiveSession();
+                if (activeSession) {
+                    console.log("[Poll] Found active session:", activeSession.id);
+                    setSession(activeSession);
+
+                    // Determine game state based on session data
+                    if (activeSession.gameHistory.length > 0 || activeSession.currentRound) {
+                        setGameState(GameState.PLAYING);
+                    } else if (activeSession.players.length >= 4) {
+                        setGameState(GameState.SETUP);
+                    }
+                } else {
+                    console.log("[Poll] No active session found (returned null)");
+                }
+            } catch (err) {
+                // No active session exists, that's okay
+                console.log("[Poll] No active session found (error):", err);
+            }
+        };
+
+        // Poll every 2 seconds
+        const intervalId = setInterval(pollForActiveSession, 2000);
+
+        // Cleanup interval on unmount or when session is loaded
+        return () => {
+            console.log("[Poll] Stopping poll for active sessions");
+            clearInterval(intervalId);
+        };
+    }, [session]);
+
+    // Poll for session updates when a session is loaded
+    // This keeps the session synchronized across multiple browsers
+    useEffect(() => {
+        if (!session) {
+            // No session loaded, nothing to refresh
+            return;
+        }
+
+        const refreshSession = async () => {
+            try {
+                const updatedSession = await api.getSession(session.id);
+                setSession(updatedSession);
+
+                // Update game state based on the refreshed session data
+                if (updatedSession.currentRound && !updatedSession.currentRound.completed) {
+                    // There's an active round in progress
+                    if (gameState !== GameState.SCORING) {
+                        setGameState(GameState.PLAYING);
+                    }
+                } else if (updatedSession.gameHistory.length > 0 || updatedSession.currentRound) {
+                    // Session has history or completed rounds
+                    if (gameState !== GameState.SCORING) {
+                        setGameState(GameState.PLAYING);
+                    }
+                }
+            } catch (err) {
+                console.log("[Poll] Session no longer exists (likely deleted), clearing local state");
+                // Session was deleted in another browser, clear it locally
+                reset();
+                setError(null); // Clear any error messages
+            }
+        };
+
+        // Poll every 2 seconds
+        const intervalId = setInterval(refreshSession, 2000);
+
+        // Cleanup interval on unmount or when session changes
+        return () => clearInterval(intervalId);
+    }, [session?.id]); // Only depend on session ID, not the whole session object
 
     // Handle adding player (during setup or mid-game)
     const handleAddPlayer = async (name: string) => {
@@ -289,6 +396,18 @@ function App() {
             }
         }
     };
+
+    // Show loading screen during initial session check
+    if (loading && !session && !error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto mb-4"></div>
+                    <p className="text-white text-xl font-semibold">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     // Show error if there is one
     if (error) {

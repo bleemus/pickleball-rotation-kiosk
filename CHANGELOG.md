@@ -2,6 +2,24 @@
 
 ## Recent Updates
 
+### December 2024 - Raspberry Pi Improvements
+
+#### Browser & Desktop Environment Updates
+- **Firefox ESR**: Replaced Chromium with Firefox ESR for better package availability on newer Raspberry Pi OS releases
+- **Wayland Support**: Added support for Labwc (Wayland) desktop environment alongside LXDE (X11)
+- **Dual Desktop Configuration**: Installer now configures both Labwc and LXDE autostart for compatibility across Pi OS versions
+
+#### Network & Display Enhancements
+- **Localhost URLs**: Changed kiosk autostart to use `localhost` instead of hostname for more reliable local connections
+- **IP Address Display**: Spectator screen now always displays IP address instead of hostname for clearer network information
+- **Docker Network Fix**: Improved network IP detection for Docker containers
+
+#### Installation & Maintenance
+- **Streamlined Scripts**: Removed `fix-kiosk.sh` script (functionality integrated into main installer)
+- **Rollback Updates**: Updated rollback script to match latest install.sh changes
+- **Sudo Handling**: Fixed autostart creation when install.sh run with sudo
+- **Quick Autostart Script**: Added utility script for quick autostart configuration
+
 ### Latest Features (December 2024)
 
 #### Spectator Display
