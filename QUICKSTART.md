@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-## Docker Compose Deployment (Recommended)
+## Docker Deployment (Recommended)
 
 ### Prerequisites
 - Docker & Docker Compose
@@ -13,7 +13,7 @@ git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
 cd pickleball-rotation-kiosk
 
 # Start all services
-docker compose up -d
+make up
 ```
 
 Access at **http://localhost**
@@ -21,15 +21,13 @@ Access at **http://localhost**
 ### Common Commands
 
 ```bash
-docker compose up -d        # Start services in background
-docker compose down         # Stop services
-docker compose logs -f      # View logs (follow mode)
-docker compose restart      # Restart all services
-docker compose ps           # View running services
-docker compose build        # Rebuild images after code changes
+make up          # Start all services
+make down        # Stop all services  
+make logs        # View logs
+make restart     # Restart all services
+make build       # Build Docker images
+make clean       # Stop and remove all containers/volumes
 ```
-
-## Local Development (Mac/Linux/Windows)
 
 ## Local Development (Mac/Linux/Windows)
 
@@ -139,14 +137,14 @@ After reboot, the spectator display launches automatically in fullscreen!
 cd ~/pickleball-rotation-kiosk
 
 # Stop/start application
-docker-compose down
-docker-compose up -d
+make down
+make up
 
 # View logs
-docker-compose logs -f
+make logs
 
 # Restart
-docker-compose restart
+make restart
 ```
 
 ## First Time Use
@@ -177,23 +175,23 @@ docker-compose restart
 curl http://localhost:3001/health
 # Should return: {"status":"ok",...}
 
-# Check Docker Compose services
-docker compose ps
+# Check services
+docker ps
 ```
 
 ### Redis not connecting
 ```bash
 # Check Redis container status
-docker compose ps redis
+docker ps | grep redis
 
 # View Redis logs
-docker compose logs redis
+docker logs pickleball-rotation-kiosk-redis-1
 ```
 
 ### Frontend shows blank page
 - Check browser console for errors
-- Verify services are running: `docker compose ps`
-- Check logs: `docker compose logs frontend`
+- Verify services are running: `docker ps`
+- Check logs: `docker logs pickleball-rotation-kiosk-frontend-1`
 
 ### Port conflicts
 ```bash
@@ -206,14 +204,7 @@ lsof -i :6379  # Redis
 
 ### Clean restart
 ```bash
-# Stop and remove everything
-docker compose down -v
-
-# Rebuild and start
-docker compose build
-docker compose up -d
-
-# Or use make
+# Clean and rebuild
 make clean
 make build
 make up
@@ -271,15 +262,12 @@ cd frontend && npm run typecheck
 
 ```bash
 # All services
-docker compose logs -f
-
-# Specific service
-docker compose logs -f backend
-docker compose logs -f frontend
-docker compose logs -f redis
-
-# Or use make
 make logs
+
+# Individual containers
+docker logs pickleball-rotation-kiosk-backend-1
+docker logs pickleball-rotation-kiosk-frontend-1
+docker logs pickleball-rotation-kiosk-redis-1
 ```
 
 ### Debugging
@@ -300,7 +288,7 @@ npm run dev
 
 ```bash
 # Connect to Redis CLI
-docker compose exec redis redis-cli
+docker exec -it pickleball-rotation-kiosk-redis-1 redis-cli
 
 # Check keys
 KEYS *
@@ -326,10 +314,6 @@ cd frontend && rm -rf node_modules && npm install
 ```bash
 # Clean Docker cache and rebuild
 docker system prune -a
-docker compose build --no-cache
-docker compose up -d
-
-# Or use make
 make clean
 make build
 make up

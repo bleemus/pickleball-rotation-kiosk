@@ -57,16 +57,16 @@ echo ""
 # Step 2: Stop and remove Docker containers
 echo "[STEP 2/7] Stopping Docker containers..."
 cd "$SCRIPT_DIR"
-if [ -f docker-compose.yml ]; then
+if [ -f Makefile ]; then
     # Try without sudo first
     if groups | grep -q docker; then
-        docker-compose down -v 2>/dev/null || true
+        make clean 2>/dev/null || true
     else
-        sudo docker-compose down -v 2>/dev/null || true
+        sudo make clean 2>/dev/null || true
     fi
     echo -e "${GREEN}✓ Docker containers stopped and removed${NC}"
 else
-    echo -e "${YELLOW}⊘ docker-compose.yml not found${NC}"
+    echo -e "${YELLOW}⊘ Makefile not found${NC}"
 fi
 echo ""
 

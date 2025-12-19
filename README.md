@@ -57,24 +57,25 @@ git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
 cd pickleball-rotation-kiosk
 
 # Start all services (Redis, backend, frontend)
-docker compose up -d
+make up
 
 # View logs
-docker compose logs -f
+make logs
 
 # Stop services
-docker compose down
+make down
 ```
 
 Access at **http://localhost**
 
 **Common Commands:**
 ```bash
-docker compose up -d        # Start all services
-docker compose down         # Stop all services
-docker compose logs -f      # View logs
-docker compose restart      # Restart all services
-docker compose ps           # View running services
+make up          # Start all services
+make down        # Stop all services
+make logs        # View logs
+make restart     # Restart all services
+make build       # Build Docker images
+make clean       # Stop and remove all containers/volumes
 ```
 
 ### Raspberry Pi Deployment
@@ -97,30 +98,10 @@ sudo reboot
 ```
 
 After reboot, the spectator display launches automatically in fullscreen (Firefox ESR) on the HDMI display.
-Access admin interface from any device: **http://raspberrypi.local**
-
-After 2-5 minutes auto-setup completes. Deploy:
-```bash
-ssh pi@pickleball.local "cd pickleball-rotation-kiosk && make build && make up"
-```
-
-**Quick Start - Option 2: Configure after first boot**
-```bash
-# Copy to your Pi
-scp -r pickleball-rotation-kiosk pi@raspberrypi.local:~/
-
-# SSH to Pi and run setup
-ssh pi@raspberrypi.local
-cd pickleball-rotation-kiosk
-./pi-setup.sh
-
-# Deploy application
-make build && make up
-```
 
 **Access**:
-- Admin Interface: `http://pickleball.local/`
-- Spectator View (auto-displays on Pi): `http://pickleball.local/spectator`
+- Admin Interface: `http://raspberrypi.local/` (or your configured hostname)
+- Spectator View: Automatically displays on Pi's HDMI output
 
 ### Local Development (without Docker)
 
@@ -166,32 +147,17 @@ VITE_DEBUG_MODE=false  # Set to true to enable debug features
 VITE_APP_NAME=Pickleball Kiosk  # Customize the app name shown throughout the UI
 ```
 
-## Docker Compose Deployment
+## Management Commands
 
-### Quick Start
-
-```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
-```
-
-## Using Make Commands (Optional)
-
-Makefile provides shortcuts for common Docker Compose operations:
+The Makefile provides convenient commands for all operations:
 
 ```bash
-make up          # docker compose up -d
-make down        # docker compose down
-make logs        # docker compose logs -f
-make restart     # docker compose restart
-make build       # docker compose build
-make clean       # docker compose down -v (removes volumes)
+make up          # Start all services with auto-detected HOST_IP
+make down        # Stop all services
+make logs        # View logs
+make restart     # Restart all services with fresh HOST_IP
+make build       # Build Docker images
+make clean       # Stop and remove all containers/volumes
 ```
 
 ## API Documentation
@@ -399,14 +365,10 @@ The application uses a sophisticated algorithm to generate fair and varied match
 ### Backend won't start
 ```bash
 # Check all services
-docker compose ps
-
-# Check Redis specifically
-docker compose ps redis
+docker ps
 
 # View logs
-docker compose logs backend
-docker compose logs redis
+make logs
 ```
 
 ### Frontend can't connect to backend
@@ -415,20 +377,15 @@ docker compose logs redis
 curl http://localhost:3001/health
 
 # Check all services
-docker compose ps
+docker ps
 
 # View frontend logs
-docker compose logs frontend
+docker logs pickleball-rotation-kiosk-frontend-1
 ```
 
 ### Docker build issues
 ```bash
 # Clean and rebuild
-docker compose down -v
-docker compose build --no-cache
-docker compose up -d
-
-# Or use make
 make clean
 make build
 make up
@@ -437,7 +394,7 @@ make up
 ### Session data lost
 - Redis data persists in Docker volume `redis-data`
 - Session TTL is 24 hours by default
-- To clear all data: `docker compose down -v`
+- To clear all data: `make clean`
 
 ## Development
 
@@ -483,28 +440,29 @@ npm run build
 
 ## Production Deployment
 
-### Docker Compose (Recommended)
+### Docker (Recommended)
 
 Already configured with:
 - Health checks for all services
 - Auto-restart policies
 - Volume persistence for Redis
 - Resource limits
+- Automatic HOST_IP detection for network access
 
 ```bash
 # Start all services
-docker compose up -d
+make up
 
 # View status
-docker compose ps
+docker ps
 
 # View logs
-docker compose logs -f
+make logs
 ```
 
 ### Systemd Service (Auto-start on boot)
 
-See [RASPBERRY_PI_GUIDE.md](RASPBERRY_PI_GUIDE.md#auto-start-on-boot) for systemd setup.
+See [RASPBERRY_PI_GUIDE.md](RASPBERRY_PI_GUIDE.md) for complete Raspberry Pi deployment with systemd setup.
 
 ## Documentation
 

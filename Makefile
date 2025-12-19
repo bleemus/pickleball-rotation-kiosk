@@ -9,17 +9,13 @@ help:
 	@echo "  make dev       - Start development servers (backend + frontend)"
 	@echo "  make test      - Run type checking"
 	@echo ""
-	@echo "Docker Compose:"
-	@echo "  make build     - Build all Docker images"
-	@echo "  make up        - Start all services"
+	@echo "Docker:"
+	@echo "  make build     - Build Docker images"
+	@echo "  make up        - Start services with auto-detected HOST_IP"
 	@echo "  make down      - Stop all services"
 	@echo "  make logs      - View logs (all services)"
-	@echo "  make restart   - Restart all services"
+	@echo "  make restart   - Restart all services with fresh HOST_IP"
 	@echo "  make clean     - Remove all containers and volumes"
-	@echo ""
-	@echo "Raspberry Pi:"
-	@echo "  make pi-setup  - Run Raspberry Pi setup script"
-	@echo "  make pi-deploy - Build and deploy on Raspberry Pi"
 
 # Development commands
 install:
@@ -68,21 +64,10 @@ logs:
 	@docker-compose logs -f
 
 restart:
-	@docker-compose restart
+	@echo "🔄 Restarting services..."
+	@export HOST_IP=$$(./get-host-ip.sh) && docker-compose down && docker-compose up -d
 	@echo "✅ Services restarted"
 
 clean:
 	@docker-compose down -v
 	@echo "✅ All containers and volumes removed"
-
-# Raspberry Pi commands
-pi-setup:
-	@echo "🥧 Running Raspberry Pi setup..."
-	@./raspberry-pi-setup.sh
-
-pi-deploy:
-	@echo "🥧 Deploying to Raspberry Pi..."
-	@docker-compose build
-	@export HOST_IP=$$(./get-host-ip.sh) && docker-compose up -d
-	@echo "✅ Deployed on Raspberry Pi!"
-	@echo "Access at: http://localhost"

@@ -79,9 +79,9 @@ if command -v docker &> /dev/null; then
     fi
 
     echo ""
-    echo "Docker Compose status:"
+    echo "Container status:"
     if cd "$ACTUAL_HOME/pickleball-rotation-kiosk" 2>/dev/null; then
-        docker-compose ps
+        docker ps --filter "name=pickleball" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
     else
         echo -e "${RED}✗ Could not find project directory at $ACTUAL_HOME/pickleball-rotation-kiosk${NC}"
     fi
@@ -178,8 +178,7 @@ echo "   cd $ACTUAL_HOME/pickleball-rotation-kiosk && ./install.sh"
 echo ""
 echo "2. If Docker services are not running:"
 echo "   cd $ACTUAL_HOME/pickleball-rotation-kiosk"
-echo "   docker-compose down"
-echo "   docker-compose up -d"
+echo "   make restart"
 echo ""
 echo "3. If services take too long to start:"
 echo "   Edit autostart file and increase sleep time:"

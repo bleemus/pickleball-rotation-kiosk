@@ -112,14 +112,14 @@ echo "[STEP 5/6] Building and starting application..."
 echo "This may take 5-10 minutes..."
 cd "$SCRIPT_DIR"
 
-# Need to logout and login for docker group to take effect, so use newgrp or sudo
+# Use make commands which handle HOST_IP properly
 if groups | grep -q docker; then
-    docker-compose build
-    docker-compose up -d
+    make build
+    make up
 else
     # User not in docker group yet (needs re-login), use sudo
-    sudo docker-compose build
-    sudo docker-compose up -d
+    sudo make build
+    sudo make up
 fi
 
 echo -e "${GREEN}✓ Application built and started${NC}"
@@ -127,12 +127,6 @@ echo ""
 
 # Create systemd service for auto-start
 echo "[STEP 6/6] Configuring auto-start..."
-
-# Detect docker-compose path
-DOCKER_COMPOSE_PATH=$(command -v docker-compose)
-if [ -z "$DOCKER_COMPOSE_PATH" ]; then
-    DOCKER_COMPOSE_PATH="/usr/local/bin/docker-compose"
-fi
 
 sudo tee /etc/systemd/system/pickleball-kiosk.service > /dev/null <<SERVICE
 [Unit]
@@ -145,8 +139,8 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$SCRIPT_DIR
-ExecStart=/bin/bash -c 'export HOST_IP=\$(./get-host-ip.sh) && $DOCKER_COMPOSE_PATH up -d'
-ExecStop=$DOCKER_COMPOSE_PATH down
+ExecStart=/usr/bin/make up
+ExecStop=/usr/bin/make down
 User=$ACTUAL_USER
 
 [Install]
@@ -257,8 +251,8 @@ echo "To reboot now, run:"
 echo "  sudo reboot"
 echo ""
 echo "Management commands:"
-echo "  Stop:    cd $SCRIPT_DIR && docker-compose down"
-echo "  Start:   cd $SCRIPT_DIR && docker-compose up -d"
-echo "  Restart: cd $SCRIPT_DIR && docker-compose restart"
-echo "  Logs:    cd $SCRIPT_DIR && docker-compose logs -f"
+echo "  Stop:    cd $SCRIPT_DIR && make down"
+echo "  Start:   cd $SCRIPT_DIR && make up"
+echo "  Restart: cd $SCRIPT_DIR && make restart"
+echo "  Logs:    cd $SCRIPT_DIR && make logs"
 echo ""

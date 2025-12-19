@@ -127,24 +127,22 @@ Replace `pickleball` with your chosen hostname.
 cd ~/pickleball-rotation-kiosk
 
 # Stop application
-docker-compose down
+make down
 
 # Start application
-docker-compose up -d
+make up
 
 # Restart application
-docker-compose restart
+make restart
 
-# View logs
-docker-compose logs -f
+# View logs (all services)
+make logs
 
-# View specific service logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f redis
+# Build images
+make build
 
-# Check service status
-docker-compose ps
+# Clean up (removes containers and volumes)
+make clean
 ```
 
 ---
@@ -205,9 +203,9 @@ docker-compose ps
 1. **Check if application is running:**
    ```bash
    cd ~/pickleball-rotation-kiosk
-   docker-compose ps
+   docker ps
    ```
-   All services should show "Up"
+   All containers should be running
 
 2. **Check autostart configuration:**
    ```bash
@@ -266,14 +264,14 @@ docker-compose ps
 3. **Clean and rebuild:**
    ```bash
    cd ~/pickleball-rotation-kiosk
-   docker-compose down -v
-   docker-compose build --no-cache
-   docker-compose up -d
+   make clean
+   make build
+   make up
    ```
 
 4. **View logs for errors:**
    ```bash
-   docker-compose logs
+   make logs
    ```
 
 ### Installation Failed
