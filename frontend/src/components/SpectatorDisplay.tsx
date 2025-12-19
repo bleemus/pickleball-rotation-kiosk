@@ -48,9 +48,14 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                     console.log("All detected IPs:", data.allIPs);
                     console.log("Selected IP:", data.ip);
                     setNetworkInfo(data);
+                } else {
+                    // If network info fetch fails, set empty object so we don't block rendering
+                    setNetworkInfo({ hostname: '', ip: null, port: '', allIPs: [] });
                 }
             } catch (err) {
                 console.error("Failed to fetch network info:", err);
+                // Set empty object so we don't block rendering
+                setNetworkInfo({ hostname: '', ip: null, port: '', allIPs: [] });
             }
         };
         fetchNetworkInfo();
@@ -243,6 +248,18 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     }
 
     if (!session || error === "No active game session") {
+        // Don't render until network info is loaded to avoid showing wrong IP
+        if (!networkInfo) {
+            return (
+                <div className={`h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-500 to-blue-600'}`}>
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto mb-4"></div>
+                        <p className="text-white text-xl font-semibold">Loading...</p>
+                    </div>
+                </div>
+            );
+        }
+
         // Determine the best URL to show
         const currentHostname = window.location.hostname;
         const isLocalhost = currentHostname === 'localhost' || currentHostname === '127.0.0.1';
@@ -425,6 +442,18 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     const previousRoundHistory = lastCompletedRound 
         ? session.gameHistory.filter(h => h.roundNumber === lastCompletedRound.roundNumber)
         : [];
+
+    // Don't render until network info is loaded to avoid showing wrong IP in QR code
+    if (!networkInfo) {
+        return (
+            <div className={`h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-green-500 to-blue-600'}`}>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto mb-4"></div>
+                    <p className="text-white text-xl font-semibold">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     // Determine the best URL to show for the QR code
     let displayUrl = window.location.origin;
