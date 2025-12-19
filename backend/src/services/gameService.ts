@@ -341,7 +341,7 @@ export async function completeCurrentRound(
     session.currentRound.completed = false;
   }
 
-  // Validate that all matches have scores
+  // Validate that scores are being submitted
   for (const scoreInput of request.scores) {
     const match = session.currentRound.matches.find(
       (m) => m.id === scoreInput.matchId,
@@ -349,6 +349,55 @@ export async function completeCurrentRound(
 
     if (!match) {
       throw new Error(`Match ${scoreInput.matchId} not found in current round`);
+    }
+
+    // Only process if this match wasn't already completed or scores changed
+    const scoresChanged = match.team1Score !== scoreInput.team1Score || 
+                          match.team2Score !== scoreInput.team2Score;
+
+    if (match.completed && !scoresChanged) {
+      // Skip already completed matches with same scores
+      continue;
+    }
+
+    // If match was previously completed with different scores, reverse the stats
+    if (match.completed && scoresChanged) {
+      const oldTeam1Won = match.team1Score! > match.team2Score!;
+      const oldPointDiff = match.team1Score! - match.team2Score!;
+
+      const team1PlayerIds = [match.team1.player1.id, match.team1.player2.id];
+      const team2PlayerIds = [match.team2.player1.id, match.team2.player2.id];
+
+      for (const playerId of team1PlayerIds) {
+        const player = session.players.find((p) => p.id === playerId);
+        if (player) {
+          player.gamesPlayed -= 1;
+          if (oldTeam1Won) {
+            player.wins -= 1;
+          } else {
+            player.losses -= 1;
+          }
+          player.pointDifferential -= oldPointDiff;
+        }
+      }
+
+      for (const playerId of team2PlayerIds) {
+        const player = session.players.find((p) => p.id === playerId);
+        if (player) {
+          player.gamesPlayed -= 1;
+          if (!oldTeam1Won) {
+            player.wins -= 1;
+          } else {
+            player.losses -= 1;
+          }
+          player.pointDifferential += oldPointDiff;
+        }
+      }
+
+      // Remove old history entry
+      session.gameHistory = session.gameHistory.filter(
+        (h) => h.matchId !== match.id,
+      );
     }
 
     // Update match with scores
@@ -404,16 +453,22 @@ export async function completeCurrentRound(
     session.gameHistory.push(historyEntry);
   }
 
-  // Update partnership and opponent history
-  const { partnershipHistory, opponentHistory } = updateHistory(
-    session.currentRound.matches,
-    session.partnershipHistory,
-    session.opponentHistory,
-  );
+  // Update partnership and opponent history only for completed matches
+  const completedMatches = session.currentRound.matches.filter(m => m.completed);
+  if (completedMatches.length > 0) {
+    const { partnershipHistory, opponentHistory } = updateHistory(
+      completedMatches,
+      session.partnershipHistory,
+      session.opponentHistory,
+    );
 
-  session.partnershipHistory = partnershipHistory;
-  session.opponentHistory = opponentHistory;
-  session.currentRound.completed = true;
+    session.partnershipHistory = partnershipHistory;
+    session.opponentHistory = opponentHistory;
+  }
+
+  // Only mark round as completed if ALL matches have scores
+  const allMatchesCompleted = session.currentRound.matches.every(m => m.completed);
+  session.currentRound.completed = allMatchesCompleted;
 
   await saveSession(session);
   return session;

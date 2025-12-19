@@ -494,45 +494,95 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                 {hasActiveRound && round ? (
                     <>
                         <div className={`grid ${getGridCols(round.matches.length)} gap-6 mb-6 flex-1 min-h-0 overflow-auto`}>
-                            {round.matches.map((match) => (
-                                <div
-                                    key={match.id}
-                                    className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-amber-50 to-orange-100'}`}
-                                >
-                                    <div className="text-center mb-4 flex-shrink-0">
-                                        <h2 className={`font-bold ${getCourtTitleSize(round.matches.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                                            Court {match.courtNumber}
-                                        </h2>
+                            {round.matches.map((match) => {
+                                const team1Won = match.completed && match.team1Score! > match.team2Score!;
+                                const team2Won = match.completed && match.team2Score! > match.team1Score!;
+                                
+                                return (
+                                    <div
+                                        key={match.id}
+                                        className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-amber-50 to-orange-100'}`}
+                                    >
+                                        <div className="text-center mb-4 flex-shrink-0">
+                                            <h2 className={`font-bold ${getCourtTitleSize(round.matches.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                                Court {match.courtNumber}
+                                            </h2>
+                                            {match.completed && (
+                                                <p className={`text-lg ${darkMode ? 'text-green-400' : 'text-green-600'} font-semibold`}>Score Entered</p>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-4 flex-1 flex flex-col justify-center px-8 lg:px-16 xl:px-24">
+                                            {/* Team 1 */}
+                                            <div className={`rounded-2xl p-6 flex items-center justify-between ${
+                                                team1Won 
+                                                    ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-200 border-4 border-green-600'
+                                                    : darkMode ? 'bg-gray-700' : 'bg-cyan-200'
+                                            }`}>
+                                                <div className="flex-1">
+                                                    <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
+                                                        team1Won 
+                                                            ? darkMode ? 'text-green-300' : 'text-gray-800'
+                                                            : darkMode ? 'text-cyan-300' : 'text-gray-800'
+                                                    }`}>
+                                                        {match.team1.player1.name}
+                                                    </p>
+                                                    <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
+                                                        team1Won 
+                                                            ? darkMode ? 'text-green-300' : 'text-gray-800'
+                                                            : darkMode ? 'text-cyan-300' : 'text-gray-800'
+                                                    }`}>
+                                                        {match.team1.player2.name}
+                                                    </p>
+                                                </div>
+                                                {match.completed && (
+                                                    <div className={`ml-4 flex-shrink-0 w-40 text-center font-bold ${getScoreSize(round.matches.length)} ${
+                                                        team1Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'
+                                                    }`}>
+                                                        {match.team1Score}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* VS Divider */}
+                                            <div className="text-center flex-shrink-0">
+                                                <span className={`font-bold ${getVsSize(round.matches.length)} ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>VS</span>
+                                            </div>
+
+                                            {/* Team 2 */}
+                                            <div className={`rounded-2xl p-6 flex items-center justify-between ${
+                                                team2Won 
+                                                    ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-200 border-4 border-green-600'
+                                                    : darkMode ? 'bg-gray-700' : 'bg-purple-200'
+                                            }`}>
+                                                <div className="flex-1">
+                                                    <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
+                                                        team2Won 
+                                                            ? darkMode ? 'text-green-300' : 'text-gray-800'
+                                                            : darkMode ? 'text-purple-300' : 'text-gray-800'
+                                                    }`}>
+                                                        {match.team2.player1.name}
+                                                    </p>
+                                                    <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
+                                                        team2Won 
+                                                            ? darkMode ? 'text-green-300' : 'text-gray-800'
+                                                            : darkMode ? 'text-purple-300' : 'text-gray-800'
+                                                    }`}>
+                                                        {match.team2.player2.name}
+                                                    </p>
+                                                </div>
+                                                {match.completed && (
+                                                    <div className={`ml-4 flex-shrink-0 w-40 text-center font-bold ${getScoreSize(round.matches.length)} ${
+                                                        team2Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'
+                                                    }`}>
+                                                        {match.team2Score}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <div className="space-y-4 flex-1 flex flex-col justify-center px-8 lg:px-16 xl:px-24">
-                                        {/* Team 1 */}
-                                        <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-cyan-200'}`}>
-                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-cyan-300' : 'text-gray-800'}`}>
-                                                {match.team1.player1.name}
-                                            </p>
-                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-cyan-300' : 'text-gray-800'}`}>
-                                                {match.team1.player2.name}
-                                            </p>
-                                        </div>
-
-                                        {/* VS Divider */}
-                                        <div className="text-center flex-shrink-0">
-                                            <span className={`font-bold ${getVsSize(round.matches.length)} ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>VS</span>
-                                        </div>
-
-                                        {/* Team 2 */}
-                                        <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-purple-200'}`}>
-                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-purple-300' : 'text-gray-800'}`}>
-                                                {match.team2.player1.name}
-                                            </p>
-                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-purple-300' : 'text-gray-800'}`}>
-                                                {match.team2.player2.name}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         {/* Bench Display */}
@@ -575,7 +625,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                                     {game.team1Players[1]}
                                                 </p>
                                             </div>
-                                            <div className={`font-bold ml-4 flex-shrink-0 w-24 text-center ${getScoreSize(previousRoundHistory.length)} ${team1Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                                            <div className={`font-bold ml-4 flex-shrink-0 w-40 text-center ${getScoreSize(previousRoundHistory.length)} ${team1Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
                                                 {game.team1Score}
                                             </div>
                                         </div>
@@ -594,7 +644,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                                     {game.team2Players[1]}
                                                 </p>
                                             </div>
-                                            <div className={`font-bold ml-4 flex-shrink-0 w-24 text-center ${getScoreSize(previousRoundHistory.length)} ${team2Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                                            <div className={`font-bold ml-4 flex-shrink-0 w-40 text-center ${getScoreSize(previousRoundHistory.length)} ${team2Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
                                                 {game.team2Score}
                                             </div>
                                         </div>

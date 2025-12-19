@@ -72,19 +72,33 @@ export function ScoreEntry({
         const newMatchErrors: Record<string, string> = {};
         let hasError = false;
 
-        // Validate all scores are entered and no ties
+        // Only validate scores that have been entered (allow partial submission)
+        const enteredScores: { matchId: string; team1Score: number; team2Score: number }[] = [];
+        
         for (const score of Object.values(scores)) {
-            if (score.team1Score === "" || score.team2Score === "") {
-                newMatchErrors[score.matchId] =
-                    "Please enter scores for both teams";
-                hasError = true;
-            } else {
-                const team1 = parseInt(score.team1Score) || 0;
-                const team2 = parseInt(score.team2Score) || 0;
-                if (team1 === team2) {
+            const hasTeam1 = score.team1Score !== "";
+            const hasTeam2 = score.team2Score !== "";
+            
+            // If either score is entered, both must be entered
+            if (hasTeam1 || hasTeam2) {
+                if (!hasTeam1 || !hasTeam2) {
                     newMatchErrors[score.matchId] =
-                        "Tie scores are not allowed";
+                        "Please enter scores for both teams";
                     hasError = true;
+                } else {
+                    const team1 = parseInt(score.team1Score) || 0;
+                    const team2 = parseInt(score.team2Score) || 0;
+                    if (team1 === team2) {
+                        newMatchErrors[score.matchId] =
+                            "Tie scores are not allowed";
+                        hasError = true;
+                    } else {
+                        enteredScores.push({
+                            matchId: score.matchId,
+                            team1Score: team1,
+                            team2Score: team2,
+                        });
+                    }
                 }
             }
         }
@@ -95,15 +109,15 @@ export function ScoreEntry({
             return;
         }
 
+        // Must have at least one score entered
+        if (enteredScores.length === 0) {
+            setError("Please enter at least one score");
+            return;
+        }
+
         setError(null);
         setMatchErrors({});
-        // Convert strings to numbers for submission
-        const numericScores = Object.values(scores).map((score) => ({
-            matchId: score.matchId,
-            team1Score: parseInt(score.team1Score) || 0,
-            team2Score: parseInt(score.team2Score) || 0,
-        }));
-        onSubmitScores(numericScores);
+        onSubmitScores(enteredScores);
     };
 
     return (
