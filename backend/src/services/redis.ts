@@ -44,7 +44,6 @@ export async function saveSession(session: Session): Promise<void> {
 export async function getActiveSessionId(): Promise<string | null> {
   const client = getRedisClient();
   const activeId = await client.get("active-session-id");
-  console.log(`getActiveSessionId returned: ${activeId}`);
   return activeId;
 }
 

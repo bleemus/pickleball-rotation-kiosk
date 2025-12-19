@@ -350,7 +350,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                             {round.matches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
+                                    className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-amber-50 to-orange-100'}`}
                                 >
                                     <div className="text-center mb-4 flex-shrink-0">
                                         <h2 className={`font-bold ${getCourtTitleSize(round.matches.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -358,13 +358,13 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                         </h2>
                                     </div>
 
-                                    <div className="space-y-4 flex-1 flex flex-col justify-center">
+                                    <div className="space-y-4 flex-1 flex flex-col justify-center px-8 lg:px-16 xl:px-24">
                                         {/* Team 1 */}
-                                        <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-blue-100'}`}>
-                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-blue-300' : 'text-gray-800'}`}>
+                                        <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-cyan-200'}`}>
+                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-cyan-300' : 'text-gray-800'}`}>
                                                 {match.team1.player1.name}
                                             </p>
-                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-blue-300' : 'text-gray-800'}`}>
+                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-cyan-300' : 'text-gray-800'}`}>
                                                 {match.team1.player2.name}
                                             </p>
                                         </div>
@@ -375,11 +375,11 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                         </div>
 
                                         {/* Team 2 */}
-                                        <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-red-100'}`}>
-                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-red-300' : 'text-gray-800'}`}>
+                                        <div className={`rounded-2xl p-6 flex flex-col items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-purple-200'}`}>
+                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-purple-300' : 'text-gray-800'}`}>
                                                 {match.team2.player1.name}
                                             </p>
-                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-red-300' : 'text-gray-800'}`}>
+                                            <p className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${darkMode ? 'text-purple-300' : 'text-gray-800'}`}>
                                                 {match.team2.player2.name}
                                             </p>
                                         </div>
@@ -404,7 +404,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                             return (
                                 <div
                                     key={game.matchId}
-                                    className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
+                                    className={`rounded-3xl shadow-2xl p-6 flex flex-col min-h-0 ${darkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-amber-50 to-orange-100'}`}
                                 >
                                     <div className="text-center mb-4 flex-shrink-0">
                                         <h2 className={`font-bold ${getCourtTitleSize(previousRoundHistory.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -413,12 +413,12 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                         <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Final Score</p>
                                     </div>
 
-                                    <div className="space-y-4 flex-1 flex flex-col justify-center">
+                                    <div className="space-y-4 flex-1 flex flex-col justify-center px-24">
                                         {/* Team 1 */}
                                         <div className={`rounded-2xl p-6 flex items-center justify-between ${
                                             team1Won
-                                                ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-100 border-4 border-green-500'
-                                                : darkMode ? 'bg-gray-700' : 'bg-gray-100'
+                                                ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-200 border-4 border-green-600'
+                                                : darkMode ? 'bg-gray-700' : 'bg-amber-100'
                                         }`}>
                                             <div className="flex-1 min-w-0">
                                                 <p className={`font-bold text-center break-words ${getPlayerNameSize(previousRoundHistory.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -436,8 +436,8 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                         {/* Team 2 */}
                                         <div className={`rounded-2xl p-6 flex items-center justify-between ${
                                             team2Won
-                                                ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-100 border-4 border-green-500'
-                                                : darkMode ? 'bg-gray-700' : 'bg-gray-100'
+                                                ? darkMode ? 'bg-green-900 border-4 border-green-500' : 'bg-green-200 border-4 border-green-600'
+                                                : darkMode ? 'bg-gray-700' : 'bg-amber-100'
                                         }`}>
                                             <div className="flex-1 min-w-0">
                                                 <p className={`font-bold text-center break-words ${getPlayerNameSize(previousRoundHistory.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -528,8 +528,8 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
 }
 
 function getGridCols(numCourts: number): string {
-    if (numCourts === 1) return "grid-cols-1 justify-items-center";
-    if (numCourts === 2) return "grid-cols-1 xl:grid-cols-2 justify-items-center";
+    if (numCourts === 1) return "grid-cols-1";
+    if (numCourts === 2) return "grid-cols-1 xl:grid-cols-2";
     if (numCourts === 3) return "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3";
     return "grid-cols-1 md:grid-cols-2 xl:grid-cols-4";
 }
