@@ -139,17 +139,18 @@ function App() {
                 const updatedSession = await api.getSession(session.id);
                 setSession(updatedSession);
 
+                // Don't override game state if user is actively entering scores
+                if (gameState === GameState.SCORING) {
+                    return;
+                }
+
                 // Update game state based on the refreshed session data
                 if (updatedSession.currentRound && !updatedSession.currentRound.completed) {
                     // There's an active round in progress
-                    if (gameState !== GameState.SCORING) {
-                        setGameState(GameState.PLAYING);
-                    }
+                    setGameState(GameState.PLAYING);
                 } else if (updatedSession.gameHistory.length > 0 || updatedSession.currentRound) {
                     // Session has history or completed rounds
-                    if (gameState !== GameState.SCORING) {
-                        setGameState(GameState.PLAYING);
-                    }
+                    setGameState(GameState.PLAYING);
                 }
             } catch (err) {
                 console.log("[Poll] Session no longer exists (likely deleted), clearing local state");
