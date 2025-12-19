@@ -251,6 +251,22 @@ export function useApi() {
         return response.json();
     };
 
+    const endSession = async (sessionId: string): Promise<Session> => {
+        const response = await fetch(
+            `${API_BASE_URL}/session/${sessionId}/end`,
+            {
+                method: "POST",
+            },
+        );
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to end session");
+        }
+
+        return response.json();
+    };
+
     return {
         createSession,
         updateNumCourts,
@@ -266,5 +282,6 @@ export function useApi() {
         getCurrentRound,
         completeRound,
         getGameHistory,
+        endSession,
     };
 }

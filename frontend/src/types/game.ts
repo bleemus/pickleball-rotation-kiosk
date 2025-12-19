@@ -51,6 +51,7 @@ export interface Session {
     opponentHistory: Record<string, number>;
     numCourts: number;
     createdAt: number;
+    ended?: boolean;
 }
 
 export enum GameState {

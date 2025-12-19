@@ -14,6 +14,7 @@ import {
   getCurrentRound,
   getGameHistory,
   deleteSessionById,
+  endSession,
 } from "../services/gameService";
 import {
   CreateSessionRequest,
@@ -253,6 +254,16 @@ router.get("/session/:id/history", async (req: Request, res: Response) => {
     res.json(history);
   } catch (error) {
     res.status(404).json({ error: (error as Error).message });
+  }
+});
+
+// End session
+router.post("/session/:id/end", async (req: Request, res: Response) => {
+  try {
+    const session = await endSession(req.params.id);
+    res.json(session);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
   }
 });
 

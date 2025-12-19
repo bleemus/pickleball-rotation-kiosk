@@ -13,6 +13,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     const [error, setError] = useState<string | null>(null);
     const [networkInfo, setNetworkInfo] = useState<{ hostname: string; ip: string | null; port: string; allIPs?: { interface: string; ip: string }[] } | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const summaryScrollRef = useRef<HTMLDivElement>(null);
     const [isHovering, setIsHovering] = useState(false);
     const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
     const darkMode = SPECTATOR_DARK_MODE;
@@ -151,6 +152,56 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         };
     }, [isHovering, isDesktop, session?.players.length]);
 
+    // Auto-scroll effect for session summary
+    useEffect(() => {
+        const container = summaryScrollRef.current;
+        if (!container || !session?.ended) return;
+
+        const SCROLL_SPEED = 1.5;
+        const INTERVAL_MS = 20;
+        const PAUSE_AT_TOP = 500; // Reduced from 3000 to start scrolling faster
+        const PAUSE_AT_BOTTOM = 500; // Reduced from 3000
+
+        let pauseUntil = Date.now() + PAUSE_AT_TOP; // Start with initial pause
+        let scrollingDown = true; // Track direction
+
+        const autoScroll = () => {
+            const now = Date.now();
+
+            // If we're in a pause period, skip scrolling
+            if (now < pauseUntil) return;
+
+            const { scrollTop, scrollHeight, clientHeight } = container;
+            const maxScroll = scrollHeight - clientHeight;
+
+            // If content doesn't overflow, no need to scroll
+            if (maxScroll <= 0) return;
+
+            if (scrollingDown) {
+                // Scroll down
+                container.scrollTop += SCROLL_SPEED;
+
+                // Check if we reached the bottom
+                if (scrollTop >= maxScroll - 5) {
+                    scrollingDown = false;
+                    pauseUntil = now + PAUSE_AT_BOTTOM;
+                }
+            } else {
+                // Scroll up
+                container.scrollTop -= SCROLL_SPEED;
+
+                // Check if we reached the top
+                if (scrollTop <= 5) {
+                    scrollingDown = true;
+                    pauseUntil = now + PAUSE_AT_TOP;
+                }
+            }
+        };
+
+        const interval = setInterval(autoScroll, INTERVAL_MS);
+        return () => clearInterval(interval);
+    }, [summaryScrollRef, session?.ended]);
+
     // Show mobile redirect message
     if (isMobile) {
         const entryUrl = window.location.origin + window.location.pathname.replace(/\/spectator$/, '');
@@ -266,6 +317,102 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                             <li>Click "Start Next Round" to begin</li>
                             <li>This spectator screen will automatically update</li>
                         </ol>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show session summary if session has ended
+    if (session?.ended) {
+        const sortedPlayers = [...session.players].sort((a, b) => {
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            return b.pointDifferential - a.pointDifferential;
+        });
+
+        return (
+            <div className={`h-screen flex flex-col ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-600 to-blue-600'}`}>
+                {/* Fixed Header */}
+                <div className="flex-shrink-0 text-center py-6">
+                    <h1 className={`text-6xl font-bold mb-4 ${darkMode ? 'text-gray-200' : 'text-white'}`}>
+                        🏆 Session Complete! 🏆
+                    </h1>
+                    <p className={`text-4xl opacity-90 ${darkMode ? 'text-gray-300' : 'text-white'}`}>
+                        Final Rankings
+                    </p>
+                </div>
+
+                {/* Scrollable Rankings Table */}
+                <div 
+                    ref={summaryScrollRef}
+                    className="flex-1 px-6 pb-6 overflow-y-auto"
+                    style={{ scrollBehavior: "auto" }}
+                >
+                    <div className="max-w-6xl mx-auto">
+                        <div className={`rounded-3xl shadow-2xl p-8 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                            <table className="w-full">
+                                <thead>
+                                    <tr className={`border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+                                        <th className={`text-left py-6 px-4 text-3xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                            Rank
+                                        </th>
+                                        <th className={`text-left py-6 px-4 text-3xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                            Player
+                                        </th>
+                                        <th className={`text-center py-6 px-4 text-3xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                            Wins
+                                        </th>
+                                        <th className={`text-center py-6 px-4 text-3xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                            Losses
+                                        </th>
+                                        <th className={`text-center py-6 px-4 text-3xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                            Games
+                                        </th>
+                                        <th className={`text-center py-6 px-4 text-3xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                            +/-
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sortedPlayers.map((player, index) => {
+                                        const isTopThree = index < 3;
+                                        const medalEmoji = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "";
+                                        
+                                        return (
+                                            <tr
+                                                key={player.id}
+                                                className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} ${isTopThree ? (darkMode ? 'bg-yellow-900 bg-opacity-20' : 'bg-yellow-50') : ''}`}
+                                            >
+                                                <td className={`py-6 px-4 text-2xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                                    {medalEmoji} {index + 1}
+                                                </td>
+                                                <td className={`py-6 px-4 text-2xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                                    {player.name}
+                                                </td>
+                                                <td className="py-6 px-4 text-2xl text-center text-green-500 font-bold">
+                                                    {player.wins}
+                                                </td>
+                                                <td className="py-6 px-4 text-2xl text-center text-red-500 font-bold">
+                                                    {player.losses}
+                                                </td>
+                                                <td className={`py-6 px-4 text-2xl text-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                    {player.gamesPlayed}
+                                                </td>
+                                                <td className={`py-6 px-4 text-2xl text-center font-bold ${
+                                                    player.pointDifferential > 0 
+                                                        ? 'text-green-500' 
+                                                        : player.pointDifferential < 0 
+                                                        ? 'text-red-500' 
+                                                        : darkMode ? 'text-gray-400' : 'text-gray-600'
+                                                }`}>
+                                                    {player.pointDifferential > 0 ? '+' : ''}{player.pointDifferential}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -428,7 +575,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                                     {game.team1Players[1]}
                                                 </p>
                                             </div>
-                                            <div className={`font-bold ml-4 flex-shrink-0 ${getScoreSize(previousRoundHistory.length)} ${team1Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                                            <div className={`font-bold ml-4 flex-shrink-0 w-24 text-center ${getScoreSize(previousRoundHistory.length)} ${team1Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
                                                 {game.team1Score}
                                             </div>
                                         </div>
@@ -447,7 +594,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                                     {game.team2Players[1]}
                                                 </p>
                                             </div>
-                                            <div className={`font-bold ml-4 flex-shrink-0 ${getScoreSize(previousRoundHistory.length)} ${team2Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                                            <div className={`font-bold ml-4 flex-shrink-0 w-24 text-center ${getScoreSize(previousRoundHistory.length)} ${team2Won ? 'text-green-400' : darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
                                                 {game.team2Score}
                                             </div>
                                         </div>

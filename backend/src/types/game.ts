@@ -59,6 +59,7 @@ export interface Session {
   opponentHistory: OpponentHistory;
   numCourts: number;
   createdAt: number;
+  ended?: boolean;
 }
 
 export interface CreateSessionRequest {

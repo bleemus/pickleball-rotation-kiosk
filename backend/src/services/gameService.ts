@@ -445,3 +445,19 @@ export async function getGameHistory(
 export async function deleteSessionById(sessionId: string): Promise<void> {
   await deleteSession(sessionId);
 }
+
+/**
+ * Ends a session and marks it as complete
+ */
+export async function endSession(sessionId: string): Promise<Session> {
+  const session = await getSessionById(sessionId);
+  
+  // Can't end if there's an active round in progress
+  if (session.currentRound && !session.currentRound.completed) {
+    throw new Error("Cannot end session while a round is in progress. Please complete or cancel the current round first.");
+  }
+  
+  session.ended = true;
+  await saveSession(session);
+  return session;
+}

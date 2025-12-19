@@ -9,6 +9,7 @@ import { ScoreHistory } from "./components/ScoreHistory";
 import { PlayerStats } from "./components/PlayerStats";
 import { PlayerManager } from "./components/PlayerManager";
 import { HelpButton } from "./components/HelpModal";
+import { SessionSummary } from "./components/SessionSummary";
 
 const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "true";
 
@@ -137,21 +138,16 @@ function App() {
         const refreshSession = async () => {
             try {
                 const updatedSession = await api.getSession(session.id);
+                
+                // Always update session data so all clients see the latest
                 setSession(updatedSession);
 
-                // Don't override game state if user is actively entering scores
-                if (gameState === GameState.SCORING) {
-                    return;
-                }
-
-                // Update game state based on the refreshed session data
-                if (updatedSession.currentRound && !updatedSession.currentRound.completed) {
-                    // There's an active round in progress
-                    setGameState(GameState.PLAYING);
-                } else if (updatedSession.gameHistory.length > 0 || updatedSession.currentRound) {
-                    // Session has history or completed rounds
+                // Only force state changes when round completion status changes
+                // If someone just completed the round, kick everyone back to PLAYING
+                if (updatedSession.currentRound?.completed && gameState === GameState.SCORING) {
                     setGameState(GameState.PLAYING);
                 }
+                // Otherwise, let users stay on whatever screen they're on
             } catch (err) {
                 console.log("[Poll] Session no longer exists (likely deleted), clearing local state");
                 // Session was deleted in another browser, clear it locally
@@ -165,7 +161,7 @@ function App() {
 
         // Cleanup interval on unmount or when session changes
         return () => clearInterval(intervalId);
-    }, [session?.id]); // Only depend on session ID, not the whole session object
+    }, [session?.id, gameState]); // Include gameState to ensure effect has current value
 
     // Handle adding player (during setup or mid-game)
     const handleAddPlayer = async (name: string) => {
@@ -398,6 +394,28 @@ function App() {
         }
     };
 
+    // End session
+    const handleEndSession = async () => {
+        if (!session) return;
+        
+        if (
+            confirm(
+                "Are you sure you want to end the session? You'll see the final rankings.",
+            )
+        ) {
+            try {
+                setLoading(true);
+                setError(null);
+                const updatedSession = await api.endSession(session.id);
+                setSession(updatedSession);
+            } catch (err) {
+                setError((err as Error).message);
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
     // Show loading screen during initial session check
     if (loading && !session && !error) {
         return (
@@ -406,6 +424,19 @@ function App() {
                     <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto mb-4"></div>
                     <p className="text-white text-xl font-semibold">Loading...</p>
                 </div>
+            </div>
+        );
+    }
+
+    // Show session summary if session has ended
+    if (session?.ended) {
+        return (
+            <div className={DEBUG_MODE ? 'border-4 border-red-600' : ''}>
+                <SessionSummary
+                    players={session.players}
+                    onResetSession={handleResetSession}
+                    loading={loading}
+                />
             </div>
         );
     }
@@ -504,6 +535,7 @@ function App() {
                                 onViewHistory={handleViewHistory}
                                 onEditPreviousScores={handleEditPreviousScores}
                                 onResetSession={handleResetSession}
+                                onEndSession={handleEndSession}
                                 hasCompletedRound={
                                     !!session.currentRound?.completed
                                 }

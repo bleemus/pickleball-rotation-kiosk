@@ -13,6 +13,7 @@ interface PlayerManagerProps {
     onViewHistory: () => void;
     onEditPreviousScores: () => void;
     onResetSession: () => void;
+    onEndSession: () => void;
     hasCompletedRound: boolean;
     loading: boolean;
 }
@@ -28,6 +29,7 @@ export function PlayerManager({
     onViewHistory,
     onEditPreviousScores,
     onResetSession,
+    onEndSession,
     hasCompletedRound,
     loading,
 }: PlayerManagerProps) {
@@ -127,7 +129,7 @@ export function PlayerManager({
                 </h1>
 
                 {/* Start Next Round Button - Prominent at Top */}
-                <div className="mb-6 lg:mb-8">
+                <div className="mb-6 lg:mb-8 space-y-3">
                     <button
                         onClick={onStartNextRound}
                         disabled={
@@ -144,6 +146,15 @@ export function PlayerManager({
                             Need at least {numCourts * 4} active players ({players.filter((p) => !p.forceSitOut).length} currently active)
                         </p>
                     )}
+                    
+                    {/* End Session Button */}
+                    <button
+                        onClick={onEndSession}
+                        disabled={loading}
+                        className="w-full px-8 py-4 lg:py-5 bg-purple-500 text-white text-xl lg:text-2xl xl:text-3xl font-bold rounded-2xl hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
+                    >
+                        End Session & View Final Rankings
+                    </button>
                 </div>
 
                 {/* Add Player Form */}
