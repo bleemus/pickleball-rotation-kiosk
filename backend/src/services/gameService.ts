@@ -8,8 +8,8 @@ import {
   AddPlayerRequest,
   CompleteRoundRequest,
 } from "../types/game";
-import { saveSession, getSession, deleteSession, getActiveSessionId } from "./redis";
-import { generateNextRound, updateHistory } from "./roundRobinService";
+import { saveSession, getSession, deleteSession, getActiveSessionId, setActiveSession } from "./redis";
+import { generateNextRound, updateHistory, reverseHistory } from "./roundRobinService";
 
 /**
  * Shuffles an array using Fisher-Yates algorithm
@@ -39,6 +39,7 @@ function createPlayer(name: string): Player {
     losses: 0,
     pointDifferential: 0,
     roundsSatOut: 0,
+    consecutiveRoundsSatOut: 0,
     forceSitOut: false,
   };
 }
@@ -72,6 +73,10 @@ export async function createSession(
   };
 
   await saveSession(session);
+
+  // Set this as the active session (single-kiosk mode)
+  await setActiveSession(session.id);
+
   return session;
 }
 
@@ -173,6 +178,14 @@ export async function removePlayer(
     }
   }
 
+  // Check if removing this player would drop below minimum required
+  const minPlayers = session.numCourts * 4;
+  if (session.players.length <= minPlayers) {
+    throw new Error(
+      `Cannot remove player. Minimum ${minPlayers} players required for ${session.numCourts} court${session.numCourts > 1 ? "s" : ""}`,
+    );
+  }
+
   session.players = session.players.filter((p) => p.id !== playerId);
 
   await saveSession(session);
@@ -227,14 +240,18 @@ export async function startNextRound(sessionId: string): Promise<Session> {
     session.numCourts,
   );
 
-  // Update roundsSatOut for benched players
+  // Update roundsSatOut and consecutiveRoundsSatOut for all players
   for (const player of session.players) {
     const isBenched = benchedPlayers.some((bp) => bp.id === player.id);
     if (isBenched) {
       player.roundsSatOut += 1;
+      player.consecutiveRoundsSatOut += 1;
+    } else {
+      // Player is playing this round - reset consecutive counter
+      player.consecutiveRoundsSatOut = 0;
     }
-    // Clear forceSitOut flag after round is generated
-    player.forceSitOut = false;
+    // Note: forceSitOut flag is cleared when round is COMPLETED, not when started
+    // This preserves the flag if round is canceled
   }
 
   session.currentRound = {
@@ -332,6 +349,15 @@ export async function completeCurrentRound(
       }
     }
 
+    // Reverse partnership and opponent history
+    const { partnershipHistory, opponentHistory } = reverseHistory(
+      session.currentRound.matches,
+      session.partnershipHistory,
+      session.opponentHistory,
+    );
+    session.partnershipHistory = partnershipHistory;
+    session.opponentHistory = opponentHistory;
+
     // Remove old history entries
     session.gameHistory = session.gameHistory.filter(
       (h) => h.roundNumber !== session.currentRound!.roundNumber,
@@ -349,6 +375,16 @@ export async function completeCurrentRound(
 
     if (!match) {
       throw new Error(`Match ${scoreInput.matchId} not found in current round`);
+    }
+
+    // Validate that scores are not tied
+    if (scoreInput.team1Score === scoreInput.team2Score) {
+      throw new Error("Tie scores are not allowed. One team must win.");
+    }
+
+    // Validate that scores are non-negative
+    if (scoreInput.team1Score < 0 || scoreInput.team2Score < 0) {
+      throw new Error("Scores cannot be negative");
     }
 
     // Only process if this match wasn't already completed or scores changed
@@ -469,6 +505,13 @@ export async function completeCurrentRound(
   // Only mark round as completed if ALL matches have scores
   const allMatchesCompleted = session.currentRound.matches.every(m => m.completed);
   session.currentRound.completed = allMatchesCompleted;
+
+  // Clear forceSitOut flags only when round is fully completed
+  if (allMatchesCompleted) {
+    for (const player of session.players) {
+      player.forceSitOut = false;
+    }
+  }
 
   await saveSession(session);
   return session;

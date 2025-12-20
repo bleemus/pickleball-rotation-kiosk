@@ -20,26 +20,52 @@ interface CompleteRoundRequest {
     }[];
 }
 
+/**
+ * Handles API response errors with proper fallbacks for network issues
+ */
+async function handleApiError(response: Response, defaultMessage: string): Promise<never> {
+    try {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const error = await response.json();
+            throw new Error(error.error || defaultMessage);
+        } else {
+            // Non-JSON response (HTML error page, etc.)
+            throw new Error(`${defaultMessage} (HTTP ${response.status})`);
+        }
+    } catch (parseError) {
+        // JSON parsing failed or network issue
+        if (parseError instanceof Error && parseError.message.includes("HTTP")) {
+            throw parseError;
+        }
+        throw new Error(`${defaultMessage} (Network error)`);
+    }
+}
+
 export function useApi() {
     const createSession = async (
         playerNames: string[],
         numCourts?: number,
     ): Promise<Session> => {
-        const response = await fetch(`${API_BASE_URL}/session`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                playerNames,
-                numCourts,
-            } as CreateSessionRequest),
-        });
+        try {
+            const response = await fetch(`${API_BASE_URL}/session`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    playerNames,
+                    numCourts,
+                } as CreateSessionRequest),
+            });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to create session");
+            if (!response.ok) {
+                await handleApiError(response, "Failed to create session");
+            }
+
+            return response.json();
+        } catch (error) {
+            if (error instanceof Error) throw error;
+            throw new Error("Failed to create session (Network error)");
         }
-
-        return response.json();
     };
 
     const updateNumCourts = async (
@@ -64,29 +90,37 @@ export function useApi() {
     };
 
     const getSession = async (sessionId: string): Promise<Session> => {
-        const response = await fetch(`${API_BASE_URL}/session/${sessionId}`);
+        try {
+            const response = await fetch(`${API_BASE_URL}/session/${sessionId}`);
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to get session");
+            if (!response.ok) {
+                await handleApiError(response, "Failed to get session");
+            }
+
+            return response.json();
+        } catch (error) {
+            if (error instanceof Error) throw error;
+            throw new Error("Failed to get session (Network error)");
         }
-
-        return response.json();
     };
 
     const getActiveSession = async (): Promise<Session | null> => {
-        const response = await fetch(`${API_BASE_URL}/session/active`);
+        try {
+            const response = await fetch(`${API_BASE_URL}/session/active`);
 
-        if (!response.ok) {
-            if (response.status === 404) {
-                // No active session exists, return null
-                return null;
+            if (!response.ok) {
+                if (response.status === 404) {
+                    // No active session exists, return null
+                    return null;
+                }
+                await handleApiError(response, "Failed to get active session");
             }
-            const error = await response.json();
-            throw new Error(error.error || "Failed to get active session");
-        }
 
-        return response.json();
+            return response.json();
+        } catch (error) {
+            if (error instanceof Error) throw error;
+            throw new Error("Failed to get active session (Network error)");
+        }
     };
 
     const deleteSession = async (sessionId: string): Promise<void> => {
@@ -219,21 +253,25 @@ export function useApi() {
         sessionId: string,
         scores: CompleteRoundRequest["scores"],
     ): Promise<Session> => {
-        const response = await fetch(
-            `${API_BASE_URL}/session/${sessionId}/round/complete`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ scores } as CompleteRoundRequest),
-            },
-        );
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/session/${sessionId}/round/complete`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ scores } as CompleteRoundRequest),
+                },
+            );
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to complete round");
+            if (!response.ok) {
+                await handleApiError(response, "Failed to complete round");
+            }
+
+            return response.json();
+        } catch (error) {
+            if (error instanceof Error) throw error;
+            throw new Error("Failed to complete round (Network error)");
         }
-
-        return response.json();
     };
 
     const getGameHistory = async (

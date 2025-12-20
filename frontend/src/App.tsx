@@ -183,6 +183,7 @@ function App() {
                     losses: 0,
                     pointDifferential: 0,
                     roundsSatOut: 0,
+                    consecutiveRoundsSatOut: 0,
                     forceSitOut: false,
                 };
                 setTempPlayers([...tempPlayers, newPlayer]);

@@ -6,6 +6,7 @@ export interface Player {
   losses: number;
   pointDifferential: number;
   roundsSatOut: number;
+  consecutiveRoundsSatOut: number;
   forceSitOut?: boolean;
 }
 

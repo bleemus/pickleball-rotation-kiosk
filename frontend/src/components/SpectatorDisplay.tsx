@@ -12,6 +12,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     const [session, setSession] = useState<Session | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [networkInfo, setNetworkInfo] = useState<{ hostname: string; ip: string | null; port: string; allIPs?: { interface: string; ip: string }[] } | null>(null);
+    const [wifiSSID, setWifiSSID] = useState<string | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const summaryScrollRef = useRef<HTMLDivElement>(null);
     const [isHovering, setIsHovering] = useState(false);
@@ -59,6 +60,23 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
             }
         };
         fetchNetworkInfo();
+    }, [apiUrl]);
+
+    // Fetch WiFi info on mount
+    useEffect(() => {
+        const fetchWifiInfo = async () => {
+            try {
+                const response = await fetch(`${apiUrl}/wifi-info`);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("WiFi SSID:", data.ssid);
+                    setWifiSSID(data.ssid);
+                }
+            } catch (err) {
+                console.log("WiFi info not available (probably not on Pi)");
+            }
+        };
+        fetchWifiInfo();
     }, [apiUrl]);
 
     // Poll for active session updates every 2 seconds
@@ -468,14 +486,39 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     // Remove /spectator from the URL if present
     const baseUrl = displayUrl.replace(/\/spectator$/, '');
 
+    // Generate WiFi QR code string (WIFI:S:<SSID>;T:WPA;P:<PASSWORD>;;)
+    // For open networks, we just show the SSID without password
+    const wifiQRString = wifiSSID ? `WIFI:S:${wifiSSID};T:nopass;;` : null;
+
     return (
         <div className={`h-screen flex ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-green-500 to-blue-600'}`}>
-            {/* Top Left - QR Code */}
-            <div className="fixed top-4 left-4 z-50">
-                {/* QR Code with Connect label */}
-                <div className={`rounded-lg shadow-lg p-2 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            {/* Top Left - QR Codes */}
+            <div className="fixed top-4 left-4 z-50 space-y-3">
+                {/* WiFi QR Code - Only show if we have WiFi info */}
+                {wifiQRString && (
+                    <div className={`rounded-lg shadow-lg p-3 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                        <div className="flex flex-col items-center">
+                            <p className={`text-xs font-bold mb-1 text-center ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                                1. Connect to WiFi
+                            </p>
+                            <QRCode
+                                value={wifiQRString}
+                                size={80}
+                                level="M"
+                            />
+                            <p className={`text-xs mt-1 text-center font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                {wifiSSID}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* App URL QR Code */}
+                <div className={`rounded-lg shadow-lg p-3 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <div className="flex flex-col items-center">
-                        <p className={`text-xs font-semibold mb-1 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Connect</p>
+                        <p className={`text-xs font-bold mb-1 text-center ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                            {wifiQRString ? '2. Open App' : 'Connect'}
+                        </p>
                         <QRCode
                             value={baseUrl}
                             size={80}

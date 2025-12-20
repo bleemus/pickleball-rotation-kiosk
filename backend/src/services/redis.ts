@@ -34,11 +34,16 @@ export async function saveSession(session: Session): Promise<void> {
   await client.set(key, JSON.stringify(session));
   // Set expiration to 24 hours
   await client.expire(key, 86400);
-  
-  // Set this as the active session
-  await client.set("active-session-id", session.id);
+
+  // Note: We do NOT set active-session-id here anymore
+  // Active session is only set when creating a new session (see setActiveSession)
+}
+
+export async function setActiveSession(sessionId: string): Promise<void> {
+  const client = getRedisClient();
+  await client.set("active-session-id", sessionId);
   await client.expire("active-session-id", 86400);
-  console.log(`Set active session ID to: ${session.id}`);
+  console.log(`Set active session ID to: ${sessionId}`);
 }
 
 export async function getActiveSessionId(): Promise<string | null> {
@@ -56,7 +61,14 @@ export async function getSession(sessionId: string): Promise<Session | null> {
     return null;
   }
 
-  return JSON.parse(data) as Session;
+  try {
+    return JSON.parse(data) as Session;
+  } catch (error) {
+    console.error(`Failed to parse session data for ${sessionId}:`, error);
+    // Delete corrupted session data
+    await client.del(key);
+    throw new Error(`Session data corrupted for ${sessionId}. Session has been removed.`);
+  }
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {
@@ -74,8 +86,23 @@ export async function deleteSession(sessionId: string): Promise<void> {
 
 export async function getAllSessionIds(): Promise<string[]> {
   const client = getRedisClient();
-  const keys = await client.keys("session:*");
-  return keys.map((key) => key.replace("session:", ""));
+  const sessionIds: string[] = [];
+
+  // Use SCAN instead of KEYS for better performance in production
+  let cursor = 0;
+  do {
+    const result = await client.scan(cursor, {
+      MATCH: "session:*",
+      COUNT: 100,
+    });
+
+    cursor = result.cursor;
+    const keys = result.keys;
+
+    sessionIds.push(...keys.map((key) => key.replace("session:", "")));
+  } while (cursor !== 0);
+
+  return sessionIds;
 }
 
 export async function closeRedis(): Promise<void> {

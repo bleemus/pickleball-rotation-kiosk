@@ -12,6 +12,7 @@ const PARTNERSHIP_PENALTY = 10;
 const OPPONENT_PENALTY = 5;
 const BENCH_BONUS = -20; // Negative because lower scores are better
 const GAMES_PLAYED_PENALTY = 8; // Penalty for each game played (encourages less-played players, ensures new players get priority)
+const CONSECUTIVE_BENCH_PENALTY = 1000; // Massive penalty to prevent sitting same player twice in a row
 
 /**
  * Creates a unique key for a player pair (sorted alphabetically)
@@ -119,6 +120,10 @@ function calculateMatchupScore(
       score += player.roundsSatOut * BENCH_BONUS;
       // Add penalty for games played (to prioritize players with fewer games)
       score += player.gamesPlayed * GAMES_PLAYED_PENALTY;
+      // Add massive penalty if player sat out last round (prevent consecutive benching)
+      if (player.consecutiveRoundsSatOut > 0) {
+        score += CONSECUTIVE_BENCH_PENALTY;
+      }
     }
 
     if (score < bestScore) {
@@ -289,6 +294,55 @@ export function updateHistory(
         const opponentKey = createPairKey(t1Player, t2Player);
         newOpponentHistory[opponentKey] =
           (newOpponentHistory[opponentKey] || 0) + 1;
+      }
+    }
+  }
+
+  return {
+    partnershipHistory: newPartnershipHistory,
+    opponentHistory: newOpponentHistory,
+  };
+}
+
+/**
+ * Reverses partnership and opponent history for matches (used when resubmitting scores)
+ */
+export function reverseHistory(
+  matches: Match[],
+  partnershipHistory: PartnershipHistory,
+  opponentHistory: OpponentHistory,
+): {
+  partnershipHistory: PartnershipHistory;
+  opponentHistory: OpponentHistory;
+} {
+  const newPartnershipHistory = { ...partnershipHistory };
+  const newOpponentHistory = { ...opponentHistory };
+
+  for (const match of matches) {
+    // Reverse partnerships
+    const team1Partners = [match.team1.player1.id, match.team1.player2.id];
+    const team2Partners = [match.team2.player1.id, match.team2.player2.id];
+
+    const team1Key = createPairKey(team1Partners[0], team1Partners[1]);
+    const team2Key = createPairKey(team2Partners[0], team2Partners[1]);
+
+    if (newPartnershipHistory[team1Key] && newPartnershipHistory[team1Key] > 0) {
+      newPartnershipHistory[team1Key] -= 1;
+    }
+    if (newPartnershipHistory[team2Key] && newPartnershipHistory[team2Key] > 0) {
+      newPartnershipHistory[team2Key] -= 1;
+    }
+
+    // Reverse opponents
+    const team1Players = [match.team1.player1.id, match.team1.player2.id];
+    const team2Players = [match.team2.player1.id, match.team2.player2.id];
+
+    for (const t1Player of team1Players) {
+      for (const t2Player of team2Players) {
+        const opponentKey = createPairKey(t1Player, t2Player);
+        if (newOpponentHistory[opponentKey] && newOpponentHistory[opponentKey] > 0) {
+          newOpponentHistory[opponentKey] -= 1;
+        }
       }
     }
   }

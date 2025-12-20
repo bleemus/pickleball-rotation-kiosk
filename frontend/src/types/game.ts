@@ -6,6 +6,7 @@ export interface Player {
     losses: number;
     pointDifferential: number;
     roundsSatOut: number;
+    consecutiveRoundsSatOut: number;
     forceSitOut?: boolean;
 }
 
@@ -16,7 +17,7 @@ export interface Team {
 
 export interface Match {
     id: string;
-    courtNumber: 1 | 2;
+    courtNumber: number;
     team1: Team;
     team2: Team;
     team1Score?: number;
@@ -34,7 +35,7 @@ export interface Round {
 export interface GameHistory {
     matchId: string;
     roundNumber: number;
-    courtNumber: 1 | 2;
+    courtNumber: number;
     team1Players: string[];
     team2Players: string[];
     team1Score: number;
