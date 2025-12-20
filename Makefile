@@ -1,4 +1,4 @@
-.PHONY: help build up down logs restart clean dev install test
+.PHONY: help build up down logs restart clean dev dev-down install test
 
 help:
 	@echo "Pickleball Kiosk - Make Commands"
@@ -6,7 +6,8 @@ help:
 	@echo ""
 	@echo "Development:"
 	@echo "  make install   - Install dependencies for backend and frontend"
-	@echo "  make dev       - Start development servers (backend + frontend)"
+	@echo "  make dev       - Start development servers (backend + frontend + Redis)"
+	@echo "  make dev-down  - Stop development Redis container"
 	@echo "  make test      - Run type checking"
 	@echo ""
 	@echo "Docker:"
@@ -28,13 +29,29 @@ install:
 dev:
 	@echo "🚀 Starting development servers..."
 	@echo ""
+	@echo "Checking Redis..."
+	@if ! docker ps --format '{{.Names}}' | grep -q '^dev-redis$$'; then \
+		echo "📦 Starting Redis container..."; \
+		docker run -d --name dev-redis -p 6379:6379 redis:7-alpine; \
+		echo "✅ Redis started"; \
+	else \
+		echo "✅ Redis already running"; \
+	fi
+	@echo ""
 	@echo "Backend:  http://localhost:3001"
 	@echo "Frontend: http://localhost:3000"
 	@echo ""
-	@echo "Make sure Redis is running:"
-	@echo "  docker run -d -p 6379:6379 redis:7-alpine"
-	@echo ""
 	@cd backend && npm run dev & cd frontend && npm run dev
+
+dev-down:
+	@echo "🛑 Stopping development Redis container..."
+	@if docker ps -a --format '{{.Names}}' | grep -q '^dev-redis$$'; then \
+		docker stop dev-redis 2>/dev/null || true; \
+		docker rm dev-redis 2>/dev/null || true; \
+		echo "✅ Redis container stopped and removed"; \
+	else \
+		echo "ℹ️  Redis container not found"; \
+	fi
 
 test:
 	@echo "🔍 Running type checks..."
@@ -58,6 +75,11 @@ up:
 
 down:
 	@docker-compose down
+	@if docker ps -a --format '{{.Names}}' | grep -q '^dev-redis$$'; then \
+		echo "🛑 Stopping dev Redis container..."; \
+		docker stop dev-redis 2>/dev/null || true; \
+		docker rm dev-redis 2>/dev/null || true; \
+	fi
 	@echo "✅ Services stopped"
 
 logs:

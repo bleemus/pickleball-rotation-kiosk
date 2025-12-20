@@ -31,9 +31,45 @@ export function getRedisClient(): RedisClientType {
 export async function saveSession(session: Session): Promise<void> {
   const client = getRedisClient();
   const key = `session:${session.id}`;
-  await client.set(key, JSON.stringify(session));
-  // Set expiration to 24 hours
-  await client.expire(key, 86400);
+
+  // Use optimistic locking to prevent concurrent modification conflicts
+  // This will retry up to 3 times if another operation modifies the session
+  const maxRetries = 3;
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
+      // Watch the key for changes
+      await client.watch(key);
+
+      // Execute transaction
+      const multi = client.multi();
+      multi.set(key, JSON.stringify(session));
+      multi.expire(key, 86400); // 24 hours
+
+      const result = await multi.exec();
+
+      // If result is null, the transaction was aborted due to concurrent modification
+      if (result === null) {
+        await client.unwatch(); // Clean up watch before retrying
+        retries++;
+        if (retries >= maxRetries) {
+          throw new Error(`Failed to save session ${session.id} after ${maxRetries} retries due to concurrent modifications`);
+        }
+        // Wait a small random amount before retrying to reduce collision probability
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+        continue;
+      }
+
+      // Transaction succeeded, unwatch before returning
+      await client.unwatch();
+      return;
+    } catch (error) {
+      // Unwatch on error
+      await client.unwatch();
+      throw error;
+    }
+  }
 
   // Note: We do NOT set active-session-id here anymore
   // Active session is only set when creating a new session (see setActiveSession)
@@ -103,6 +139,78 @@ export async function getAllSessionIds(): Promise<string[]> {
   } while (cursor !== 0);
 
   return sessionIds;
+}
+
+/**
+ * Atomically updates a session using optimistic locking with retry logic
+ * @param sessionId - The session ID to update
+ * @param updateFn - Function that modifies the session
+ * @param maxRetries - Maximum number of retry attempts (default: 3)
+ * @returns The updated session
+ */
+export async function updateSessionAtomic(
+  sessionId: string,
+  updateFn: (session: Session) => Session | Promise<Session>,
+  maxRetries: number = 3
+): Promise<Session> {
+  const client = getRedisClient();
+  const key = `session:${sessionId}`;
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
+      // Watch the key for changes
+      await client.watch(key);
+
+      // Read current session
+      const data = await client.get(key);
+      if (!data) {
+        await client.unwatch();
+        throw new Error(`Session ${sessionId} not found`);
+      }
+
+      let session: Session;
+      try {
+        session = JSON.parse(data) as Session;
+      } catch (error) {
+        await client.unwatch();
+        await client.del(key);
+        throw new Error(`Session data corrupted for ${sessionId}`);
+      }
+
+      // Apply the update function
+      const updatedSession = await updateFn(session);
+
+      // Execute transaction to save updated session
+      const multi = client.multi();
+      multi.set(key, JSON.stringify(updatedSession));
+      multi.expire(key, 86400); // 24 hours
+
+      const result = await multi.exec();
+
+      // If result is null, another operation modified the session during our update
+      if (result === null) {
+        await client.unwatch(); // Clean up watch before retrying
+        retries++;
+        if (retries >= maxRetries) {
+          throw new Error(`Failed to update session ${sessionId} after ${maxRetries} retries due to concurrent modifications`);
+        }
+        // Wait a small random amount before retrying to reduce collision probability
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+        continue;
+      }
+
+      // Transaction succeeded, unwatch before returning
+      await client.unwatch();
+      return updatedSession;
+    } catch (error) {
+      // Unwatch on error
+      await client.unwatch();
+      throw error;
+    }
+  }
+
+  throw new Error(`Failed to update session ${sessionId} after ${maxRetries} retries`);
 }
 
 export async function closeRedis(): Promise<void> {

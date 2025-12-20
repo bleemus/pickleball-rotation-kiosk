@@ -13,6 +13,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     const [error, setError] = useState<string | null>(null);
     const [networkInfo, setNetworkInfo] = useState<{ hostname: string; ip: string | null; port: string; allIPs?: { interface: string; ip: string }[] } | null>(null);
     const [wifiSSID, setWifiSSID] = useState<string | null>(null);
+    const [wifiPassword, setWifiPassword] = useState<string | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const summaryScrollRef = useRef<HTMLDivElement>(null);
     const [isHovering, setIsHovering] = useState(false);
@@ -45,9 +46,6 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                 const response = await fetch(`${apiUrl}/network-info`);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log("Network info received:", data);
-                    console.log("All detected IPs:", data.allIPs);
-                    console.log("Selected IP:", data.ip);
                     setNetworkInfo(data);
                 } else {
                     // If network info fetch fails, set empty object so we don't block rendering
@@ -69,11 +67,11 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                 const response = await fetch(`${apiUrl}/wifi-info`);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log("WiFi SSID:", data.ssid);
                     setWifiSSID(data.ssid);
+                    setWifiPassword(data.password || null);
                 }
             } catch (err) {
-                console.log("WiFi info not available (probably not on Pi)");
+                // WiFi info not available - not configured
             }
         };
         fetchWifiInfo();
@@ -109,7 +107,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     // Auto-scroll effect for player stats (desktop only)
     useEffect(() => {
         const container = scrollContainerRef.current;
-        if (!container || !session || !isDesktop) return;
+        if (!container || !session || !isDesktop || session.ended) return;
 
         const SCROLL_SPEED = 2; // pixels per interval - smooth but faster
         const INTERVAL_MS = 20; // milliseconds between scrolls - frequent updates
@@ -178,7 +176,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     // Auto-scroll effect for session summary
     useEffect(() => {
         const container = summaryScrollRef.current;
-        if (!container || !session?.ended) return;
+        if (!container || !session || !session.ended) return;
 
         const SCROLL_SPEED = 1.5;
         const INTERVAL_MS = 20;
@@ -298,8 +296,38 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         // Remove /spectator from the URL if present
         const baseUrl = displayUrl.replace(/\/spectator$/, '');
 
+        // Generate WiFi QR code string for welcome screen
+        const wifiQRString = wifiSSID
+            ? (wifiPassword
+                ? `WIFI:S:${wifiSSID};T:WPA;P:${wifiPassword};;`
+                : `WIFI:S:${wifiSSID};T:nopass;;`)
+            : null;
+
         return (
             <div className={`h-screen flex items-center justify-center p-8 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-500 to-blue-600'}`}>
+                {/* WiFi QR Code - Top Left */}
+                {wifiQRString && (
+                    <div className="fixed top-4 left-4 z-50 space-y-3">
+                        <div className={`rounded-xl shadow-2xl p-5 ${darkMode ? 'bg-gray-800 border-2 border-blue-500' : 'bg-white border-2 border-blue-400'}`}>
+                            <div className="flex flex-col items-center">
+                                <p className={`text-lg font-bold mb-2 text-center ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                                    Step 1: Connect to WiFi
+                                </p>
+                                <QRCode
+                                    value={wifiQRString}
+                                    size={150}
+                                    level="M"
+                                />
+                                <p className={`text-base mt-2 text-center font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                    {wifiSSID}
+                                </p>
+                                <p className={`text-xs mt-1 text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    Scan to connect
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div className={`rounded-3xl shadow-2xl p-12 max-w-4xl text-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                     <h1 className={`text-5xl font-bold mb-6 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Welcome to {APP_NAME}</h1>
 
@@ -486,44 +514,23 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     // Remove /spectator from the URL if present
     const baseUrl = displayUrl.replace(/\/spectator$/, '');
 
-    // Generate WiFi QR code string (WIFI:S:<SSID>;T:WPA;P:<PASSWORD>;;)
-    // For open networks, we just show the SSID without password
-    const wifiQRString = wifiSSID ? `WIFI:S:${wifiSSID};T:nopass;;` : null;
-
     return (
         <div className={`h-screen flex ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-green-500 to-blue-600'}`}>
-            {/* Top Left - QR Codes */}
-            <div className="fixed top-4 left-4 z-50 space-y-3">
-                {/* WiFi QR Code - Only show if we have WiFi info */}
-                {wifiQRString && (
-                    <div className={`rounded-lg shadow-lg p-3 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                        <div className="flex flex-col items-center">
-                            <p className={`text-xs font-bold mb-1 text-center ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                                1. Connect to WiFi
-                            </p>
-                            <QRCode
-                                value={wifiQRString}
-                                size={80}
-                                level="M"
-                            />
-                            <p className={`text-xs mt-1 text-center font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                                {wifiSSID}
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* App URL QR Code */}
-                <div className={`rounded-lg shadow-lg p-3 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            {/* Top Left - App URL QR Code only (no WiFi QR since user is already connected) */}
+            <div className="fixed top-4 left-4 z-50">
+                <div className={`rounded-xl shadow-2xl p-3 ${darkMode ? 'bg-gray-800 border-2 border-green-500' : 'bg-white border-2 border-green-400'}`}>
                     <div className="flex flex-col items-center">
-                        <p className={`text-xs font-bold mb-1 text-center ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                            {wifiQRString ? '2. Open App' : 'Connect'}
+                        <p className={`text-sm font-bold mb-1 text-center ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                            Scan to Connect
                         </p>
                         <QRCode
                             value={baseUrl}
-                            size={80}
+                            size={100}
                             level="M"
                         />
+                        <p className={`text-xs mt-1 text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Open app
+                        </p>
                     </div>
                 </div>
             </div>

@@ -26,6 +26,8 @@ services:
       - PORT=${PORT:-3001}
       - NODE_ENV=${NODE_ENV:-production}
       - HOST_IP=${HOST_IP:-}
+      - WIFI_SSID=${WIFI_SSID:-}
+      - WIFI_PASSWORD=${WIFI_PASSWORD:-}
     depends_on:
       redis:
         condition: service_healthy

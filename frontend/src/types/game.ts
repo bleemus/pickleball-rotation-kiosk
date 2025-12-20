@@ -43,13 +43,22 @@ export interface GameHistory {
     timestamp: number;
 }
 
+// Partnership and opponent history types
+export interface PartnershipHistory {
+    [playerPair: string]: number; // "player1-player2" -> count
+}
+
+export interface OpponentHistory {
+    [playerPair: string]: number; // "player1-player2" -> count
+}
+
 export interface Session {
     id: string;
     players: Player[];
     currentRound: Round | null;
     gameHistory: GameHistory[];
-    partnershipHistory: Record<string, number>;
-    opponentHistory: Record<string, number>;
+    partnershipHistory: PartnershipHistory;
+    opponentHistory: OpponentHistory;
     numCourts: number;
     createdAt: number;
     ended?: boolean;

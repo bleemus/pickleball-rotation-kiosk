@@ -94,48 +94,23 @@ router.get("/network-info", (req: Request, res: Response) => {
   });
 });
 
-// Get WiFi SSID (for Raspberry Pi)
+// Get WiFi credentials (from environment configuration)
 router.get("/wifi-info", (req: Request, res: Response) => {
-  const { execSync } = require("child_process");
+  const ssid = process.env.WIFI_SSID;
+  const password = process.env.WIFI_PASSWORD;
 
-  try {
-    // Try multiple methods to get WiFi SSID
-    let ssid = "";
-
-    // Method 1: Try iwgetid (if wireless-tools is installed)
-    try {
-      ssid = execSync("iwgetid -r", { encoding: "utf-8" }).trim();
-    } catch (e) {
-      // Method 2: Try nmcli (NetworkManager)
-      try {
-        const nmcliOutput = execSync("nmcli -t -f active,ssid dev wifi | grep '^yes'", { encoding: "utf-8" }).trim();
-        ssid = nmcliOutput.split(":")[1] || "";
-      } catch (e2) {
-        // Method 3: Try parsing /proc/net/wireless and wpa_cli
-        try {
-          execSync("cat /proc/net/wireless | grep -q wlan", { encoding: "utf-8" });
-          ssid = execSync("wpa_cli -i wlan0 status | grep '^ssid=' | cut -d'=' -f2", { encoding: "utf-8" }).trim();
-        } catch (e3) {
-          // Method 4: Check iw command
-          try {
-            const iwOutput = execSync("iw dev wlan0 link", { encoding: "utf-8" });
-            const match = iwOutput.match(/SSID:\s*(.+)/);
-            ssid = match ? match[1].trim() : "";
-          } catch (e4) {
-            // All methods failed
-          }
-        }
-      }
-    }
-
-    if (ssid) {
-      res.json({ ssid });
-    } else {
-      res.status(404).json({ error: "Not connected to WiFi" });
-    }
-  } catch (error) {
-    res.status(404).json({ error: "WiFi information not available" });
+  if (!ssid) {
+    res.status(404).json({ error: "WiFi not configured. Set WIFI_SSID and WIFI_PASSWORD environment variables." });
+    return;
   }
+
+  // Return SSID and password (if configured)
+  const response: { ssid: string; password?: string } = { ssid };
+  if (password) {
+    response.password = password;
+  }
+
+  res.json(response);
 });
 
 // Get active session

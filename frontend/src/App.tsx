@@ -139,12 +139,14 @@ function App() {
             try {
                 const updatedSession = await api.getSession(session.id);
                 
-                // Always update session data so all clients see the latest
-                setSession(updatedSession);
-
                 // Only force state changes when round completion status changes
                 // If someone just completed the round, kick everyone back to PLAYING
-                if (updatedSession.currentRound?.completed && gameState === GameState.SCORING) {
+                const shouldResetToPlaying = updatedSession.currentRound?.completed && gameState === GameState.SCORING;
+                
+                // Always update session data so all clients see the latest
+                setSession(updatedSession);
+                
+                if (shouldResetToPlaying) {
                     setGameState(GameState.PLAYING);
                 }
                 // Otherwise, let users stay on whatever screen they're on
@@ -161,7 +163,7 @@ function App() {
 
         // Cleanup interval on unmount or when session changes
         return () => clearInterval(intervalId);
-    }, [session?.id, gameState]); // Include gameState to ensure effect has current value
+    }, [session?.id]); // Remove gameState from dependencies to avoid re-runs
 
     // Handle adding player (during setup or mid-game)
     const handleAddPlayer = async (name: string) => {

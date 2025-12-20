@@ -218,6 +218,11 @@ make down
 PORT=3001
 REDIS_URL=redis://localhost:6379
 NODE_ENV=development
+
+# WiFi credentials to display in QR code on spectator screen
+# Both SSID and PASSWORD are required for WiFi QR code to appear
+# WIFI_SSID=MyNetwork
+# WIFI_PASSWORD=MyPassword123
 ```
 
 **Frontend** (frontend/.env):
@@ -226,6 +231,13 @@ VITE_API_URL=http://localhost:3001/api
 ```
 
 For network access (other devices on LAN), use machine's IP in `VITE_API_URL`.
+
+**WiFi Configuration**:
+- `WIFI_SSID`: WiFi network name to display in QR code on spectator screen
+- `WIFI_PASSWORD`: WiFi password (optional - if not set, QR code shows open network)
+- Set in docker-compose.yml or .env file
+- QR code will only appear if WIFI_SSID is configured
+- Example: `WIFI_SSID=YourNetwork WIFI_PASSWORD=YourPassword make up`
 
 ### Debugging
 

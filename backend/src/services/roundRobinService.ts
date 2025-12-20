@@ -12,7 +12,7 @@ const PARTNERSHIP_PENALTY = 10;
 const OPPONENT_PENALTY = 5;
 const BENCH_BONUS = -20; // Negative because lower scores are better
 const GAMES_PLAYED_PENALTY = 8; // Penalty for each game played (encourages less-played players, ensures new players get priority)
-const CONSECUTIVE_BENCH_PENALTY = 1000; // Massive penalty to prevent sitting same player twice in a row
+const CONSECUTIVE_BENCH_BONUS = -100; // Strong bonus (negative) to prioritize players who sat out last round
 
 /**
  * Creates a unique key for a player pair (sorted alphabetically)
@@ -120,9 +120,9 @@ function calculateMatchupScore(
       score += player.roundsSatOut * BENCH_BONUS;
       // Add penalty for games played (to prioritize players with fewer games)
       score += player.gamesPlayed * GAMES_PLAYED_PENALTY;
-      // Add massive penalty if player sat out last round (prevent consecutive benching)
+      // Add strong bonus if player sat out last round (prioritize them to prevent consecutive benching)
       if (player.consecutiveRoundsSatOut > 0) {
-        score += CONSECUTIVE_BENCH_PENALTY;
+        score += CONSECUTIVE_BENCH_BONUS;
       }
     }
 

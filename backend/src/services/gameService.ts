@@ -8,7 +8,7 @@ import {
   AddPlayerRequest,
   CompleteRoundRequest,
 } from "../types/game";
-import { saveSession, getSession, deleteSession, getActiveSessionId, setActiveSession } from "./redis";
+import { saveSession, getSession, deleteSession, getActiveSessionId, setActiveSession, updateSessionAtomic } from "./redis";
 import { generateNextRound, updateHistory, reverseHistory } from "./roundRobinService";
 
 /**
@@ -27,13 +27,26 @@ function shuffleArray<T>(array: T[]): T[] {
  * Creates a new player object
  */
 function createPlayer(name: string): Player {
-  if (name.length > 30) {
+  // Trim whitespace
+  const trimmedName = name.trim();
+
+  // Validate name
+  if (!trimmedName) {
+    throw new Error("Player name cannot be empty");
+  }
+
+  if (trimmedName.length > 30) {
     throw new Error("Player name must be 30 characters or less");
+  }
+
+  // Check for invalid characters that could cause issues
+  if (/[<>\"']/.test(trimmedName)) {
+    throw new Error("Player name contains invalid characters");
   }
 
   return {
     id: uuidv4(),
-    name,
+    name: trimmedName,
     gamesPlayed: 0,
     wins: 0,
     losses: 0,
@@ -279,11 +292,16 @@ export async function cancelCurrentRound(sessionId: string): Promise<Session> {
     throw new Error("Cannot cancel a completed round");
   }
 
-  // Reverse the roundsSatOut increments for benched players
+  // Reverse the roundsSatOut and consecutiveRoundsSatOut increments for benched players
   for (const benchedPlayer of session.currentRound.benchedPlayers) {
     const player = session.players.find((p) => p.id === benchedPlayer.id);
-    if (player && player.roundsSatOut > 0) {
-      player.roundsSatOut -= 1;
+    if (player) {
+      if (player.roundsSatOut > 0) {
+        player.roundsSatOut -= 1;
+      }
+      if (player.consecutiveRoundsSatOut > 0) {
+        player.consecutiveRoundsSatOut -= 1;
+      }
     }
   }
 
@@ -296,15 +314,22 @@ export async function cancelCurrentRound(sessionId: string): Promise<Session> {
 
 /**
  * Completes the current round with scores
+ * Uses atomic updates to prevent concurrent modification conflicts
  */
 export async function completeCurrentRound(
   sessionId: string,
   request: CompleteRoundRequest,
 ): Promise<Session> {
-  const session = await getSessionById(sessionId);
+  // Use atomic update to prevent race conditions when multiple users submit scores simultaneously
+  return await updateSessionAtomic(sessionId, (session) => {
 
   if (!session.currentRound) {
     throw new Error("No active round to complete");
+  }
+
+  // Validate that at least some scores are being submitted
+  if (!request.scores || request.scores.length === 0) {
+    throw new Error("No scores provided. At least one match score must be submitted.");
   }
 
   const isResubmit = session.currentRound.completed;
@@ -324,12 +349,12 @@ export async function completeCurrentRound(
       // Find players by name (since history stores names, not IDs)
       for (const playerName of entry.team1Players) {
         const player = session.players.find((p) => p.name === playerName);
-        if (player && player.gamesPlayed > 0) {
-          player.gamesPlayed -= 1;
-          if (team1Won && player.wins > 0) {
-            player.wins -= 1;
-          } else if (!team1Won && player.losses > 0) {
-            player.losses -= 1;
+        if (player) {
+          player.gamesPlayed = Math.max(0, player.gamesPlayed - 1);
+          if (team1Won) {
+            player.wins = Math.max(0, player.wins - 1);
+          } else {
+            player.losses = Math.max(0, player.losses - 1);
           }
           player.pointDifferential -= pointDiff;
         }
@@ -337,12 +362,12 @@ export async function completeCurrentRound(
 
       for (const playerName of entry.team2Players) {
         const player = session.players.find((p) => p.name === playerName);
-        if (player && player.gamesPlayed > 0) {
-          player.gamesPlayed -= 1;
-          if (!team1Won && player.wins > 0) {
-            player.wins -= 1;
-          } else if (team1Won && player.losses > 0) {
-            player.losses -= 1;
+        if (player) {
+          player.gamesPlayed = Math.max(0, player.gamesPlayed - 1);
+          if (!team1Won) {
+            player.wins = Math.max(0, player.wins - 1);
+          } else {
+            player.losses = Math.max(0, player.losses - 1);
           }
           player.pointDifferential += pointDiff;
         }
@@ -513,8 +538,9 @@ export async function completeCurrentRound(
     }
   }
 
-  await saveSession(session);
+  // Return modified session (will be saved atomically by updateSessionAtomic)
   return session;
+  });
 }
 
 /**

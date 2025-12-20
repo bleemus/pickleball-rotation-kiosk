@@ -34,11 +34,12 @@ async function handleApiError(response: Response, defaultMessage: string): Promi
             throw new Error(`${defaultMessage} (HTTP ${response.status})`);
         }
     } catch (parseError) {
-        // JSON parsing failed or network issue
-        if (parseError instanceof Error && parseError.message.includes("HTTP")) {
+        // If it's already an Error we threw, re-throw it
+        if (parseError instanceof Error) {
             throw parseError;
         }
-        throw new Error(`${defaultMessage} (Network error)`);
+        // Otherwise it's a parsing error, wrap it
+        throw new Error(`${defaultMessage} (Parse error)`);
     }
 }
 
