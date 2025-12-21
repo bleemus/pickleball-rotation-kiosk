@@ -53,12 +53,10 @@ function createMockReqRes(options: {
 
 // Helper to find route handler
 function getRouteHandler(method: string, path: string) {
-  const layer = router.stack.find(
-    (layer: { route?: { path: string; methods: Record<string, boolean> } }) => {
-      if (!layer.route) return false;
-      return layer.route.path === path && layer.route.methods[method.toLowerCase()];
-    }
-  );
+  const layer = router.stack.find((layer: any) => {
+    if (!layer.route) return false;
+    return layer.route.path === path && layer.route.methods[method.toLowerCase()];
+  });
 
   if (!layer || !layer.route) {
     throw new Error(`Route ${method} ${path} not found`);
@@ -132,8 +130,9 @@ describe("Game Routes", () => {
     it("should return network information", async () => {
       const handler = getRouteHandler("GET", "/network-info");
       const { req, res } = createMockReqRes({});
+      const next = vi.fn();
 
-      handler(req, res);
+      handler(req, res, next);
 
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -153,7 +152,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("GET", "/wifi-info");
       const { req, res } = createMockReqRes({});
 
-      handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(String) }));
@@ -170,7 +170,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("GET", "/wifi-info");
       const { req, res } = createMockReqRes({});
 
-      handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(res.json).toHaveBeenCalledWith({
         ssid: "TestNetwork",
@@ -191,7 +192,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("POST", "/test/cleanup");
       const { req, res } = createMockReqRes({});
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockFlushAllSessions).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({ message: expect.any(String) });
@@ -206,7 +208,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("POST", "/test/cleanup");
       const { req, res } = createMockReqRes({});
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockFlushAllSessions).not.toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(403);
@@ -222,7 +225,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("GET", "/session/active");
       const { req, res } = createMockReqRes({});
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(res.json).toHaveBeenCalledWith(mockSession);
     });
@@ -233,7 +237,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("GET", "/session/active");
       const { req, res } = createMockReqRes({});
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: "No active session" });
@@ -245,7 +250,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("GET", "/session/active");
       const { req, res } = createMockReqRes({});
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "Redis connection failed" });
@@ -261,7 +267,8 @@ describe("Game Routes", () => {
         body: { playerNames: ["Alice", "Bob", "Charlie", "Dave"], numCourts: 1 },
       });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.createSession).toHaveBeenCalledWith({
         playerNames: ["Alice", "Bob", "Charlie", "Dave"],
@@ -277,7 +284,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("POST", "/session");
       const { req, res } = createMockReqRes({ body: { playerNames: [] } });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: "Invalid player count" });
@@ -291,7 +299,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("GET", "/session/:id");
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.getSessionById).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(mockSession);
@@ -302,8 +311,9 @@ describe("Game Routes", () => {
 
       const handler = getRouteHandler("GET", "/session/:id");
       const { req, res } = createMockReqRes({ params: { id: "non-existent" } });
+      const next = vi.fn();
 
-      await handler(req, res);
+      await handler(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: "Session not found" });
@@ -321,7 +331,8 @@ describe("Game Routes", () => {
         body: { numCourts: 2 },
       });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.updateNumCourts).toHaveBeenCalledWith("session-123", 2);
       expect(res.json).toHaveBeenCalledWith(updatedSession);
@@ -334,8 +345,9 @@ describe("Game Routes", () => {
 
       const handler = getRouteHandler("DELETE", "/session/:id");
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
+      const next = vi.fn();
 
-      await handler(req, res);
+      await handler(req, res, next);
 
       expect(mockGameService.deleteSessionById).toHaveBeenCalledWith("session-123");
       expect(res.status).toHaveBeenCalledWith(204);
@@ -370,7 +382,8 @@ describe("Game Routes", () => {
         body: { name: "Eve" },
       });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.addPlayer).toHaveBeenCalledWith("session-123", { name: "Eve" });
       expect(res.json).toHaveBeenCalledWith(updatedSession);
@@ -390,7 +403,8 @@ describe("Game Routes", () => {
         params: { id: "session-123", playerId: "4" },
       });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.removePlayer).toHaveBeenCalledWith("session-123", "4");
       expect(res.json).toHaveBeenCalledWith(updatedSession);
@@ -404,7 +418,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("GET", "/session/:id/players");
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(res.json).toHaveBeenCalledWith(mockSession.players);
     });
@@ -421,7 +436,8 @@ describe("Game Routes", () => {
         params: { id: "session-123", playerId: "1" },
       });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.togglePlayerSitOut).toHaveBeenCalledWith("session-123", "1");
       expect(res.json).toHaveBeenCalledWith(updatedSession);
@@ -444,7 +460,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("POST", "/session/:id/round");
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.startNextRound).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(sessionWithRound);
@@ -464,7 +481,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("GET", "/session/:id/round/current");
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.getCurrentRound).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(currentRound);
@@ -478,7 +496,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("DELETE", "/session/:id/round");
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.cancelCurrentRound).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(mockSession);
@@ -496,7 +515,8 @@ describe("Game Routes", () => {
         body: { scores: [{ matchId: "match-1", team1Score: 11, team2Score: 9 }] },
       });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.completeCurrentRound).toHaveBeenCalledWith("session-123", {
         scores: [{ matchId: "match-1", team1Score: 11, team2Score: 9 }],
@@ -515,7 +535,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("GET", "/session/:id/history");
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.getGameHistory).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(history);
@@ -530,7 +551,8 @@ describe("Game Routes", () => {
       const handler = getRouteHandler("POST", "/session/:id/end");
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
-      await handler(req, res);
+      const next = vi.fn();
+      handler(req, res, next);
 
       expect(mockGameService.endSession).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(endedSession);
