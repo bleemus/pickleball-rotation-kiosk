@@ -2,6 +2,46 @@
 
 ## Recent Updates
 
+### December 21, 2025 - Test Suite & Type Safety Improvements
+
+#### Unit Test Fixes (171 tests now passing)
+- **Component Tests**: Fixed all Vitest unit tests across 9 test suites
+  - Updated button text expectations ("📊" → "View History")
+  - Fixed duplicate element selectors (Player Stats appears on mobile & desktop)
+  - Added missing mock data imports (mockSessionWithRound, mockGameHistory, mockEndedSession)
+  - Fixed gameHistory structure to match GameHistory interface
+  - Updated SessionSummary text ("Game Complete!" → "Session Complete!")
+  - Added 8-player requirement for multi-court test scenarios
+  - Improved player removal test with better DOM queries
+  - Fixed PlayerManager component text expectations
+
+#### E2E Test Fixes (16 Playwright tests passing)
+- **E2E Tests**: Fixed all 16 Playwright end-to-end tests to pass successfully
+  - Fixed localStorage key references (`sessionId` → `pickleballSessionId`)
+  - Updated responsive design selectors to handle mobile/desktop duplicate elements
+  - Fixed score persistence test expectations (app shows PlayerManager after completing round)
+  - Added dialog handlers for reset confirmation prompts
+  - Improved timeout handling and wait conditions
+
+#### Type Safety
+- **TypeScript**: Fixed TypeScript compilation errors across frontend test suite
+  - Removed unused imports (`mockMatch2`, `waitFor`)
+  - Fixed `global` references to use `window` object
+  - Cleaned up unused function parameters in mock handlers
+
+#### Test Coverage
+All tests now passing:
+- **Unit Tests**: 171 Vitest tests across 9 test files
+  - Component tests (CurrentMatchups, PlayerSetup, ScoreEntry, BenchDisplay, PlayerStats, SessionSummary)
+  - Hook tests (useApi, useGameState)
+  - Integration tests (App.test.tsx - 18 tests)
+- **E2E Tests**: 16 Playwright tests
+  - Setup & player management (4 tests)
+  - Full game flow (1 test)
+  - Score validation (4 tests)  
+  - Session recovery & persistence (4 tests)
+  - End-to-end integration (3 tests)
+
 ### December 2024 - Raspberry Pi Improvements
 
 #### Browser & Desktop Environment Updates

@@ -21,6 +21,7 @@ import {
   AddPlayerRequest,
   CompleteRoundRequest,
 } from "../types/game";
+import { flushAllSessions } from "../services/redis";
 
 const router = Router();
 
@@ -111,6 +112,22 @@ router.get("/wifi-info", (req: Request, res: Response) => {
   }
 
   res.json(response);
+});
+
+// Test cleanup endpoint - flush all Redis session data (development/test only)
+router.post("/test/cleanup", async (req: Request, res: Response) => {
+  // Only allow in development or test environments
+  if (process.env.NODE_ENV === "production") {
+    res.status(403).json({ error: "Test cleanup endpoint disabled in production" });
+    return;
+  }
+
+  try {
+    await flushAllSessions();
+    res.json({ message: "All session data flushed from Redis" });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
 });
 
 // Get active session

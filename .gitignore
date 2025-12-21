@@ -36,4 +36,10 @@ Thumbs.db
 # Docker volumes
 docker-compose.override.yml
 
+# Testing
+coverage/
+playwright-report/
+test-results/
+.vitest/
+
 .claude/*

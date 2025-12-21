@@ -247,16 +247,20 @@ Both frontend and backend support hot reload in development mode:
 - Edit frontend files → browser auto-refreshes
 - Edit backend files → server auto-restarts
 
-### Type Checking
+### Type Checking & Testing
 
 ```bash
-# Check types without running servers
+# Run all tests (type checking + unit tests + E2E)
 make test
 
-# Or manually
-cd backend && npm run typecheck
-cd frontend && npm run typecheck
+# Or run individually:
+cd backend && npm run typecheck    # Backend types
+cd frontend && npm run typecheck   # Frontend types
+cd frontend && npm test            # Unit tests
+npx playwright test                # E2E tests (16 tests)
 ```
+
+See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) for detailed testing documentation.
 
 ### Viewing Logs
 

@@ -29,11 +29,11 @@ export function ScoreEntry({
                 {
                     matchId: match.id,
                     team1Score:
-                        match.team1Score !== undefined
+                        match.team1Score !== undefined && match.team1Score !== null
                             ? match.team1Score.toString()
                             : "",
                     team2Score:
-                        match.team2Score !== undefined
+                        match.team2Score !== undefined && match.team2Score !== null
                             ? match.team2Score.toString()
                             : "",
                 },

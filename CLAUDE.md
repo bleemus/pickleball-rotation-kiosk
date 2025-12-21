@@ -21,7 +21,7 @@ make dev
 # Backend:  http://localhost:3001
 # Frontend: http://localhost:3000
 
-# Type checking
+# Run all tests (type checking + unit + E2E)
 make test
 ```
 
@@ -59,6 +59,27 @@ npm run dev          # Development server (Vite)
 npm run build        # Production build
 npm run preview      # Preview production build
 npm run typecheck    # Type check without building
+npm test             # Run unit tests (Vitest)
+npm run test:watch   # Unit tests in watch mode
+
+# E2E Tests
+npx playwright test              # Run all 16 E2E tests
+npx playwright test --ui         # Interactive mode
+npx playwright test --headed     # With browser visible
+```
+
+## Testing
+
+### Test Suite
+- **E2E Tests**: 16 Playwright tests covering setup, gameplay, score validation, and session recovery
+- **Unit Tests**: Vitest tests for components and hooks
+- **Type Checking**: Full TypeScript safety across frontend and backend
+
+### Running Tests
+```bash
+make test                        # Run all tests
+cd frontend && npm test          # Unit tests only
+npx playwright test              # E2E tests only
 ```
 
 ## Architecture

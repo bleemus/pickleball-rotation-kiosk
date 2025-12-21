@@ -1,4 +1,4 @@
-.PHONY: help build up down logs restart clean dev dev-down install test
+.PHONY: help build up down logs restart clean dev dev-down install test test-unit test-e2e test-all test-ui
 
 help:
 	@echo "Pickleball Kiosk - Make Commands"
@@ -9,6 +9,12 @@ help:
 	@echo "  make dev       - Start development servers (backend + frontend + Redis)"
 	@echo "  make dev-down  - Stop development Redis container"
 	@echo "  make test      - Run type checking"
+	@echo ""
+	@echo "Testing:"
+	@echo "  make test-unit - Run unit tests (Vitest)"
+	@echo "  make test-e2e  - Run E2E tests (Playwright)"
+	@echo "  make test-all  - Run all tests (type check + unit + E2E)"
+	@echo "  make test-ui   - Open Vitest UI"
 	@echo ""
 	@echo "Docker:"
 	@echo "  make build     - Build Docker images"
@@ -30,17 +36,17 @@ dev:
 	@echo "🚀 Starting development servers..."
 	@echo ""
 	@echo "Checking Redis..."
-	@if ! docker ps --format '{{.Names}}' | grep -q '^dev-redis$$'; then \
-		echo "📦 Starting Redis container..."; \
-		docker run -d --name dev-redis -p 6379:6379 redis:7-alpine; \
+	@if docker ps --format '{{.Names}}' | grep -q '^dev-redis$$'; then \
+		echo "✅ Redis already running"; \
+	elif docker ps -a --format '{{.Names}}' | grep -q '^dev-redis$$'; then \
+		echo "📦 Starting existing Redis container..."; \
+		docker start dev-redis; \
 		echo "✅ Redis started"; \
 	else \
-		echo "✅ Redis already running"; \
+		echo "📦 Creating new Redis container..."; \
+		docker run -d --name dev-redis -p 6379:6379 redis:7-alpine; \
+		echo "✅ Redis created and started"; \
 	fi
-	@echo ""
-	@echo "Backend:  http://localhost:3001"
-	@echo "Frontend: http://localhost:3000"
-	@echo ""
 	@cd backend && npm run dev & cd frontend && npm run dev
 
 dev-down:
@@ -93,3 +99,33 @@ restart:
 clean:
 	@docker-compose down -v
 	@echo "✅ All containers and volumes removed"
+
+# Testing commands
+test-unit:
+	@echo "🧪 Running unit tests (Vitest)..."
+	@cd frontend && npm run test:unit
+	@echo "✅ Unit tests complete!"
+
+test-e2e:
+	@echo "🎭 Running E2E tests (Playwright)..."
+	@echo "Ensuring Redis is running..."
+	@if ! docker ps --format '{{.Names}}' | grep -q '^dev-redis$$'; then \
+		echo "📦 Starting Redis container..."; \
+		docker run -d --name dev-redis -p 6379:6379 redis:7-alpine; \
+		echo "✅ Redis started"; \
+	else \
+		echo "✅ Redis already running"; \
+	fi
+	@npm run test:e2e
+	@echo "✅ E2E tests complete!"
+
+test-all:
+	@echo "🚀 Running all tests..."
+	@make test
+	@make test-unit
+	@make test-e2e
+	@echo "✅ All tests complete!"
+
+test-ui:
+	@echo "🎨 Opening Vitest UI..."
+	@cd frontend && npm run test:ui

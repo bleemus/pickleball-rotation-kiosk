@@ -412,6 +412,69 @@ pickleball-kiosk/
 └── docker-compose.yml
 ```
 
+## Testing
+
+### Run All Tests
+
+```bash
+make test
+```
+
+This runs:
+1. TypeScript type checking (backend & frontend)
+2. Frontend unit tests (Vitest)
+3. E2E tests (Playwright)
+
+### Frontend Unit Tests
+
+```bash
+cd frontend
+npm test              # Run tests once
+npm run test:watch    # Run in watch mode
+npm run test:ui       # Open Vitest UI
+npm run test:coverage # Generate coverage report
+```
+
+Tests are located in:
+- `frontend/src/components/*.test.tsx` - Component tests
+- `frontend/src/hooks/*.test.ts` - Hook tests
+- `frontend/src/test/` - Test utilities and mocks
+
+### E2E Tests (Playwright)
+
+```bash
+# Run all E2E tests
+npx playwright test
+
+# Run specific test file
+npx playwright test 01-setup.spec.ts
+
+# Run in UI mode (interactive)
+npx playwright test --ui
+
+# Run with browser visible (headed mode)
+npx playwright test --headed
+
+# Generate HTML report
+npx playwright show-report
+```
+
+E2E tests are located in `e2e/`:
+- `01-setup.spec.ts` - Player setup and game initialization
+- `02-full-game.spec.ts` - Complete game flow
+- `04-score-validation.spec.ts` - Score entry validation
+- `05-session-recovery.spec.ts` - Session persistence
+
+### Type Checking Only
+
+```bash
+# Backend
+cd backend && npm run typecheck
+
+# Frontend  
+cd frontend && npm run typecheck
+```
+
 ## Making Changes
 
 ### 1. Create a Branch

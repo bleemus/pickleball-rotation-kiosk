@@ -213,6 +213,39 @@ export async function updateSessionAtomic(
   throw new Error(`Failed to update session ${sessionId} after ${maxRetries} retries`);
 }
 
+/**
+ * Flush all session data from Redis (for testing only)
+ */
+export async function flushAllSessions(): Promise<void> {
+  const client = getRedisClient();
+
+  // Get all session keys
+  const sessionKeys: string[] = [];
+  let cursor = 0;
+
+  do {
+    const result = await client.scan(cursor, {
+      MATCH: "session:*",
+      COUNT: 100,
+    });
+
+    cursor = result.cursor;
+    sessionKeys.push(...result.keys);
+  } while (cursor !== 0);
+
+  // Also clear the active session ID
+  const activeSessionKey = await client.exists("active-session-id");
+  if (activeSessionKey) {
+    sessionKeys.push("active-session-id");
+  }
+
+  // Delete all keys
+  if (sessionKeys.length > 0) {
+    await client.del(sessionKeys);
+    console.log(`Flushed ${sessionKeys.length} keys from Redis`);
+  }
+}
+
 export async function closeRedis(): Promise<void> {
   if (redisClient) {
     await redisClient.quit();

@@ -425,6 +425,15 @@ pickleball-kiosk/
 5. Connect frontend to API in `frontend/src/hooks/useApi.ts`
 
 ### Testing
+
+Run all tests (type checking + unit tests + E2E):
+
+```bash
+make test
+```
+
+Individual test suites:
+
 ```bash
 # Backend type checking
 cd backend
@@ -434,9 +443,26 @@ npm run typecheck
 cd frontend
 npm run typecheck
 
-# Build test
-npm run build
+# Frontend unit tests (Vitest)
+cd frontend
+npm test              # Run once
+npm run test:watch    # Watch mode
+npm run test:ui       # Interactive UI
+npm run test:coverage # Coverage report
+
+# E2E tests (Playwright)
+npx playwright test              # Run all 16 tests
+npx playwright test --ui         # Interactive mode
+npx playwright test --headed     # With browser visible
+npx playwright show-report       # View HTML report
 ```
+
+**Test Coverage:**
+- 16 Playwright E2E tests (setup, gameplay, score validation, session recovery)
+- Vitest unit tests for components and hooks
+- Full TypeScript type safety
+
+See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) for detailed testing guide.
 
 ## Production Deployment
 
