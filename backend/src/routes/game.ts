@@ -98,11 +98,9 @@ router.get("/wifi-info", (req: Request, res: Response) => {
   const password = process.env.WIFI_PASSWORD;
 
   if (!ssid) {
-    res
-      .status(404)
-      .json({
-        error: "WiFi not configured. Set WIFI_SSID and WIFI_PASSWORD environment variables.",
-      });
+    res.status(404).json({
+      error: "WiFi not configured. Set WIFI_SSID and WIFI_PASSWORD environment variables.",
+    });
     return;
   }
 
