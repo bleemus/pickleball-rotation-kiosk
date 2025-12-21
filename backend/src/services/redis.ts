@@ -102,7 +102,7 @@ export async function getSession(sessionId: string): Promise<Session | null> {
   try {
     return JSON.parse(data) as Session;
   } catch (error) {
-    console.error(`Failed to parse session data for ${sessionId}:`, error);
+    console.error("Failed to parse session data for session", sessionId, error);
     // Delete corrupted session data
     await client.del(key);
     throw new Error(`Session data corrupted for ${sessionId}. Session has been removed.`);
