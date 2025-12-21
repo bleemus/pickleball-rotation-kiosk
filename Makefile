@@ -109,7 +109,9 @@ test-unit:
 test-e2e:
 	@echo "🎭 Running E2E tests (Playwright)..."
 	@echo "Ensuring Redis is running..."
-	@if ! docker ps --format '{{.Names}}' | grep -q '^dev-redis$$'; then \
+	@if [ "$$CI" = "true" ] || [ "$$GITHUB_ACTIONS" = "true" ]; then \
+		echo "✅ CI detected; using existing Redis service"; \
+	elif ! docker ps --format '{{.Names}}' | grep -q '^dev-redis$$'; then \
 		echo "📦 Starting Redis container..."; \
 		docker run -d --name dev-redis -p 6379:6379 redis:7-alpine; \
 		echo "✅ Redis started"; \

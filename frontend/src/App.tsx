@@ -88,18 +88,33 @@ function App() {
     useEffect(() => {
         if (session) {
             // Already have a session, no need to poll for new sessions
-            console.log("[Poll] Session already loaded, skipping poll for new sessions");
+            if (DEBUG_MODE) {
+                console.log(
+                    "[Poll] Session already loaded, skipping poll for new sessions",
+                );
+            }
             return;
         }
 
-        console.log("[Poll] Starting to poll for active sessions (no session loaded)");
+        if (DEBUG_MODE) {
+            console.log(
+                "[Poll] Starting to poll for active sessions (no session loaded)",
+            );
+        }
 
         const pollForActiveSession = async () => {
             try {
-                console.log("[Poll] Checking for active session...");
+                if (DEBUG_MODE) {
+                    console.log("[Poll] Checking for active session...");
+                }
                 const activeSession = await api.getActiveSession();
                 if (activeSession) {
-                    console.log("[Poll] Found active session:", activeSession.id);
+                    if (DEBUG_MODE) {
+                        console.log(
+                            "[Poll] Found active session:",
+                            activeSession.id,
+                        );
+                    }
                     setSession(activeSession);
 
                     // Determine game state based on session data
@@ -109,11 +124,20 @@ function App() {
                         setGameState(GameState.SETUP);
                     }
                 } else {
-                    console.log("[Poll] No active session found (returned null)");
+                    if (DEBUG_MODE) {
+                        console.log(
+                            "[Poll] No active session found (returned null)",
+                        );
+                    }
                 }
             } catch (err) {
                 // No active session exists, that's okay
-                console.log("[Poll] No active session found (error):", err);
+                if (DEBUG_MODE) {
+                    console.log(
+                        "[Poll] No active session found (error):",
+                        err,
+                    );
+                }
             }
         };
 
@@ -122,7 +146,9 @@ function App() {
 
         // Cleanup interval on unmount or when session is loaded
         return () => {
-            console.log("[Poll] Stopping poll for active sessions");
+            if (DEBUG_MODE) {
+                console.log("[Poll] Stopping poll for active sessions");
+            }
             clearInterval(intervalId);
         };
     }, [session]);
@@ -151,7 +177,11 @@ function App() {
                 }
                 // Otherwise, let users stay on whatever screen they're on
             } catch (err) {
-                console.log("[Poll] Session no longer exists (likely deleted), clearing local state");
+                if (DEBUG_MODE) {
+                    console.log(
+                        "[Poll] Session no longer exists (likely deleted), clearing local state",
+                    );
+                }
                 // Session was deleted in another browser, clear it locally
                 reset();
                 setError(null); // Clear any error messages
