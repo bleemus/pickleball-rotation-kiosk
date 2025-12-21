@@ -1,19 +1,19 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 import {
   mockSession,
   mockSessionWithRound,
   mockSessionWithCompletedRound,
   mockPlayers,
   mockRound,
-  mockGameHistory
-} from './mockData';
+  mockGameHistory,
+} from "./mockData";
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = "/api";
 
 export const handlers = [
   // Session endpoints
   http.post(`${API_BASE_URL}/session`, async ({ request }) => {
-    const body = await request.json() as { playerNames: string[]; numCourts?: number };
+    const body = (await request.json()) as { playerNames: string[]; numCourts?: number };
     return HttpResponse.json({
       ...mockSession,
       players: body.playerNames.map((name, index) => ({
@@ -39,7 +39,7 @@ export const handlers = [
   }),
 
   http.patch(`${API_BASE_URL}/session/:id/courts`, async ({ request }) => {
-    const body = await request.json() as { numCourts: number };
+    const body = (await request.json()) as { numCourts: number };
     return HttpResponse.json({
       ...mockSession,
       numCourts: body.numCourts,
@@ -48,7 +48,7 @@ export const handlers = [
 
   // Player endpoints
   http.post(`${API_BASE_URL}/session/:id/players`, async ({ request }) => {
-    const body = await request.json() as { name: string };
+    const body = (await request.json()) as { name: string };
     const newPlayer = {
       id: `player-${mockSession.players.length + 1}`,
       name: body.name,

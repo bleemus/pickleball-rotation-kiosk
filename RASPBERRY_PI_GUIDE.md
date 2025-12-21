@@ -5,6 +5,7 @@ Complete guide for deploying the Pickleball Kiosk on a Raspberry Pi with automat
 ## Hardware Requirements
 
 ### Minimum
+
 - **Raspberry Pi 3B+** or newer
 - **2GB RAM** minimum
 - **16GB microSD card** (Class 10 or better)
@@ -13,6 +14,7 @@ Complete guide for deploying the Pickleball Kiosk on a Raspberry Pi with automat
 - **Network**: WiFi or Ethernet connection
 
 ### Recommended
+
 - **Raspberry Pi 4 (4GB RAM)** or **Raspberry Pi 5**
 - **32GB microSD card** (for better longevity)
 - **Ethernet connection** (more reliable than WiFi)
@@ -84,6 +86,7 @@ sudo reboot
 ### 5. Done!
 
 After reboot:
+
 - **Spectator display** launches automatically in fullscreen on the Pi's HDMI display
 - **Admin interface** accessible from any device on the network at `http://pickleball.local/`
 
@@ -109,12 +112,12 @@ The `install.sh` script automatically:
 
 After installation:
 
-| Interface | URL | Description |
-|-----------|-----|-------------|
-| **Admin** | `http://pickleball.local/` | Manage games, enter scores, add players |
-| **Spectator** | `http://pickleball.local/spectator` | Full-screen display (auto-launches on Pi) |
-| **Backend API** | `http://pickleball.local:3001/api` | REST API endpoints |
-| **Health Check** | `http://pickleball.local:3001/health` | Service health status |
+| Interface        | URL                                   | Description                               |
+| ---------------- | ------------------------------------- | ----------------------------------------- |
+| **Admin**        | `http://pickleball.local/`            | Manage games, enter scores, add players   |
+| **Spectator**    | `http://pickleball.local/spectator`   | Full-screen display (auto-launches on Pi) |
+| **Backend API**  | `http://pickleball.local:3001/api`    | REST API endpoints                        |
+| **Health Check** | `http://pickleball.local:3001/health` | Service health status                     |
 
 Replace `pickleball` with your chosen hostname.
 
@@ -156,14 +159,17 @@ make clean
 **Solutions:**
 
 1. **Check mDNS is running:**
+
    ```bash
    sudo systemctl status avahi-daemon
    ```
 
 2. **Find IP address:**
+
    ```bash
    hostname -I
    ```
+
    Then access via IP: `http://192.168.1.XXX/`
 
 3. **Windows users:** Install [Bonjour Print Services](https://support.apple.com/kb/DL999)
@@ -177,17 +183,20 @@ make clean
 **Solutions:**
 
 1. **Check if WiFi is blocked:**
+
    ```bash
    sudo rfkill list
    ```
 
 2. **Unblock WiFi:**
+
    ```bash
    sudo rfkill unblock wifi
    sudo rfkill unblock all
    ```
 
 3. **Check WiFi configuration:**
+
    ```bash
    cat /etc/wpa_supplicant/wpa_supplicant.conf
    ```
@@ -201,19 +210,24 @@ make clean
 **Solutions:**
 
 1. **Check if application is running:**
+
    ```bash
    cd ~/pickleball-rotation-kiosk
    docker ps
    ```
+
    All containers should be running
 
 2. **Check autostart configuration:**
+
    ```bash
    cat ~/.config/lxsession/LXDE-pi/autostart
    ```
+
    Should include firefox-esr line
 
 3. **Re-run installer:**
+
    ```bash
    cd ~/pickleball-rotation-kiosk
    ./install.sh
@@ -231,9 +245,11 @@ make clean
 **Solutions:**
 
 1. **Check screen blanking settings:**
+
    ```bash
    grep "xserver-command" /etc/lightdm/lightdm.conf
    ```
+
    Should show: `xserver-command=X -s 0 -dpms`
 
 2. **Re-run installer to fix:**
@@ -250,18 +266,22 @@ make clean
 **Solutions:**
 
 1. **Check Docker is running:**
+
    ```bash
    sudo systemctl status docker
    sudo systemctl start docker
    ```
 
 2. **Check disk space:**
+
    ```bash
    df -h
    ```
+
    Root partition should have at least 2GB free
 
 3. **Clean and rebuild:**
+
    ```bash
    cd ~/pickleball-rotation-kiosk
    make clean
@@ -281,21 +301,25 @@ make clean
 **Solutions:**
 
 1. **Check internet connection:**
+
    ```bash
    ping -c 3 google.com
    ```
 
 2. **Check available disk space:**
+
    ```bash
    df -h
    ```
 
 3. **View system logs:**
+
    ```bash
    sudo journalctl -xe
    ```
 
 4. **Try manual installation steps:**
+
    ```bash
    # Update system
    sudo apt-get update
@@ -329,6 +353,7 @@ For multiple courts/kiosks:
    - Court 3: `court3.local`
 
 2. **During installation, set different hostname:**
+
    ```
    Change hostname? y
    Enter new hostname: court1
@@ -377,16 +402,19 @@ nano ~/.config/lxsession/LXDE-pi/autostart
 ```
 
 **Change spectator URL to admin interface:**
+
 ```bash
 @firefox-esr --kiosk http://pickleball.local/
 ```
 
 **Change wait time before launch:**
+
 ```bash
 @bash -c "sleep 20"  # Wait 20 seconds instead of 15
 ```
 
 **Disable cursor hiding:**
+
 ```bash
 # Remove or comment out:
 # @unclutter -idle 0.5 -root

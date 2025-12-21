@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '../test/utils';
-import { PlayerStats } from './PlayerStats';
-import { Player } from '../types/game';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "../test/utils";
+import { PlayerStats } from "./PlayerStats";
+import { Player } from "../types/game";
 
-describe('PlayerStats', () => {
+describe("PlayerStats", () => {
   const mockPlayers: Player[] = [
     {
-      id: '1',
-      name: 'Alice',
+      id: "1",
+      name: "Alice",
       gamesPlayed: 5,
       wins: 4,
       losses: 1,
@@ -17,8 +17,8 @@ describe('PlayerStats', () => {
       forceSitOut: false,
     },
     {
-      id: '2',
-      name: 'Bob',
+      id: "2",
+      name: "Bob",
       gamesPlayed: 5,
       wins: 3,
       losses: 2,
@@ -28,8 +28,8 @@ describe('PlayerStats', () => {
       forceSitOut: false,
     },
     {
-      id: '3',
-      name: 'Charlie',
+      id: "3",
+      name: "Charlie",
       gamesPlayed: 5,
       wins: 2,
       losses: 3,
@@ -40,59 +40,59 @@ describe('PlayerStats', () => {
     },
   ];
 
-  describe('Rendering', () => {
-    it('renders player stats header', () => {
+  describe("Rendering", () => {
+    it("renders player stats header", () => {
       render(<PlayerStats players={mockPlayers} />);
 
-      expect(screen.getByText('Player Stats')).toBeInTheDocument();
+      expect(screen.getByText("Player Stats")).toBeInTheDocument();
     });
 
-    it('renders all players', () => {
+    it("renders all players", () => {
       render(<PlayerStats players={mockPlayers} />);
 
-      mockPlayers.forEach(player => {
+      mockPlayers.forEach((player) => {
         expect(screen.getByText(player.name)).toBeInTheDocument();
       });
     });
 
-    it('displays player rank numbers', () => {
+    it("displays player rank numbers", () => {
       render(<PlayerStats players={mockPlayers} />);
 
-      expect(screen.getByText('#1')).toBeInTheDocument();
-      expect(screen.getByText('#2')).toBeInTheDocument();
-      expect(screen.getByText('#3')).toBeInTheDocument();
+      expect(screen.getByText("#1")).toBeInTheDocument();
+      expect(screen.getByText("#2")).toBeInTheDocument();
+      expect(screen.getByText("#3")).toBeInTheDocument();
     });
   });
 
-  describe('Sorting', () => {
-    it('sorts players by wins descending', () => {
+  describe("Sorting", () => {
+    it("sorts players by wins descending", () => {
       render(<PlayerStats players={mockPlayers} />);
 
-      const playerElements = screen.getAllByText(/^[A-Za-z]+$/).filter(el =>
-        ['Alice', 'Bob', 'Charlie'].includes(el.textContent || '')
-      );
+      const playerElements = screen
+        .getAllByText(/^[A-Za-z]+$/)
+        .filter((el) => ["Alice", "Bob", "Charlie"].includes(el.textContent || ""));
 
-      const playerNames = playerElements.map(el => el.textContent);
-      expect(playerNames).toEqual(['Alice', 'Bob', 'Charlie']);
+      const playerNames = playerElements.map((el) => el.textContent);
+      expect(playerNames).toEqual(["Alice", "Bob", "Charlie"]);
     });
 
-    it('uses point differential as tiebreaker', () => {
+    it("uses point differential as tiebreaker", () => {
       const playersWithTies: Player[] = [
         {
           ...mockPlayers[0],
-          name: 'Player1',
+          name: "Player1",
           wins: 3,
           pointDifferential: 5,
         },
         {
           ...mockPlayers[1],
-          name: 'Player2',
+          name: "Player2",
           wins: 3,
           pointDifferential: 10,
         },
         {
           ...mockPlayers[2],
-          name: 'Player3',
+          name: "Player3",
           wins: 3,
           pointDifferential: 3,
         },
@@ -100,31 +100,31 @@ describe('PlayerStats', () => {
 
       render(<PlayerStats players={playersWithTies} />);
 
-      const playerElements = screen.getAllByText(/^Player[123]$/).filter(el =>
-        ['Player1', 'Player2', 'Player3'].includes(el.textContent || '')
-      );
+      const playerElements = screen
+        .getAllByText(/^Player[123]$/)
+        .filter((el) => ["Player1", "Player2", "Player3"].includes(el.textContent || ""));
 
-      const playerNames = playerElements.map(el => el.textContent);
-      expect(playerNames).toEqual(['Player2', 'Player1', 'Player3']);
+      const playerNames = playerElements.map((el) => el.textContent);
+      expect(playerNames).toEqual(["Player2", "Player1", "Player3"]);
     });
 
-    it('uses name as final tiebreaker', () => {
+    it("uses name as final tiebreaker", () => {
       const playersWithSameStats: Player[] = [
         {
           ...mockPlayers[0],
-          name: 'Charlie',
+          name: "Charlie",
           wins: 3,
           pointDifferential: 5,
         },
         {
           ...mockPlayers[1],
-          name: 'Alice',
+          name: "Alice",
           wins: 3,
           pointDifferential: 5,
         },
         {
           ...mockPlayers[2],
-          name: 'Bob',
+          name: "Bob",
           wins: 3,
           pointDifferential: 5,
         },
@@ -135,59 +135,59 @@ describe('PlayerStats', () => {
       const playerElements = screen.getAllByText(/^[A-Z][a-z]+$/);
 
       const playerNames = playerElements
-        .map(el => el.textContent)
-        .filter(name => ['Alice', 'Bob', 'Charlie'].includes(name || ''));
+        .map((el) => el.textContent)
+        .filter((name) => ["Alice", "Bob", "Charlie"].includes(name || ""));
 
-      expect(playerNames).toEqual(['Alice', 'Bob', 'Charlie']);
+      expect(playerNames).toEqual(["Alice", "Bob", "Charlie"]);
     });
   });
 
-  describe('Player Information Display', () => {
-    it('shows player statistics', () => {
+  describe("Player Information Display", () => {
+    it("shows player statistics", () => {
       const { container } = render(<PlayerStats players={mockPlayers} />);
 
       // Check that stats are displayed in the component
-      expect(container.textContent).toContain('Alice');
-      expect(container.textContent).toContain('4'); // wins
-      expect(container.textContent).toContain('12'); // point diff
+      expect(container.textContent).toContain("Alice");
+      expect(container.textContent).toContain("4"); // wins
+      expect(container.textContent).toContain("12"); // point diff
     });
 
-    it('shows point differential with + for positive', () => {
+    it("shows point differential with + for positive", () => {
       render(<PlayerStats players={mockPlayers} />);
 
-      expect(screen.getByText('+12')).toBeInTheDocument();
-      expect(screen.getByText('+5')).toBeInTheDocument();
+      expect(screen.getByText("+12")).toBeInTheDocument();
+      expect(screen.getByText("+5")).toBeInTheDocument();
     });
 
-    it('shows point differential without + for negative', () => {
+    it("shows point differential without + for negative", () => {
       render(<PlayerStats players={mockPlayers} />);
 
-      expect(screen.getByText('-3')).toBeInTheDocument();
+      expect(screen.getByText("-3")).toBeInTheDocument();
     });
 
-    it('displays all players with their stats', () => {
+    it("displays all players with their stats", () => {
       render(<PlayerStats players={mockPlayers} />);
 
-      mockPlayers.forEach(player => {
+      mockPlayers.forEach((player) => {
         expect(screen.getByText(player.name)).toBeInTheDocument();
       });
     });
   });
 
-  describe('Edge Cases', () => {
-    it('handles empty player list', () => {
+  describe("Edge Cases", () => {
+    it("handles empty player list", () => {
       render(<PlayerStats players={[]} />);
 
-      expect(screen.getByText('Player Stats')).toBeInTheDocument();
+      expect(screen.getByText("Player Stats")).toBeInTheDocument();
     });
 
-    it('handles single player', () => {
+    it("handles single player", () => {
       const singlePlayer = [mockPlayers[0]];
 
       render(<PlayerStats players={singlePlayer} />);
 
-      expect(screen.getByText('Alice')).toBeInTheDocument();
-      expect(screen.getByText('#1')).toBeInTheDocument();
+      expect(screen.getByText("Alice")).toBeInTheDocument();
+      expect(screen.getByText("#1")).toBeInTheDocument();
     });
   });
 });

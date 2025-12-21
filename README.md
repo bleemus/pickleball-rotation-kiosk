@@ -24,27 +24,32 @@ A kiosk application for managing round-robin pickleball games across 2 courts wi
 ## Architecture
 
 ### Frontend
+
 - React 18 + TypeScript
 - Vite for fast development and optimized builds
 - Tailwind CSS for responsive, touch-friendly UI
 - Nginx for production serving
 
 ### Backend
+
 - Node.js + Express + TypeScript
 - RESTful API design
 - Health check endpoints
 
 ### Data Layer
+
 - Redis for session state and game history
 - 24-hour session expiration
 
 ### Deployment
+
 - Docker Compose for easy deployment
 - Optimized for Raspberry Pi
 
 ## Quick Start
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - (Optional) Node.js 20+ for local development without Docker
 - (Optional) Raspberry Pi for kiosk deployment
@@ -69,6 +74,7 @@ make down
 Access at **http://localhost**
 
 **Common Commands:**
+
 ```bash
 make up          # Start all services
 make down        # Stop all services
@@ -100,6 +106,7 @@ sudo reboot
 After reboot, the spectator display launches automatically in fullscreen (Firefox ESR) on the HDMI display.
 
 **Access**:
+
 - Admin Interface: `http://raspberrypi.local/` (or your configured hostname)
 - Spectator View: Automatically displays on Pi's HDMI output
 
@@ -108,6 +115,7 @@ After reboot, the spectator display launches automatically in fullscreen (Firefo
 For active development with hot-reload, see [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
 
 **Quick setup:**
+
 ```bash
 # Install dependencies
 cd backend && npm install
@@ -126,6 +134,7 @@ cd frontend && npm run dev   # Frontend on :3000
 Create environment files:
 
 **Backend** (`backend/.env`):
+
 ```bash
 cp backend/.env.example backend/.env
 ```
@@ -137,6 +146,7 @@ NODE_ENV=development
 ```
 
 **Frontend** (`frontend/.env`):
+
 ```bash
 cp frontend/.env.example frontend/.env
 ```
@@ -165,6 +175,7 @@ make clean       # Stop and remove all containers/volumes
 ### Session Management
 
 #### Create Session
+
 ```http
 POST /api/session
 Content-Type: application/json
@@ -175,11 +186,13 @@ Content-Type: application/json
 ```
 
 #### Get Session
+
 ```http
 GET /api/session/:id
 ```
 
 #### Delete Session
+
 ```http
 DELETE /api/session/:id
 ```
@@ -187,6 +200,7 @@ DELETE /api/session/:id
 ### Player Management
 
 #### Add Player
+
 ```http
 POST /api/session/:id/players
 Content-Type: application/json
@@ -197,21 +211,25 @@ Content-Type: application/json
 ```
 
 #### Remove Player
+
 ```http
 DELETE /api/session/:id/players/:playerId
 ```
 
 #### Get Players
+
 ```http
 GET /api/session/:id/players
 ```
 
 #### Toggle Player Sit Out
+
 ```http
 PATCH /api/session/:id/sitout/:playerId
 ```
 
 #### Update Number of Courts
+
 ```http
 PATCH /api/session/:id/courts
 Content-Type: application/json
@@ -224,6 +242,7 @@ Content-Type: application/json
 ### Session Management (Active Session)
 
 #### Get Active Session
+
 ```http
 GET /api/session/active
 ```
@@ -233,16 +252,19 @@ Returns the currently active session without requiring a session ID.
 ### Game Management
 
 #### Start Next Round
+
 ```http
 POST /api/session/:id/round
 ```
 
 #### Get Current Round
+
 ```http
 GET /api/session/:id/round/current
 ```
 
 #### Complete Round with Scores
+
 ```http
 POST /api/session/:id/round/complete
 Content-Type: application/json
@@ -264,6 +286,7 @@ Content-Type: application/json
 ```
 
 #### Get Game History
+
 ```http
 GET /api/session/:id/history
 ```
@@ -273,12 +296,14 @@ GET /api/session/:id/history
 The application uses a sophisticated algorithm to generate fair and varied matchups:
 
 ### Scoring System
+
 - **Partnership Penalty**: +10 points for each previous partnership
 - **Opponent Penalty**: +5 points for each previous opposition
 - **Bench Bonus**: -20 points per round sitting out
 - **Games Played Penalty**: +8 points per game played (prioritizes new/less-played players)
 
 ### Process
+
 1. Filter out players marked to sit out (manual sit-out feature)
 2. Generate all possible 4-player combinations from available players
 3. For each combination, try different team arrangements
@@ -288,6 +313,7 @@ The application uses a sophisticated algorithm to generate fair and varied match
 7. Forced sit-out flags automatically clear after round generation
 
 ### Benefits
+
 - Players partner with different people each round
 - Opponents vary to maximize competition variety
 - Benched players get priority in next round
@@ -298,6 +324,7 @@ The application uses a sophisticated algorithm to generate fair and varied match
 ## User Guide
 
 ### Starting a Session
+
 1. Configure number of courts (default: 2) using the sidebar selector
 2. Enter player names (minimum 4 × number of courts required)
 3. Player names limited to 30 characters
@@ -305,6 +332,7 @@ The application uses a sophisticated algorithm to generate fair and varied match
 5. **Debug Mode**: If enabled, use "🔧 Fill" button to auto-generate test players
 
 ### During Play
+
 1. View current matchups on the main screen (centered player names)
 2. Players play their matches
 3. Click "Enter Scores" when matches complete
@@ -313,6 +341,7 @@ The application uses a sophisticated algorithm to generate fair and varied match
 6. Click "Back to Manage" to cancel the round if needed
 
 ### Between Rounds
+
 1. View player statistics in the right sidebar (auto-scrolling)
 2. Add new players using the "Add New Player" form
 3. Remove players by clicking the ✕ button (requires confirmation)
@@ -323,6 +352,7 @@ The application uses a sophisticated algorithm to generate fair and varied match
 8. Click "Start Next Round" to generate new matchups
 
 ### Spectator Display
+
 1. Navigate to `/spectator` on any device to view the full-screen spectator display
 2. Automatically shows the active session (no session ID required)
 3. Displays current matchups during rounds
@@ -332,11 +362,13 @@ The application uses a sophisticated algorithm to generate fair and varied match
 7. Ideal for TVs or secondary displays at your venue
 
 ### Help System
+
 1. Click the **?** button (bottom right) on any screen to open help
 2. Comprehensive guide covers all features and workflows
 3. Sections include: Getting Started, During Round, Score Entry, Managing Players, Spectator Display, and Tips
 
 ### Managing Players
+
 - Add players mid-session - new players get priority in matchups
 - Remove players who need to leave (requires confirmation)
 - Players sitting out show as "(Sitting Out)" in orange
@@ -344,18 +376,21 @@ The application uses a sophisticated algorithm to generate fair and varied match
 - Inline validation prevents starting rounds without enough players
 
 ### Score Editing
+
 - Edit previous round scores if mistakes were made
 - Previous scores pre-fill in the form
 - Stats automatically recalculate when scores change
 - Can only edit the most recently completed round
 
 ### Statistics Tracked
+
 - Games played
 - Wins and losses
 - **Point differential** (total points scored - points against)
 - Rounds sat out (cumulative, used as tiebreaker)
 
 ### Resetting
+
 - Click "Reset" button (upper left on all screens)
 - Confirmation required to prevent accidental resets
 - Clears all session data and error messages
@@ -363,6 +398,7 @@ The application uses a sophisticated algorithm to generate fair and varied match
 ## Troubleshooting
 
 ### Backend won't start
+
 ```bash
 # Check all services
 docker ps
@@ -372,6 +408,7 @@ make logs
 ```
 
 ### Frontend can't connect to backend
+
 ```bash
 # Verify backend is healthy
 curl http://localhost:3001/health
@@ -384,6 +421,7 @@ docker logs pickleball-rotation-kiosk-frontend-1
 ```
 
 ### Docker build issues
+
 ```bash
 # Clean and rebuild
 make clean
@@ -392,6 +430,7 @@ make up
 ```
 
 ### Session data lost
+
 - Redis data persists in Docker volume `redis-data`
 - Session TTL is 24 hours by default
 - To clear all data: `make clean`
@@ -399,6 +438,7 @@ make up
 ## Development
 
 ### Project Structure
+
 ```
 pickleball-kiosk/
 ├── backend/               # Express API server
@@ -418,6 +458,7 @@ pickleball-kiosk/
 ```
 
 ### Adding Features
+
 1. Backend: Add service logic in `backend/src/services/`
 2. Frontend: Create components in `frontend/src/components/`
 3. Update types in both frontend and backend
@@ -458,6 +499,7 @@ npx playwright show-report       # View HTML report
 ```
 
 **Test Coverage:**
+
 - 16 Playwright E2E tests (setup, gameplay, score validation, session recovery)
 - Vitest unit tests for components and hooks
 - Full TypeScript type safety
@@ -469,6 +511,7 @@ See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) for detailed testing guide.
 ### Docker (Recommended)
 
 Already configured with:
+
 - Health checks for all services
 - Auto-restart policies
 - Volume persistence for Redis

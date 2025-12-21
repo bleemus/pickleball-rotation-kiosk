@@ -27,7 +27,7 @@ function createPairKey(player1Id: string, player2Id: string): string {
 function getPartnershipCount(
   player1Id: string,
   player2Id: string,
-  partnershipHistory: PartnershipHistory,
+  partnershipHistory: PartnershipHistory
 ): number {
   const key = createPairKey(player1Id, player2Id);
   return partnershipHistory[key] || 0;
@@ -39,7 +39,7 @@ function getPartnershipCount(
 function getOpponentCount(
   player1Id: string,
   player2Id: string,
-  opponentHistory: OpponentHistory,
+  opponentHistory: OpponentHistory
 ): number {
   const key = createPairKey(player1Id, player2Id);
   return opponentHistory[key] || 0;
@@ -52,7 +52,7 @@ function getOpponentCount(
 function calculateMatchupScore(
   players: Player[],
   partnershipHistory: PartnershipHistory,
-  opponentHistory: OpponentHistory,
+  opponentHistory: OpponentHistory
 ): MatchupScore {
   if (players.length !== 4) {
     throw new Error("Matchup must have exactly 4 players");
@@ -92,11 +92,7 @@ function calculateMatchupScore(
 
     // Calculate partnership penalties
     for (const [i, j] of arrangement.partnerships) {
-      const partnerCount = getPartnershipCount(
-        players[i].id,
-        players[j].id,
-        partnershipHistory,
-      );
+      const partnerCount = getPartnershipCount(players[i].id, players[j].id, partnershipHistory);
       score += partnerCount * PARTNERSHIP_PENALTY;
     }
 
@@ -106,11 +102,7 @@ function calculateMatchupScore(
 
     for (const i of team1) {
       for (const j of team2) {
-        const opponentCount = getOpponentCount(
-          players[i].id,
-          players[j].id,
-          opponentHistory,
-        );
+        const opponentCount = getOpponentCount(players[i].id, players[j].id, opponentHistory);
         score += opponentCount * OPPONENT_PENALTY;
       }
     }
@@ -128,10 +120,7 @@ function calculateMatchupScore(
 
     if (score < bestScore) {
       bestScore = score;
-      bestPartnerships = arrangement.partnerships.map(([i, j]) => [
-        players[i].id,
-        players[j].id,
-      ]);
+      bestPartnerships = arrangement.partnerships.map(([i, j]) => [players[i].id, players[j].id]);
     }
   }
 
@@ -173,12 +162,12 @@ export function generateNextRound(
   players: Player[],
   partnershipHistory: PartnershipHistory,
   opponentHistory: OpponentHistory,
-  numCourts: number = 2,
+  numCourts: number = 2
 ): { matches: Match[]; benchedPlayers: Player[] } {
   const minPlayers = numCourts * 4;
   if (players.length < minPlayers) {
     throw new Error(
-      `Need at least ${minPlayers} players to generate a round with ${numCourts} court${numCourts > 1 ? "s" : ""}`,
+      `Need at least ${minPlayers} players to generate a round with ${numCourts} court${numCourts > 1 ? "s" : ""}`
     );
   }
 
@@ -189,7 +178,7 @@ export function generateNextRound(
   // Check if we have enough available players
   if (availablePlayers.length < minPlayers) {
     throw new Error(
-      `Not enough players available. ${forcedSitOutPlayers.length} player(s) marked to sit out, need at least ${minPlayers} available players.`,
+      `Not enough players available. ${forcedSitOutPlayers.length} player(s) marked to sit out, need at least ${minPlayers} available players.`
     );
   }
 
@@ -198,7 +187,7 @@ export function generateNextRound(
 
   // Calculate scores for each combination
   const scoredMatchups = allCombinations.map((combo) =>
-    calculateMatchupScore(combo, partnershipHistory, opponentHistory),
+    calculateMatchupScore(combo, partnershipHistory, opponentHistory)
   );
 
   // Sort by score (lower is better)
@@ -210,9 +199,7 @@ export function generateNextRound(
 
   for (const matchup of scoredMatchups) {
     // Check if any player in this matchup is already used
-    const hasOverlap = matchup.players.some((playerId) =>
-      usedPlayerIds.has(playerId),
-    );
+    const hasOverlap = matchup.players.some((playerId) => usedPlayerIds.has(playerId));
 
     if (!hasOverlap) {
       selectedMatchups.push(matchup);
@@ -264,7 +251,7 @@ export function generateNextRound(
 export function updateHistory(
   matches: Match[],
   partnershipHistory: PartnershipHistory,
-  opponentHistory: OpponentHistory,
+  opponentHistory: OpponentHistory
 ): {
   partnershipHistory: PartnershipHistory;
   opponentHistory: OpponentHistory;
@@ -280,10 +267,8 @@ export function updateHistory(
     const team1Key = createPairKey(team1Partners[0], team1Partners[1]);
     const team2Key = createPairKey(team2Partners[0], team2Partners[1]);
 
-    newPartnershipHistory[team1Key] =
-      (newPartnershipHistory[team1Key] || 0) + 1;
-    newPartnershipHistory[team2Key] =
-      (newPartnershipHistory[team2Key] || 0) + 1;
+    newPartnershipHistory[team1Key] = (newPartnershipHistory[team1Key] || 0) + 1;
+    newPartnershipHistory[team2Key] = (newPartnershipHistory[team2Key] || 0) + 1;
 
     // Update opponents
     const team1Players = [match.team1.player1.id, match.team1.player2.id];
@@ -292,8 +277,7 @@ export function updateHistory(
     for (const t1Player of team1Players) {
       for (const t2Player of team2Players) {
         const opponentKey = createPairKey(t1Player, t2Player);
-        newOpponentHistory[opponentKey] =
-          (newOpponentHistory[opponentKey] || 0) + 1;
+        newOpponentHistory[opponentKey] = (newOpponentHistory[opponentKey] || 0) + 1;
       }
     }
   }
@@ -310,7 +294,7 @@ export function updateHistory(
 export function reverseHistory(
   matches: Match[],
   partnershipHistory: PartnershipHistory,
-  opponentHistory: OpponentHistory,
+  opponentHistory: OpponentHistory
 ): {
   partnershipHistory: PartnershipHistory;
   opponentHistory: OpponentHistory;

@@ -3,6 +3,7 @@
 ## Docker Deployment (Recommended)
 
 ### Prerequisites
+
 - Docker & Docker Compose
 
 ### Quick Deploy
@@ -22,7 +23,7 @@ Access at **http://localhost**
 
 ```bash
 make up          # Start all services
-make down        # Stop all services  
+make down        # Stop all services
 make logs        # View logs
 make restart     # Restart all services
 make build       # Build Docker images
@@ -34,6 +35,7 @@ make clean       # Stop and remove all containers/volumes
 For active development with hot-reload:
 
 ### Prerequisites
+
 - Node.js 20+
 - Docker & Docker Compose
 
@@ -74,6 +76,7 @@ For local development, create:
 Create environment files:
 
 **Backend** (`backend/.env`):
+
 ```bash
 cp backend/.env.example backend/.env
 ```
@@ -85,6 +88,7 @@ NODE_ENV=development
 ```
 
 **Frontend** (`frontend/.env`):
+
 ```bash
 cp frontend/.env.example frontend/.env
 ```
@@ -100,6 +104,7 @@ VITE_APP_NAME=Pickleball Kiosk  # Customize the app name shown in the UI
 ### Quick Setup (Recommended)
 
 **Prerequisites:**
+
 - Raspberry Pi OS installed (use Raspberry Pi Imager)
 - Complete the initial setup wizard
 - Pi connected to network
@@ -121,6 +126,7 @@ sudo reboot
 After reboot, the spectator display launches automatically in fullscreen!
 
 **What the installer does:**
+
 - Installs unclutter (cursor hiding)
 - Installs Docker & Docker Compose
 - Builds and starts the application
@@ -128,6 +134,7 @@ After reboot, the spectator display launches automatically in fullscreen!
 - Sets up auto-start on boot
 
 **Access:**
+
 - Admin interface: `http://raspberrypi.local/` (or your hostname)
 - Spectator display: Automatically launches on HDMI
 
@@ -170,6 +177,7 @@ make restart
 ## Troubleshooting
 
 ### Can't connect to backend
+
 ```bash
 # Check backend health
 curl http://localhost:3001/health
@@ -180,6 +188,7 @@ docker ps
 ```
 
 ### Redis not connecting
+
 ```bash
 # Check Redis container status
 docker ps | grep redis
@@ -189,11 +198,13 @@ docker logs pickleball-rotation-kiosk-redis-1
 ```
 
 ### Frontend shows blank page
+
 - Check browser console for errors
 - Verify services are running: `docker ps`
 - Check logs: `docker logs pickleball-rotation-kiosk-frontend-1`
 
 ### Port conflicts
+
 ```bash
 # Check what's using the ports
 lsof -i :80    # Frontend (Docker)
@@ -203,6 +214,7 @@ lsof -i :6379  # Redis
 ```
 
 ### Clean restart
+
 ```bash
 # Clean and rebuild
 make clean
@@ -213,16 +225,19 @@ make up
 ## Access Points
 
 **Local Development:**
+
 - Frontend: http://localhost:3000
 - Backend: http://localhost:3001
 - Health: http://localhost:3001/health
 
 **Docker Compose:**
+
 - Frontend: http://localhost
 - Backend: http://localhost:3001
 - Health: http://localhost:3001/health
 
 **Raspberry Pi:**
+
 - Frontend: http://raspberrypi.local
 - Backend: http://raspberrypi.local:3001
 
@@ -244,6 +259,7 @@ make up
 ### Hot Reload
 
 Both frontend and backend support hot reload in development mode:
+
 - Edit frontend files → browser auto-refreshes
 - Edit backend files → server auto-restarts
 
@@ -277,6 +293,7 @@ docker logs pickleball-rotation-kiosk-redis-1
 ### Debugging
 
 #### Backend debugging
+
 ```bash
 cd backend
 npm run dev
@@ -284,6 +301,7 @@ npm run dev
 ```
 
 #### Frontend debugging
+
 - Open browser DevTools (F12)
 - Check Console tab for errors
 - Check Network tab for API calls
@@ -307,6 +325,7 @@ FLUSHALL
 ## Common Issues
 
 ### npm install fails
+
 ```bash
 # Clear cache and retry
 npm cache clean --force
@@ -315,6 +334,7 @@ cd frontend && rm -rf node_modules && npm install
 ```
 
 ### Docker build fails
+
 ```bash
 # Clean Docker cache and rebuild
 docker system prune -a
@@ -324,6 +344,7 @@ make up
 ```
 
 ### Can't access from other devices
+
 ```bash
 # Frontend needs to know backend URL
 # In frontend/.env, use your machine's IP

@@ -2,14 +2,14 @@ name: Test Suite
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       redis:
         image: redis:7-alpine
@@ -28,8 +28,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         id: install
@@ -84,7 +84,7 @@ jobs:
           script: |
             const fs = require('fs');
             const testStatus = process.env.JOB_STATUS;
-            
+
             let message = `## Test Results\n\n`;
             message += `**Status:** ${testStatus === 'success' ? '✅ All tests passed' : '❌ Tests failed'}\n\n`;
             message += `### Test Suites\n`;
@@ -94,7 +94,7 @@ jobs:
             message += `- Playwright Install: ${{ steps.playwright.outcome }}\n`;
             message += `- E2E Tests: ${{ steps.e2e.outcome }}\n\n`;
             message += `[View full test results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n`;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

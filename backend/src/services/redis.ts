@@ -54,10 +54,12 @@ export async function saveSession(session: Session): Promise<void> {
         await client.unwatch(); // Clean up watch before retrying
         retries++;
         if (retries >= maxRetries) {
-          throw new Error(`Failed to save session ${session.id} after ${maxRetries} retries due to concurrent modifications`);
+          throw new Error(
+            `Failed to save session ${session.id} after ${maxRetries} retries due to concurrent modifications`
+          );
         }
         // Wait a small random amount before retrying to reduce collision probability
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 50));
         continue;
       }
 
@@ -111,7 +113,7 @@ export async function deleteSession(sessionId: string): Promise<void> {
   const client = getRedisClient();
   const key = `session:${sessionId}`;
   await client.del(key);
-  
+
   // If this was the active session, clear the active session ID
   const activeSessionId = await client.get("active-session-id");
   if (activeSessionId === sessionId) {
@@ -193,10 +195,12 @@ export async function updateSessionAtomic(
         await client.unwatch(); // Clean up watch before retrying
         retries++;
         if (retries >= maxRetries) {
-          throw new Error(`Failed to update session ${sessionId} after ${maxRetries} retries due to concurrent modifications`);
+          throw new Error(
+            `Failed to update session ${sessionId} after ${maxRetries} retries due to concurrent modifications`
+          );
         }
         // Wait a small random amount before retrying to reduce collision probability
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 50));
         continue;
       }
 

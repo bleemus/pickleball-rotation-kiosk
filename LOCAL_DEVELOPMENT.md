@@ -80,6 +80,7 @@ cd frontend && npm run typecheck
 Create environment files for backend and frontend:
 
 **Backend** (`backend/.env`):
+
 ```bash
 cp backend/.env.example backend/.env
 ```
@@ -91,6 +92,7 @@ NODE_ENV=development
 ```
 
 **Frontend** (`frontend/.env`):
+
 ```bash
 cp frontend/.env.example frontend/.env
 ```
@@ -187,9 +189,10 @@ make down
 ### Debugging Backend
 
 #### Console Logging
+
 ```typescript
 // In any backend file
-console.log('Debug info:', yourVariable);
+console.log("Debug info:", yourVariable);
 ```
 
 #### VS Code Debugger
@@ -221,6 +224,7 @@ Create `.vscode/launch.json`:
 4. **Components** tab (React DevTools): Inspect component state
 
 Install React DevTools:
+
 - [Chrome Extension](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi)
 - [Firefox Extension](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/)
 
@@ -262,18 +266,14 @@ Example:
 
 ```tsx
 // frontend/src/components/NewFeature.tsx
-import { Player } from '../types/game';
+import { Player } from "../types/game";
 
 interface NewFeatureProps {
   players: Player[];
 }
 
 export function NewFeature({ players }: NewFeatureProps) {
-  return (
-    <div className="p-4">
-      {/* Your component */}
-    </div>
-  );
+  return <div className="p-4">{/* Your component */}</div>;
 }
 ```
 
@@ -283,13 +283,14 @@ Edit `backend/src/services/roundRobinService.ts`:
 
 ```typescript
 // Adjust penalty weights
-const PARTNERSHIP_PENALTY = 10;     // Points added for previous partnerships
-const OPPONENT_PENALTY = 5;         // Points added for previous opponents
-const BENCH_BONUS = -20;            // Points subtracted for sitting out (priority boost)
-const GAMES_PLAYED_PENALTY = 8;     // Points added per game played (prioritizes new players)
+const PARTNERSHIP_PENALTY = 10; // Points added for previous partnerships
+const OPPONENT_PENALTY = 5; // Points added for previous opponents
+const BENCH_BONUS = -20; // Points subtracted for sitting out (priority boost)
+const GAMES_PLAYED_PENALTY = 8; // Points added per game played (prioritizes new players)
 ```
 
 **Recent Changes:**
+
 - Increased `GAMES_PLAYED_PENALTY` from 3 to 8 to better prioritize new/less-played players
 - Manual sit-out feature filters players before matchup generation
 - Weighted scoring ensures fair rotation and variety
@@ -421,6 +422,7 @@ make test
 ```
 
 This runs:
+
 1. TypeScript type checking (backend & frontend)
 2. Frontend unit tests (Vitest)
 3. E2E tests (Playwright)
@@ -436,6 +438,7 @@ npm run test:coverage # Generate coverage report
 ```
 
 Tests are located in:
+
 - `frontend/src/components/*.test.tsx` - Component tests
 - `frontend/src/hooks/*.test.ts` - Hook tests
 - `frontend/src/test/` - Test utilities and mocks
@@ -460,6 +463,7 @@ npx playwright show-report
 ```
 
 E2E tests are located in `e2e/`:
+
 - `01-setup.spec.ts` - Player setup and game initialization
 - `02-full-game.spec.ts` - Complete game flow
 - `04-score-validation.spec.ts` - Score entry validation
@@ -471,7 +475,7 @@ E2E tests are located in `e2e/`:
 # Backend
 cd backend && npm run typecheck
 
-# Frontend  
+# Frontend
 cd frontend && npm run typecheck
 ```
 
@@ -559,6 +563,7 @@ git log           # View history
 ### VS Code (Recommended)
 
 Install extensions:
+
 - ESLint
 - Prettier
 - TypeScript and JavaScript Language Features

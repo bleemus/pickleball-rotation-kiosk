@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '../test/utils';
-import { BenchDisplay } from './BenchDisplay';
-import { Player } from '../types/game';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "../test/utils";
+import { BenchDisplay } from "./BenchDisplay";
+import { Player } from "../types/game";
 
-describe('BenchDisplay', () => {
+describe("BenchDisplay", () => {
   const benchedPlayers: Player[] = [
     {
-      id: '1',
-      name: 'Alice',
+      id: "1",
+      name: "Alice",
       gamesPlayed: 2,
       wins: 1,
       losses: 1,
@@ -17,8 +17,8 @@ describe('BenchDisplay', () => {
       forceSitOut: false,
     },
     {
-      id: '2',
-      name: 'Bob',
+      id: "2",
+      name: "Bob",
       gamesPlayed: 1,
       wins: 0,
       losses: 1,
@@ -29,38 +29,38 @@ describe('BenchDisplay', () => {
     },
   ];
 
-  describe('Rendering', () => {
-    it('renders benched players', () => {
+  describe("Rendering", () => {
+    it("renders benched players", () => {
       render(<BenchDisplay players={benchedPlayers} />);
 
-      expect(screen.getByText('On the Bench')).toBeInTheDocument();
-      expect(screen.getByText('Alice')).toBeInTheDocument();
-      expect(screen.getByText('Bob')).toBeInTheDocument();
+      expect(screen.getByText("On the Bench")).toBeInTheDocument();
+      expect(screen.getByText("Alice")).toBeInTheDocument();
+      expect(screen.getByText("Bob")).toBeInTheDocument();
     });
 
-    it('displays rounds sat out for each player', () => {
+    it("displays rounds sat out for each player", () => {
       render(<BenchDisplay players={benchedPlayers} />);
 
-      expect(screen.getByText('Sat out: 3')).toBeInTheDocument();
-      expect(screen.getByText('Sat out: 2')).toBeInTheDocument();
+      expect(screen.getByText("Sat out: 3")).toBeInTheDocument();
+      expect(screen.getByText("Sat out: 2")).toBeInTheDocument();
     });
 
-    it('renders nothing when no benched players', () => {
+    it("renders nothing when no benched players", () => {
       const { container } = render(<BenchDisplay players={[]} />);
 
       expect(container.firstChild).toBeNull();
-      expect(screen.queryByText('On the Bench')).not.toBeInTheDocument();
+      expect(screen.queryByText("On the Bench")).not.toBeInTheDocument();
     });
 
-    it('handles single benched player', () => {
+    it("handles single benched player", () => {
       render(<BenchDisplay players={[benchedPlayers[0]]} />);
 
-      expect(screen.getByText('On the Bench')).toBeInTheDocument();
-      expect(screen.getByText('Alice')).toBeInTheDocument();
-      expect(screen.queryByText('Bob')).not.toBeInTheDocument();
+      expect(screen.getByText("On the Bench")).toBeInTheDocument();
+      expect(screen.getByText("Alice")).toBeInTheDocument();
+      expect(screen.queryByText("Bob")).not.toBeInTheDocument();
     });
 
-    it('displays all players when multiple are benched', () => {
+    it("displays all players when multiple are benched", () => {
       const manyPlayers: Player[] = Array.from({ length: 4 }, (_, i) => ({
         id: `player-${i}`,
         name: `Player ${i + 1}`,
@@ -75,15 +75,15 @@ describe('BenchDisplay', () => {
 
       render(<BenchDisplay players={manyPlayers} />);
 
-      manyPlayers.forEach(player => {
+      manyPlayers.forEach((player) => {
         expect(screen.getByText(player.name)).toBeInTheDocument();
         expect(screen.getByText(`Sat out: ${player.roundsSatOut}`)).toBeInTheDocument();
       });
     });
   });
 
-  describe('Player Information', () => {
-    it('shows correct sat out count for each player', () => {
+  describe("Player Information", () => {
+    it("shows correct sat out count for each player", () => {
       const players: Player[] = [
         {
           ...benchedPlayers[0],
@@ -97,8 +97,8 @@ describe('BenchDisplay', () => {
 
       render(<BenchDisplay players={players} />);
 
-      expect(screen.getByText('Sat out: 0')).toBeInTheDocument();
-      expect(screen.getByText('Sat out: 10')).toBeInTheDocument();
+      expect(screen.getByText("Sat out: 0")).toBeInTheDocument();
+      expect(screen.getByText("Sat out: 10")).toBeInTheDocument();
     });
   });
 });

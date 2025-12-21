@@ -16,11 +16,7 @@ import {
   deleteSessionById,
   endSession,
 } from "../services/gameService";
-import {
-  CreateSessionRequest,
-  AddPlayerRequest,
-  CompleteRoundRequest,
-} from "../types/game";
+import { CreateSessionRequest, AddPlayerRequest, CompleteRoundRequest } from "../types/game";
 import { flushAllSessions } from "../services/redis";
 
 const router = Router();
@@ -31,11 +27,11 @@ function getLocalNetworkIP(): string | null {
   const candidates: string[] = [];
 
   // Skip virtual/docker interfaces
-  const skipInterfaces = ['docker', 'veth', 'virbr', 'vmnet', 'vboxnet', 'br-'];
+  const skipInterfaces = ["docker", "veth", "virbr", "vmnet", "vboxnet", "br-"];
 
   for (const name of Object.keys(nets)) {
     // Skip virtual interfaces
-    if (skipInterfaces.some(skip => name.toLowerCase().startsWith(skip))) {
+    if (skipInterfaces.some((skip) => name.toLowerCase().startsWith(skip))) {
       continue;
     }
 
@@ -54,13 +50,14 @@ function getLocalNetworkIP(): string | null {
   // 1. 192.168.x.x (most common home/office networks)
   // 2. 10.x.x.x (common corporate networks)
   // 3. 172.16-31.x.x (less common private range)
-  const preferred = candidates.find(ip => ip.startsWith("192.168.")) ||
-                    candidates.find(ip => ip.startsWith("10.")) ||
-                    candidates.find(ip => {
-                      const second = parseInt(ip.split(".")[1]);
-                      return ip.startsWith("172.") && second >= 16 && second <= 31;
-                    }) ||
-                    candidates[0]; // Fallback to first candidate
+  const preferred =
+    candidates.find((ip) => ip.startsWith("192.168.")) ||
+    candidates.find((ip) => ip.startsWith("10.")) ||
+    candidates.find((ip) => {
+      const second = parseInt(ip.split(".")[1]);
+      return ip.startsWith("172.") && second >= 16 && second <= 31;
+    }) ||
+    candidates[0]; // Fallback to first candidate
 
   return preferred || null;
 }
@@ -101,7 +98,11 @@ router.get("/wifi-info", (req: Request, res: Response) => {
   const password = process.env.WIFI_PASSWORD;
 
   if (!ssid) {
-    res.status(404).json({ error: "WiFi not configured. Set WIFI_SSID and WIFI_PASSWORD environment variables." });
+    res
+      .status(404)
+      .json({
+        error: "WiFi not configured. Set WIFI_SSID and WIFI_PASSWORD environment variables.",
+      });
     return;
   }
 
@@ -198,17 +199,14 @@ router.post("/session/:id/players", async (req: Request, res: Response) => {
 });
 
 // Remove player from session
-router.delete(
-  "/session/:id/players/:playerId",
-  async (req: Request, res: Response) => {
-    try {
-      const session = await removePlayer(req.params.id, req.params.playerId);
-      res.json(session);
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  },
-);
+router.delete("/session/:id/players/:playerId", async (req: Request, res: Response) => {
+  try {
+    const session = await removePlayer(req.params.id, req.params.playerId);
+    res.json(session);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+  }
+});
 
 // Get all players in session
 router.get("/session/:id/players", async (req: Request, res: Response) => {
@@ -221,20 +219,14 @@ router.get("/session/:id/players", async (req: Request, res: Response) => {
 });
 
 // Toggle player sit out for next round
-router.patch(
-  "/session/:id/players/:playerId/sitout",
-  async (req: Request, res: Response) => {
-    try {
-      const session = await togglePlayerSitOut(
-        req.params.id,
-        req.params.playerId,
-      );
-      res.json(session);
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  },
-);
+router.patch("/session/:id/players/:playerId/sitout", async (req: Request, res: Response) => {
+  try {
+    const session = await togglePlayerSitOut(req.params.id, req.params.playerId);
+    res.json(session);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+  }
+});
 
 // Start next round
 router.post("/session/:id/round", async (req: Request, res: Response) => {
@@ -247,17 +239,14 @@ router.post("/session/:id/round", async (req: Request, res: Response) => {
 });
 
 // Get current round
-router.get(
-  "/session/:id/round/current",
-  async (req: Request, res: Response) => {
-    try {
-      const round = await getCurrentRound(req.params.id);
-      res.json(round);
-    } catch (error) {
-      res.status(404).json({ error: (error as Error).message });
-    }
-  },
-);
+router.get("/session/:id/round/current", async (req: Request, res: Response) => {
+  try {
+    const round = await getCurrentRound(req.params.id);
+    res.json(round);
+  } catch (error) {
+    res.status(404).json({ error: (error as Error).message });
+  }
+});
 
 // Cancel current round
 router.delete("/session/:id/round", async (req: Request, res: Response) => {
@@ -270,18 +259,15 @@ router.delete("/session/:id/round", async (req: Request, res: Response) => {
 });
 
 // Complete current round with scores
-router.post(
-  "/session/:id/round/complete",
-  async (req: Request, res: Response) => {
-    try {
-      const request: CompleteRoundRequest = req.body;
-      const session = await completeCurrentRound(req.params.id, request);
-      res.json(session);
-    } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
-    }
-  },
-);
+router.post("/session/:id/round/complete", async (req: Request, res: Response) => {
+  try {
+    const request: CompleteRoundRequest = req.body;
+    const session = await completeCurrentRound(req.params.id, request);
+    res.json(session);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+  }
+});
 
 // Get game history
 router.get("/session/:id/history", async (req: Request, res: Response) => {

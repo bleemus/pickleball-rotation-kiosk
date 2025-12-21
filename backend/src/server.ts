@@ -20,17 +20,10 @@ app.get("/health", (req, res) => {
 app.use("/api", gameRoutes);
 
 // Error handling middleware
-app.use(
-  (
-    err: Error,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
-  ) => {
-    console.error("Unhandled error:", err);
-    res.status(500).json({ error: "Internal server error" });
-  },
-);
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Internal server error" });
+});
 
 // Start server
 async function startServer() {

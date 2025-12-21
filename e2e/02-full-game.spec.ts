@@ -1,17 +1,20 @@
-import { test, expect } from './fixtures';
-import { GamePage } from './helpers';
+import { test, expect } from "./fixtures";
+import { GamePage } from "./helpers";
 
-test.describe('Complete Game Flow', () => {
-  test('plays multiple rounds with score tracking and stats updates', async ({ page, cleanState }) => {
+test.describe("Complete Game Flow", () => {
+  test("plays multiple rounds with score tracking and stats updates", async ({
+    page,
+    cleanState,
+  }) => {
     const game = new GamePage(page);
     await game.goto();
 
     // Setup: Add 8 players
-    const players = ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Frank', 'Grace', 'Heidi'];
+    const players = ["Alice", "Bob", "Charlie", "Dave", "Eve", "Frank", "Grace", "Heidi"];
     await game.addMultiplePlayers(players);
 
     // Verify player count
-    await expect(page.locator('text=Players (8)')).toBeVisible();
+    await expect(page.locator("text=Players (8)")).toBeVisible();
 
     // Start game with 2 courts
     await game.startGame();
@@ -58,30 +61,39 @@ test.describe('Complete Game Flow', () => {
     await expect(page.locator('button:has-text("Start Next Round")')).toBeVisible();
   });
 
-  test('handles bench rotation correctly', async ({ page, cleanState }) => {
+  test("handles bench rotation correctly", async ({ page, cleanState }) => {
     const game = new GamePage(page);
     await game.goto();
 
     // Add 10 players for 2 courts (will have 2 benched)
-    const players = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10'];
+    const players = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"];
     await game.addMultiplePlayers(players);
 
     await game.startGame();
 
     // Should show "On the Bench" section
-    await expect(page.locator('text=On the Bench')).toBeVisible();
+    await expect(page.locator("text=On the Bench")).toBeVisible();
 
     // Should have 2 benched players (10 total - 8 playing = 2 benched)
-    const benchSection = page.locator('text=On the Bench').locator('..');
+    const benchSection = page.locator("text=On the Bench").locator("..");
     await expect(benchSection).toBeVisible();
   });
 
-  test('tracks player statistics accurately', async ({ page, cleanState }) => {
+  test("tracks player statistics accurately", async ({ page, cleanState }) => {
     const game = new GamePage(page);
     await game.goto();
 
     // Add players and start game
-    await game.addMultiplePlayers(['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Frank', 'Grace', 'Heidi']);
+    await game.addMultiplePlayers([
+      "Alice",
+      "Bob",
+      "Charlie",
+      "Dave",
+      "Eve",
+      "Frank",
+      "Grace",
+      "Heidi",
+    ]);
     await game.startGame();
 
     // Play one round

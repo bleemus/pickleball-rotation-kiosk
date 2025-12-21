@@ -1,7 +1,7 @@
-import '@testing-library/jest-dom';
-import { cleanup } from '@testing-library/react';
-import { afterEach, vi, beforeAll } from 'vitest';
-import './mocks/server';
+import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
+import { afterEach, vi, beforeAll } from "vitest";
+import "./mocks/server";
 
 // Mock localStorage and sessionStorage with actual storage implementation
 const createStorageMock = () => {
@@ -33,12 +33,12 @@ const sessionStorageMock = createStorageMock();
 
 // Setup before all tests
 beforeAll(() => {
-  Object.defineProperty(window, 'localStorage', {
+  Object.defineProperty(window, "localStorage", {
     value: localStorageMock,
     writable: true,
   });
 
-  Object.defineProperty(window, 'sessionStorage', {
+  Object.defineProperty(window, "sessionStorage", {
     value: sessionStorageMock,
     writable: true,
   });
@@ -57,9 +57,9 @@ window.confirm = vi.fn(() => true);
 window.alert = vi.fn();
 
 // Mock matchMedia (for responsive components)
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
