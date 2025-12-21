@@ -60,9 +60,11 @@ export function CurrentMatchups({
                                     <h2 className="text-lg lg:text-2xl xl:text-3xl font-bold text-gray-800">
                                         Court {match.courtNumber}
                                     </h2>
-                                    {match.completed && (
-                                        <p className="text-sm lg:text-base text-green-600 font-semibold">Score Entered</p>
-                                    )}
+                                    <p className="text-sm lg:text-base font-semibold h-5 lg:h-6">
+                                        {match.completed && (
+                                            <span className="text-green-600">Score Entered</span>
+                                        )}
+                                    </p>
                                 </div>
 
                                 <div className="space-y-1 lg:space-y-3 flex-1 flex flex-col justify-center lg:min-h-0">

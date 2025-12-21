@@ -586,9 +586,11 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                                             <h2 className={`font-bold ${getCourtTitleSize(round.matches.length)} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                 Court {match.courtNumber}
                                             </h2>
-                                            {match.completed && (
-                                                <p className={`text-lg ${darkMode ? 'text-green-400' : 'text-green-600'} font-semibold`}>Score Entered</p>
-                                            )}
+                                            <p className="text-lg font-semibold h-7">
+                                                {match.completed && (
+                                                    <span className={darkMode ? 'text-green-400' : 'text-green-600'}>Score Entered</span>
+                                                )}
+                                            </p>
                                         </div>
 
                                         <div className="space-y-4 flex-1 flex flex-col justify-center px-8 lg:px-16 xl:px-24">
