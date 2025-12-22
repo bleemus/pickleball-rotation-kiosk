@@ -1,4 +1,5 @@
 import { Session, Player, Round, GameHistory } from "../types/game";
+import { Reservation } from "../types/reservation";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -261,6 +262,27 @@ export function useApi() {
     return response.json();
   };
 
+  const getCurrentReservations = async (): Promise<Reservation[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/reservations/current`);
+
+      if (!response.ok) {
+        // If email parser service is down, return empty array instead of throwing
+        if (response.status === 503) {
+          console.warn("Reservation service unavailable");
+          return [];
+        }
+        await handleApiError(response, "Failed to get current reservations");
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("Error fetching reservations:", error);
+      // Return empty array on network errors to avoid breaking the UI
+      return [];
+    }
+  };
+
   return {
     createSession,
     updateNumCourts,
@@ -277,5 +299,6 @@ export function useApi() {
     completeRound,
     getGameHistory,
     endSession,
+    getCurrentReservations,
   };
 }

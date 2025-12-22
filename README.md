@@ -10,6 +10,7 @@ A kiosk application for managing round-robin pickleball games across 2 courts wi
 - **Score Tracking**: Complete game history with win/loss records and point differential
 - **Player Management**: Add/remove players between rounds, manual sit-out control
 - **Score Editing**: Edit previous round scores with automatic stat recalculation
+- **Email Integration**: Automatically imports players from Pickle Planner reservation emails
 - **Spectator Display**: Dedicated full-screen view with auto-scrolling stats and live match updates
 - **Previous Round Results**: Shows completed match scores while waiting between rounds
 - **Customizable Branding**: Configure app name via environment variable
@@ -35,6 +36,13 @@ A kiosk application for managing round-robin pickleball games across 2 courts wi
 - Node.js + Express + TypeScript
 - RESTful API design
 - Health check endpoints
+
+### Email Parser Service
+
+- IMAP email client for Pickle Planner reservations
+- Automatic player roster extraction
+- REST API for reservation queries
+- Lightweight and Raspberry Pi compatible
 
 ### Data Layer
 
@@ -136,19 +144,51 @@ Create environment files:
 **Backend** (`backend/.env`):
 
 ```bash
-cp backend/.env.example backend/.env
-```
-
-```env
-PORT=3001
-REDIS_URL=redis://localhost:6379
-NODE_ENV=development
+EMAIL_PARSER_URL=http://localhost:3002
 ```
 
 **Frontend** (`frontend/.env`):
 
 ```bash
 cp frontend/.env.example frontend/.env
+```
+
+```env
+VITE_API_URL=http://localhost:3001/api
+VITE_DEBUG_MODE=false  # Set to true to enable debug features
+VITE_APP_NAME=Pickleball Kiosk  # Customize the app name shown throughout the UI
+```
+
+**Email Parser** (`email-parser/.env`):
+
+```bash
+cp email-parser/.env.example email-parser/.env
+```
+
+```env
+# Email Configuration
+EMAIL_USER=your-email@example.com
+EMAIL_PASSWORD=your-app-password
+EMAIL_HOST=imap.gmail.com
+EMAIL_PORT=993
+EMAIL_TLS=true
+EMAIL_CHECK_INTERVAL=5  # Check every 5 minutes
+
+# Service Configuration
+PORT=3002
+```
+
+**Gmail Setup for Email Parser:**
+
+1. Enable IMAP in Gmail settings
+2. Enable 2-Step Verification in Google Account
+3. Generate an App Password:
+   - Go to Google Account → Security → App Passwords
+   - Select "Mail" and generate password
+   - Use this password (not your regular password) in `EMAIL_PASSWORD`
+4. Forward Pickle Planner reservation emails to this account
+
+See [email-parser/README.md](email-parser/README.md) for detailed email parser setup.frontend/.env.example frontend/.env
 ```
 
 ```env

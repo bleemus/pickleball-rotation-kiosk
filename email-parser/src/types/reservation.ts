@@ -1,0 +1,17 @@
+export interface Reservation {
+  id: string;
+  date: Date;
+  startTime: string; // e.g., "5:30am"
+  endTime: string; // e.g., "7:00am"
+  players: string[];
+  court?: string;
+  organizer?: string;
+  rawEmail?: string;
+  createdAt: Date;
+}
+
+export interface ReservationQuery {
+  date?: string; // ISO date string
+  startTime?: string;
+  endTime?: string;
+}

@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { initRedis, closeRedis } from "./services/redis";
 import gameRoutes from "./routes/game";
+import reservationRoutes from "./routes/reservations";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -18,6 +19,7 @@ app.get("/health", (req, res) => {
 
 // API routes
 app.use("/api", gameRoutes);
+app.use("/api/reservations", reservationRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
