@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Player } from "../types/game";
 
 interface PlayerManagerProps {
@@ -36,6 +36,7 @@ export function PlayerManager({
   const [playerName, setPlayerName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCourtSelector, setShowCourtSelector] = useState(false);
+  const playerInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddPlayer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +59,11 @@ export function PlayerManager({
     onAddPlayer(playerName.trim());
     setPlayerName("");
     setError(null);
+
+    // Refocus the input field for quick consecutive entries
+    setTimeout(() => {
+      playerInputRef.current?.focus();
+    }, 0);
   };
 
   const handleRemovePlayer = (playerId: string, playerName: string) => {
@@ -151,6 +157,7 @@ export function PlayerManager({
           </h2>
           <form onSubmit={handleAddPlayer} className="flex gap-3 lg:gap-4">
             <input
+              ref={playerInputRef}
               type="text"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Player } from "../types/game";
 import { HelpButton } from "./HelpModal";
 import { APP_NAME } from "../config";
@@ -25,6 +25,7 @@ export function PlayerSetup({
   const [playerName, setPlayerName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [numCourts, setNumCourts] = useState(2);
+  const playerInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddPlayer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +48,11 @@ export function PlayerSetup({
     onAddPlayer(playerName.trim());
     setPlayerName("");
     setError(null);
+
+    // Refocus the input field for quick consecutive entries
+    setTimeout(() => {
+      playerInputRef.current?.focus();
+    }, 0);
   };
 
   const handleRemovePlayer = (playerId: string, playerName: string) => {
@@ -163,6 +169,7 @@ export function PlayerSetup({
               className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-4 lg:mb-6"
             >
               <input
+                ref={playerInputRef}
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
@@ -172,6 +179,16 @@ export function PlayerSetup({
                 disabled={loading}
               />
               <div className="flex gap-2 sm:gap-3 lg:gap-4">
+                {/* Start Game Button - Only show on mobile */}
+                <button
+                  type="button"
+                  onClick={() => onStartGame(numCourts)}
+                  disabled={!canStartGame || loading}
+                  className="lg:hidden flex-1 sm:flex-none px-4 sm:px-6 py-3 lg:py-4 bg-green-500 text-white text-base sm:text-lg font-bold rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={canStartGame ? "Start the game" : `Need ${numCourts * 4 - players.length} more player${numCourts * 4 - players.length !== 1 ? "s" : ""}`}
+                >
+                  Start
+                </button>
                 <button
                   type="submit"
                   className="flex-1 sm:flex-none px-4 sm:px-6 lg:px-8 py-3 lg:py-4 bg-blue-500 text-white text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
@@ -230,10 +247,11 @@ export function PlayerSetup({
             )}
           </div>
 
+          {/* Start Game Button - Desktop only (mobile has it next to Add button) */}
           <button
             onClick={() => onStartGame(numCourts)}
             disabled={!canStartGame || loading}
-            className="w-full py-4 lg:py-6 bg-green-500 text-white text-2xl lg:text-3xl font-bold rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="hidden lg:block w-full py-4 lg:py-6 bg-green-500 text-white text-2xl lg:text-3xl font-bold rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Starting..." : "Start Game"}
           </button>

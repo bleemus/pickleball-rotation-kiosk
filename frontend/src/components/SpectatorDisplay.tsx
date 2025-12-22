@@ -21,7 +21,6 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
   const [wifiPassword, setWifiPassword] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const summaryScrollRef = useRef<HTMLDivElement>(null);
-  const [isHovering, setIsHovering] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const darkMode = SPECTATOR_DARK_MODE;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -114,112 +113,147 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     const container = scrollContainerRef.current;
     if (!container || !session || !isDesktop || session.ended) return;
 
-    const SCROLL_SPEED = 2; // pixels per interval - smooth but faster
-    const INTERVAL_MS = 20; // milliseconds between scrolls - frequent updates
+    const SCROLL_SPEED = 2; // pixels per step - smaller for smoothness
+    const STEP_INTERVAL = 16; // milliseconds between steps (~60fps, Safari-friendly)
     const PAUSE_AT_TOP = 2000; // 2 second pause at top
     const PAUSE_AT_BOTTOM = 2000; // 2 second pause at bottom
 
     let pauseUntil = 0;
-    let atBottom = false;
+    let scrollingDown = true;
+    let intervalId: number;
+    let isScrolling = false;
 
     const autoScroll = () => {
-      const now = Date.now();
+      if (isScrolling) return; // Prevent overlapping calls
+      isScrolling = true;
 
-      // Skip if hovering
-      if (isHovering) {
-        return;
-      }
+      try {
+        const now = Date.now();
 
-      // Wait for pause periods
-      if (now < pauseUntil) {
-        return;
-      }
+        // Wait for pause periods
+        if (now < pauseUntil) {
+          isScrolling = false;
+          return;
+        }
 
-      const scrollHeight = container.scrollHeight;
-      const clientHeight = container.clientHeight;
-      const maxScroll = scrollHeight - clientHeight;
+        // Round values to avoid sub-pixel issues at different zoom levels
+        const scrollHeight = Math.round(container.scrollHeight);
+        const clientHeight = Math.round(container.clientHeight);
+        const maxScroll = scrollHeight - clientHeight;
 
-      // Only scroll if there's content to scroll
-      if (maxScroll > 0) {
-        const currentScroll = container.scrollTop;
+        // Only scroll if there's content to scroll
+        if (maxScroll <= 10) {
+          isScrolling = false;
+          return; // Not enough content to scroll
+        }
 
-        if (!atBottom && currentScroll < maxScroll) {
+        const currentScroll = Math.round(container.scrollTop);
+
+        if (scrollingDown) {
           // Scroll down
-          container.scrollTop = Math.min(currentScroll + SCROLL_SPEED, maxScroll);
-
-          // Check if we reached bottom
-          if (container.scrollTop >= maxScroll - 1) {
-            atBottom = true;
+          if (currentScroll < maxScroll - SCROLL_SPEED * 2) {
+            // Use scrollBy for better Safari zoom compatibility
+            container.scrollBy(0, SCROLL_SPEED);
+          } else {
+            // Reached bottom - switch direction and pause
+            scrollingDown = false;
             pauseUntil = now + PAUSE_AT_BOTTOM;
           }
-        } else if (atBottom && currentScroll > 0) {
+        } else {
           // Scroll up
-          container.scrollTop = Math.max(currentScroll - SCROLL_SPEED, 0);
-
-          // Check if we reached top
-          if (container.scrollTop <= 1) {
-            atBottom = false;
+          if (currentScroll > SCROLL_SPEED * 2) {
+            // Use scrollBy for better Safari zoom compatibility
+            container.scrollBy(0, -SCROLL_SPEED);
+          } else {
+            // Reached top - switch direction and pause
+            scrollingDown = true;
             pauseUntil = now + PAUSE_AT_TOP;
           }
         }
+      } finally {
+        isScrolling = false;
       }
     };
 
-    const intervalId = setInterval(autoScroll, INTERVAL_MS);
+    intervalId = window.setInterval(autoScroll, STEP_INTERVAL);
 
     return () => {
-      clearInterval(intervalId);
+      window.clearInterval(intervalId);
     };
-  }, [isHovering, isDesktop, session?.players.length]);
+  }, [isDesktop, session?.players.length, session?.ended]);
 
   // Auto-scroll effect for session summary
   useEffect(() => {
     const container = summaryScrollRef.current;
     if (!container || !session || !session.ended) return;
 
-    const SCROLL_SPEED = 1.5;
-    const INTERVAL_MS = 20;
+    const SCROLL_SPEED = 2; // pixels per step - smaller for smoothness
+    const STEP_INTERVAL = 16; // milliseconds between steps (~60fps, Safari-friendly)
     const PAUSE_AT_TOP = 500; // Reduced from 3000 to start scrolling faster
     const PAUSE_AT_BOTTOM = 500; // Reduced from 3000
 
     let pauseUntil = Date.now() + PAUSE_AT_TOP; // Start with initial pause
     let scrollingDown = true; // Track direction
+    let intervalId: number;
+    let isScrolling = false;
 
     const autoScroll = () => {
-      const now = Date.now();
+      if (isScrolling) return; // Prevent overlapping calls
+      isScrolling = true;
 
-      // If we're in a pause period, skip scrolling
-      if (now < pauseUntil) return;
+      try {
+        const now = Date.now();
 
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      const maxScroll = scrollHeight - clientHeight;
-
-      // If content doesn't overflow, no need to scroll
-      if (maxScroll <= 0) return;
-
-      if (scrollingDown) {
-        // Scroll down
-        container.scrollTop += SCROLL_SPEED;
-
-        // Check if we reached the bottom
-        if (scrollTop >= maxScroll - 5) {
-          scrollingDown = false;
-          pauseUntil = now + PAUSE_AT_BOTTOM;
+        // If we're in a pause period, skip scrolling
+        if (now < pauseUntil) {
+          isScrolling = false;
+          return;
         }
-      } else {
-        // Scroll up
-        container.scrollTop -= SCROLL_SPEED;
 
-        // Check if we reached the top
-        if (scrollTop <= 5) {
-          scrollingDown = true;
-          pauseUntil = now + PAUSE_AT_TOP;
+        // Round values to avoid sub-pixel issues at different zoom levels
+        const scrollHeight = Math.round(container.scrollHeight);
+        const clientHeight = Math.round(container.clientHeight);
+        const maxScroll = scrollHeight - clientHeight;
+
+        // If content doesn't overflow, no need to scroll
+        if (maxScroll <= 10) {
+          isScrolling = false;
+          return;
         }
+
+        const currentScroll = Math.round(container.scrollTop);
+
+        if (scrollingDown) {
+          // Scroll down
+          if (currentScroll < maxScroll - SCROLL_SPEED * 2) {
+            // Use scrollBy for better Safari zoom compatibility
+            container.scrollBy(0, SCROLL_SPEED);
+          } else {
+            // Reached bottom - switch direction and pause
+            scrollingDown = false;
+            pauseUntil = now + PAUSE_AT_BOTTOM;
+          }
+        } else {
+          // Scroll up
+          if (currentScroll > SCROLL_SPEED * 2) {
+            // Use scrollBy for better Safari zoom compatibility
+            container.scrollBy(0, -SCROLL_SPEED);
+          } else {
+            // Reached top - switch direction and pause
+            scrollingDown = true;
+            pauseUntil = now + PAUSE_AT_TOP;
+          }
+        }
+      } finally {
+        isScrolling = false;
       }
     };
 
-    const interval = setInterval(autoScroll, INTERVAL_MS);
-    return () => clearInterval(interval);
+    intervalId = window.setInterval(autoScroll, STEP_INTERVAL);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
   }, [summaryScrollRef, session?.ended]);
 
   // Show mobile redirect message
@@ -436,7 +470,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         <div
           ref={summaryScrollRef}
           className="flex-1 px-6 pb-6 overflow-y-auto"
-          style={{ scrollBehavior: "auto" }}
+          style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
         >
           <div className="max-w-6xl mx-auto">
             <div className={`rounded-3xl shadow-2xl p-8 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
@@ -890,96 +924,103 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
 
       {/* Sidebar - Player Stats */}
       <div
-        ref={scrollContainerRef}
-        className={`w-80 xl:w-96 p-6 overflow-y-auto ${darkMode ? "bg-gray-950 bg-opacity-95" : "bg-gray-800 bg-opacity-90"}`}
-        style={{ scrollBehavior: "auto" }}
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
+        className={`w-80 xl:w-96 flex flex-col ${darkMode ? "bg-gray-950 bg-opacity-95" : "bg-gray-800 bg-opacity-90"}`}
       >
-        <h2
-          className={`text-3xl font-bold mb-6 text-center ${darkMode ? "text-gray-200" : "text-white"}`}
+        {/* Fixed Header */}
+        <div className="p-6 pb-3 flex-shrink-0">
+          <h2
+            className={`text-3xl font-bold text-center ${darkMode ? "text-gray-200" : "text-white"}`}
+          >
+            Player Stats
+          </h2>
+        </div>
+
+        {/* Scrollable Content */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 px-6 pb-6 overflow-y-auto"
+          style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
         >
-          Player Stats
-        </h2>
-        <div className="space-y-3">
-          {[...session.players]
-            .sort((a, b) => {
-              // Sort by wins desc, then point diff desc
-              if (b.wins !== a.wins) return b.wins - a.wins;
-              return b.pointDifferential - a.pointDifferential;
-            })
-            .map((player, index) => (
-              <div
-                key={player.id}
-                className={`rounded-xl p-4 shadow-lg ${darkMode ? "bg-gray-800" : "bg-white"}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`text-2xl font-bold ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+          <div className="space-y-3">
+            {[...session.players]
+              .sort((a, b) => {
+                // Sort by wins desc, then point diff desc
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                return b.pointDifferential - a.pointDifferential;
+              })
+              .map((player, index) => (
+                <div
+                  key={player.id}
+                  className={`rounded-xl p-4 shadow-lg ${darkMode ? "bg-gray-800" : "bg-white"}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`text-2xl font-bold ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+                      >
+                        #{index + 1}
+                      </span>
+                      <span
+                        className={`text-xl font-bold ${darkMode ? "text-gray-200" : "text-gray-800"}`}
+                      >
+                        {player.name}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div
+                      className={`rounded-lg p-2 text-center ${darkMode ? "bg-green-900" : "bg-green-100"}`}
                     >
-                      #{index + 1}
-                    </span>
-                    <span
-                      className={`text-xl font-bold ${darkMode ? "text-gray-200" : "text-gray-800"}`}
+                      <div className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+                        Wins
+                      </div>
+                      <div
+                        className={`text-lg font-bold ${darkMode ? "text-green-400" : "text-green-700"}`}
+                      >
+                        {player.wins}
+                      </div>
+                    </div>
+                    <div
+                      className={`rounded-lg p-2 text-center ${darkMode ? "bg-red-900" : "bg-red-100"}`}
                     >
-                      {player.name}
-                    </span>
+                      <div className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+                        Losses
+                      </div>
+                      <div
+                        className={`text-lg font-bold ${darkMode ? "text-red-400" : "text-red-700"}`}
+                      >
+                        {player.losses}
+                      </div>
+                    </div>
+                    <div
+                      className={`rounded-lg p-2 text-center ${darkMode ? "bg-orange-900" : "bg-orange-100"}`}
+                    >
+                      <div className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+                        Sat
+                      </div>
+                      <div
+                        className={`text-lg font-bold ${darkMode ? "text-orange-400" : "text-orange-700"}`}
+                      >
+                        {player.roundsSatOut}
+                      </div>
+                    </div>
+                    <div
+                      className={`rounded-lg p-2 text-center ${darkMode ? "bg-purple-900" : "bg-purple-100"}`}
+                    >
+                      <div className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+                        Diff
+                      </div>
+                      <div
+                        className={`text-lg font-bold ${darkMode ? "text-purple-400" : "text-purple-700"}`}
+                      >
+                        {player.pointDifferential > 0 ? "+" : ""}
+                        {player.pointDifferential}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div
-                    className={`rounded-lg p-2 text-center ${darkMode ? "bg-green-900" : "bg-green-100"}`}
-                  >
-                    <div className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-                      Wins
-                    </div>
-                    <div
-                      className={`text-lg font-bold ${darkMode ? "text-green-400" : "text-green-700"}`}
-                    >
-                      {player.wins}
-                    </div>
-                  </div>
-                  <div
-                    className={`rounded-lg p-2 text-center ${darkMode ? "bg-red-900" : "bg-red-100"}`}
-                  >
-                    <div className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-                      Losses
-                    </div>
-                    <div
-                      className={`text-lg font-bold ${darkMode ? "text-red-400" : "text-red-700"}`}
-                    >
-                      {player.losses}
-                    </div>
-                  </div>
-                  <div
-                    className={`rounded-lg p-2 text-center ${darkMode ? "bg-orange-900" : "bg-orange-100"}`}
-                  >
-                    <div className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-                      Sat
-                    </div>
-                    <div
-                      className={`text-lg font-bold ${darkMode ? "text-orange-400" : "text-orange-700"}`}
-                    >
-                      {player.roundsSatOut}
-                    </div>
-                  </div>
-                  <div
-                    className={`rounded-lg p-2 text-center ${darkMode ? "bg-purple-900" : "bg-purple-100"}`}
-                  >
-                    <div className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-                      Diff
-                    </div>
-                    <div
-                      className={`text-lg font-bold ${darkMode ? "text-purple-400" : "text-purple-700"}`}
-                    >
-                      {player.pointDifferential > 0 ? "+" : ""}
-                      {player.pointDifferential}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+              ))}
+          </div>
         </div>
       </div>
     </div>
