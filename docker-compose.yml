@@ -13,6 +13,25 @@ services:
       timeout: 3s
       retries: 3
 
+  email-parser:
+    build:
+      context: ./email-parser
+      dockerfile: Dockerfile
+    container_name: pickleball-email-parser
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./email-parser/.env
+    volumes:
+      - email-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
   backend:
     build:
       context: ./backend
@@ -28,8 +47,11 @@ services:
       - HOST_IP=${HOST_IP:-}
       - WIFI_SSID=${WIFI_SSID:-}
       - WIFI_PASSWORD=${WIFI_PASSWORD:-}
+      - EMAIL_PARSER_URL=${EMAIL_PARSER_URL:-http://email-parser:3002}
     depends_on:
       redis:
+        condition: service_healthy
+      email-parser:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
@@ -57,4 +79,6 @@ services:
 
 volumes:
   redis-data:
+    driver: local
+  email-data:
     driver: local
