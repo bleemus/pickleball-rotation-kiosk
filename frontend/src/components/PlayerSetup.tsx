@@ -185,7 +185,11 @@ export function PlayerSetup({
                   onClick={() => onStartGame(numCourts)}
                   disabled={!canStartGame || loading}
                   className="lg:hidden flex-1 sm:flex-none px-4 sm:px-6 py-3 lg:py-4 bg-green-500 text-white text-base sm:text-lg font-bold rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={canStartGame ? "Start the game" : `Need ${numCourts * 4 - players.length} more player${numCourts * 4 - players.length !== 1 ? "s" : ""}`}
+                  title={
+                    canStartGame
+                      ? "Start the game"
+                      : `Need ${numCourts * 4 - players.length} more player${numCourts * 4 - players.length !== 1 ? "s" : ""}`
+                  }
                 >
                   Start
                 </button>
