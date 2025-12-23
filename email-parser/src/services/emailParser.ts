@@ -57,7 +57,9 @@ export class EmailParser {
       // Extract players
       // Look for "Players" on its own line followed by player names
       // Match "Players" followed by newlines and bullet points
-      const playersSection = emailText.match(/Players\s*\n[\s\S]*?(?=\n\s*(?:Reservation Fee|Fee Breakdown|Total:|Status:|The door code))/i);
+      const playersSection = emailText.match(
+        /Players\s*\n[\s\S]*?(?=\n\s*(?:Reservation Fee|Fee Breakdown|Total:|Status:|The door code))/i
+      );
       if (playersSection) {
         const playerNames: string[] = [];
         const lines = playersSection[0].split("\n");

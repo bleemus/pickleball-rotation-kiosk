@@ -236,7 +236,8 @@ export function PlayerSetup({
                             {reservation.court && ` • ${reservation.court}`}
                           </div>
                           <div className="text-sm lg:text-base text-gray-700 mt-1">
-                            {reservation.players.length} player{reservation.players.length !== 1 ? "s" : ""}:{" "}
+                            {reservation.players.length} player
+                            {reservation.players.length !== 1 ? "s" : ""}:{" "}
                             {reservation.players.join(", ")}
                           </div>
                         </div>
@@ -360,8 +361,8 @@ export function PlayerSetup({
           {/* Pickle Planner Info */}
           <div className="mt-6 lg:mt-8 mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm lg:text-base text-gray-700 text-center">
-              <span className="font-semibold">Using Pickle Planner?</span> Forward your reservation email to{" "}
-              <span className="font-mono text-blue-600">pickleballkiosk@bleemus.com</span>
+              <span className="font-semibold">Using Pickle Planner?</span> Forward your reservation
+              email to <span className="font-mono text-blue-600">pickleballkiosk@bleemus.com</span>
               <br className="hidden sm:block" />
               <span className="text-gray-600"> and players will appear above within 1 minute</span>
             </p>

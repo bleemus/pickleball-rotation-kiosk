@@ -49,19 +49,14 @@ describe("ReservationStorage", () => {
         JSON.stringify(mockReservation),
         { EX: 7 * 24 * 60 * 60 }
       );
-      expect(redisClient.sAdd).toHaveBeenCalledWith(
-        "reservation:index",
-        mockReservation.id
-      );
+      expect(redisClient.sAdd).toHaveBeenCalledWith("reservation:index", mockReservation.id);
     });
 
     it("should skip duplicate reservations", async () => {
       const existingReservation = { ...mockReservation, id: "res_existing" };
 
       vi.mocked(redisClient.sMembers).mockResolvedValue([existingReservation.id]);
-      vi.mocked(redisClient.get).mockResolvedValue(
-        JSON.stringify(existingReservation)
-      );
+      vi.mocked(redisClient.get).mockResolvedValue(JSON.stringify(existingReservation));
 
       await storage.addReservation(mockReservation);
 
@@ -74,12 +69,8 @@ describe("ReservationStorage", () => {
     it("should return all reservations from Redis", async () => {
       vi.mocked(redisClient.sMembers).mockResolvedValue(["res_1", "res_2"]);
       vi.mocked(redisClient.get)
-        .mockResolvedValueOnce(
-          JSON.stringify({ ...mockReservation, id: "res_1" })
-        )
-        .mockResolvedValueOnce(
-          JSON.stringify({ ...mockReservation, id: "res_2" })
-        );
+        .mockResolvedValueOnce(JSON.stringify({ ...mockReservation, id: "res_1" }))
+        .mockResolvedValueOnce(JSON.stringify({ ...mockReservation, id: "res_2" }));
 
       const result = await storage.getAllReservations();
 
@@ -99,10 +90,7 @@ describe("ReservationStorage", () => {
       const result = await storage.getAllReservations();
 
       expect(result).toHaveLength(1);
-      expect(redisClient.sRem).toHaveBeenCalledWith(
-        "reservation:index",
-        "res_expired"
-      );
+      expect(redisClient.sRem).toHaveBeenCalledWith("reservation:index", "res_expired");
     });
 
     it("should return empty array when no reservations exist", async () => {
@@ -116,9 +104,7 @@ describe("ReservationStorage", () => {
 
   describe("getReservation", () => {
     it("should return a specific reservation by ID", async () => {
-      vi.mocked(redisClient.get).mockResolvedValue(
-        JSON.stringify(mockReservation)
-      );
+      vi.mocked(redisClient.get).mockResolvedValue(JSON.stringify(mockReservation));
 
       const result = await storage.getReservation(mockReservation.id);
 
@@ -129,9 +115,7 @@ describe("ReservationStorage", () => {
       expect(result?.court).toBe(mockReservation.court);
       expect(result?.organizer).toBe(mockReservation.organizer);
       expect(result?.players).toEqual(mockReservation.players);
-      expect(redisClient.get).toHaveBeenCalledWith(
-        `reservation:${mockReservation.id}`
-      );
+      expect(redisClient.get).toHaveBeenCalledWith(`reservation:${mockReservation.id}`);
     });
 
     it("should return undefined for non-existent reservation", async () => {
@@ -151,13 +135,8 @@ describe("ReservationStorage", () => {
       const result = await storage.deleteReservation(mockReservation.id);
 
       expect(result).toBe(true);
-      expect(redisClient.del).toHaveBeenCalledWith(
-        `reservation:${mockReservation.id}`
-      );
-      expect(redisClient.sRem).toHaveBeenCalledWith(
-        "reservation:index",
-        mockReservation.id
-      );
+      expect(redisClient.del).toHaveBeenCalledWith(`reservation:${mockReservation.id}`);
+      expect(redisClient.sRem).toHaveBeenCalledWith("reservation:index", mockReservation.id);
     });
 
     it("should return false when reservation doesn't exist", async () => {

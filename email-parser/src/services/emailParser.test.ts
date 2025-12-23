@@ -210,11 +210,7 @@ Reservation Fee: $40.00
       const result = parser.parseReservation(emailText, emailSubject);
 
       expect(result).toBeDefined();
-      expect(result?.players).toEqual([
-        "Valid Player",
-        "Another Valid Player",
-        "Good Name",
-      ]);
+      expect(result?.players).toEqual(["Valid Player", "Another Valid Player", "Good Name"]);
     });
 
     it("should handle hyphenated and apostrophe names", () => {

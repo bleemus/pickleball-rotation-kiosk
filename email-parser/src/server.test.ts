@@ -96,9 +96,7 @@ describe("Email Parser API", () => {
 
         const current = reservations.filter((reservation) => {
           const resDate = new Date(reservation.date);
-          const startMatch = reservation.startTime.match(
-            /(\\d{1,2}):(\\d{2})(am|pm)/i
-          );
+          const startMatch = reservation.startTime.match(/(\\d{1,2}):(\\d{2})(am|pm)/i);
           if (!startMatch) return false;
 
           let startHour = parseInt(startMatch[1]);
@@ -198,9 +196,7 @@ describe("Email Parser API", () => {
   describe("GET /api/reservations", () => {
     it("should return all reservations", async () => {
       vi.mocked(redisClient.sMembers).mockResolvedValue([mockReservation.id]);
-      vi.mocked(redisClient.get).mockResolvedValue(
-        JSON.stringify(mockReservation)
-      );
+      vi.mocked(redisClient.get).mockResolvedValue(JSON.stringify(mockReservation));
 
       const response = await request(app).get("/api/reservations");
 
@@ -209,18 +205,14 @@ describe("Email Parser API", () => {
     });
 
     it("should filter reservations by date", async () => {
-      const response = await request(app)
-        .get("/api/reservations")
-        .query({ date: "2025-12-22" });
+      const response = await request(app).get("/api/reservations").query({ date: "2025-12-22" });
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
     });
 
     it("should filter reservations by startTime", async () => {
-      const response = await request(app)
-        .get("/api/reservations")
-        .query({ startTime: "5:30pm" });
+      const response = await request(app).get("/api/reservations").query({ startTime: "5:30pm" });
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -251,13 +243,9 @@ describe("Email Parser API", () => {
 
   describe("GET /api/reservations/:id", () => {
     it("should return a specific reservation", async () => {
-      vi.mocked(redisClient.get).mockResolvedValue(
-        JSON.stringify(mockReservation)
-      );
+      vi.mocked(redisClient.get).mockResolvedValue(JSON.stringify(mockReservation));
 
-      const response = await request(app).get(
-        `/api/reservations/${mockReservation.id}`
-      );
+      const response = await request(app).get(`/api/reservations/${mockReservation.id}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("id", mockReservation.id);
@@ -288,9 +276,7 @@ describe("Email Parser API", () => {
         organizer: "Alice",
       };
 
-      const response = await request(app)
-        .post("/api/reservations")
-        .send(newReservation);
+      const response = await request(app).post("/api/reservations").send(newReservation);
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("id");
@@ -305,9 +291,7 @@ describe("Email Parser API", () => {
         // Missing required fields
       };
 
-      const response = await request(app)
-        .post("/api/reservations")
-        .send(invalidReservation);
+      const response = await request(app).post("/api/reservations").send(invalidReservation);
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("error");
@@ -319,9 +303,7 @@ describe("Email Parser API", () => {
       vi.mocked(redisClient.del).mockResolvedValue(1);
       vi.mocked(redisClient.sRem).mockResolvedValue(1);
 
-      const response = await request(app).delete(
-        `/api/reservations/${mockReservation.id}`
-      );
+      const response = await request(app).delete(`/api/reservations/${mockReservation.id}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("success", true);

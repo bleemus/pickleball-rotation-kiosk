@@ -35,6 +35,7 @@ The email parser is one of four services in the pickleball kiosk application:
 ### Redis Schema
 
 **Keys:**
+
 - `reservation:{reservationId}` → JSON-serialized Reservation object
 - `reservation:index` → Set of all reservation IDs (for fast enumeration)
 
@@ -96,6 +97,7 @@ Users can also manually forward emails to the configured address - the frontend 
 Returns service health status.
 
 **Response:**
+
 ```json
 {
   "status": "ok",
@@ -112,11 +114,13 @@ Returns service health status.
 Get all reservations.
 
 **Query Parameters:**
+
 - `date` (optional): ISO date string (e.g., "2025-12-17")
 - `startTime` (optional): Time string (e.g., "5:30am")
 - `endTime` (optional): Time string (e.g., "7:00am")
 
 **Response:**
+
 ```json
 [
   {
@@ -152,6 +156,7 @@ Get a specific reservation by ID.
 Manually add a reservation (for testing).
 
 **Request Body:**
+
 ```json
 {
   "date": "2025-12-17",
@@ -208,6 +213,7 @@ The parser uses regex patterns to extract:
 ### HTML to Text Conversion
 
 Emails are HTML-formatted. The parser:
+
 1. Removes `<style>` and `<script>` tags
 2. Converts `<li>` tags to newlines with bullets
 3. Converts block elements (`<div>`, `<p>`, `<br>`) to newlines
@@ -290,6 +296,7 @@ docker-compose logs -f email-parser
 ### No reservations appearing
 
 1. **Check email polling status:**
+
    ```bash
    curl http://localhost:3002/health
    ```
@@ -301,6 +308,7 @@ docker-compose logs -f email-parser
    - Emails are automatically marked as read after processing
 
 3. **Check logs:**
+
    ```bash
    make email-logs
    ```
@@ -311,6 +319,7 @@ docker-compose logs -f email-parser
    - `[2025-12-22T10:30:02.000Z] Parsed reservation for ...`
 
 4. **Manually trigger email check:**
+
    ```bash
    curl -X POST http://localhost:3002/api/check-emails
    ```
@@ -337,6 +346,7 @@ See [GRAPH_API_SETUP.md](GRAPH_API_SETUP.md) for detailed troubleshooting.
 If reservations are being found but not parsed correctly:
 
 1. **Check raw email format:**
+
    ```bash
    curl http://localhost:3002/api/reservations | jq '.[0].rawEmail'
    ```
@@ -353,6 +363,7 @@ If reservations are being found but not parsed correctly:
 ### Service won't start
 
 1. **Check Redis connection:**
+
    ```bash
    docker ps | grep redis
    ```
@@ -360,6 +371,7 @@ If reservations are being found but not parsed correctly:
    Redis must be running before email-parser starts.
 
 2. **Check port conflicts:**
+
    ```bash
    lsof -i :3002
    ```
@@ -367,6 +379,7 @@ If reservations are being found but not parsed correctly:
    Port 3002 must be available.
 
 3. **Check environment variables:**
+
    ```bash
    cat email-parser/.env
    ```
@@ -453,17 +466,20 @@ The email parser integrates with the kiosk application through:
 ## Security Notes
 
 **Microsoft Graph API:**
+
 - Uses client credentials flow (daemon app)
 - Application Access Policy restricts to single mailbox
 - Client secret should be kept secure (never commit to git)
 - Mail.ReadWrite permission required to mark emails as read
 
 **Redis:**
+
 - Runs on localhost only by default
 - No authentication configured (add Redis password for production)
 - Data automatically expires after 7 days
 
 **Feature Flag:**
+
 - Set `ENABLE_EMAIL_POLLING=false` to disable email polling if service breaks
 - Service continues to run and serve API requests with empty data
 - Can be toggled without code changes

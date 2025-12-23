@@ -118,11 +118,9 @@ export class GraphEmailChecker {
 
           // Mark message as read
           if (message.id) {
-            await this.client
-              .api(`/users/${this.userId}/messages/${message.id}`)
-              .patch({
-                isRead: true,
-              });
+            await this.client.api(`/users/${this.userId}/messages/${message.id}`).patch({
+              isRead: true,
+            });
           }
         } catch (error) {
           console.error(`[${timestamp()}] Error processing message:`, error);

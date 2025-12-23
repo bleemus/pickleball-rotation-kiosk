@@ -8,7 +8,5 @@ declare module "mailparser" {
     date?: Date;
   }
 
-  export function simpleParser(
-    source: Buffer | string
-  ): Promise<ParsedMail>;
+  export function simpleParser(source: Buffer | string): Promise<ParsedMail>;
 }

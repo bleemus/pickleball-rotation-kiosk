@@ -36,7 +36,7 @@ export class EmailChecker {
    */
   async checkEmails(): Promise<void> {
     console.log(`[${timestamp()}] Checking for new reservation emails...`);
-    
+
     // Create a new ImapFlow client for each check to avoid reuse issues
     const client = new ImapFlow({
       host: this.config.host,
@@ -73,7 +73,9 @@ export class EmailChecker {
         // If no direct emails from pickleplanner.com, check all unread emails
         // (they might be forwarded)
         if (allUnread.length > 0) {
-          console.log(`[${timestamp()}] No emails from pickleplanner.com, but found ${allUnread.length} unread email(s). Checking all...`);
+          console.log(
+            `[${timestamp()}] No emails from pickleplanner.com, but found ${allUnread.length} unread email(s). Checking all...`
+          );
           // Process all unread emails instead
           const messagesToProcess = allUnread;
 
@@ -110,7 +112,7 @@ export class EmailChecker {
                   date: reservation.date,
                   time: `${reservation.startTime} - ${reservation.endTime}`,
                   court: reservation.court,
-                  players: reservation.players.join(", ")
+                  players: reservation.players.join(", "),
                 });
                 this.onReservationFound(reservation);
               } else {
@@ -163,7 +165,7 @@ export class EmailChecker {
               date: reservation.date,
               time: `${reservation.startTime} - ${reservation.endTime}`,
               court: reservation.court,
-              players: reservation.players.join(", ")
+              players: reservation.players.join(", "),
             });
             this.onReservationFound(reservation);
           } else {

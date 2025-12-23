@@ -88,6 +88,7 @@ make down
 Access at **http://localhost**
 
 **Services:**
+
 - Frontend: http://localhost (port 80)
 - Backend API: http://localhost:3001
 - Email Parser: http://localhost:3002
@@ -214,6 +215,7 @@ The email parser uses Microsoft Graph API for reliable, OAuth2-based email acces
 **IMAP Fallback (Gmail/Outlook):**
 
 If Graph API is not configured, the service falls back to IMAP. For Gmail:
+
 1. Enable IMAP in Gmail settings
 2. Enable 2-Step Verification
 3. Generate App Password at https://myaccount.google.com/apppasswords

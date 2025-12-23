@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Reservation } from "../types/game";
 
-const EMAIL_PARSER_URL =
-  import.meta.env.VITE_EMAIL_PARSER_URL || "http://localhost:3002";
+const EMAIL_PARSER_URL = import.meta.env.VITE_EMAIL_PARSER_URL || "http://localhost:3002";
 
 export function useReservations() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
