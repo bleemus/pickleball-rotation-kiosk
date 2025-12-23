@@ -4,6 +4,10 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Ensure React runs in development mode during tests
+    "process.env.NODE_ENV": JSON.stringify("test"),
+  },
   test: {
     globals: true,
     environment: "jsdom",

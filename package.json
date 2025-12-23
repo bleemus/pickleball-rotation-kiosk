@@ -20,10 +20,16 @@
   "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@types/microsoft-graph": "^2.40.1",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
     "eslint": "^9.39.2",
     "eslint-plugin-react": "^7.37.5",
-    "prettier": "3.7.4"
+    "prettier": "3.7.4",
+    "tsx": "^4.21.0"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.13.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7"
   }
 }

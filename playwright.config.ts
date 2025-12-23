@@ -33,6 +33,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
       env: {
+        NODE_ENV: "test",
         REDIS_URL: "redis://localhost:6379",
         PORT: "3001",
       },

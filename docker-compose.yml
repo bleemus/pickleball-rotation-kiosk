@@ -21,6 +21,9 @@ services:
     restart: unless-stopped
     ports:
       - "3002:3002"
+    environment:
+      - ENABLE_EMAIL_POLLING=${ENABLE_EMAIL_POLLING:-true}
+      - REDIS_URL=redis://redis:6379
     env_file:
       - ./email-parser/.env
     volumes:

@@ -70,3 +70,16 @@ export enum GameState {
   SCORING = "scoring",
   HISTORY = "history",
 }
+
+// Email parser reservation types
+export interface Reservation {
+  id: string;
+  createdAt: string;
+  rawEmail: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  court: string;
+  organizer: string;
+  players: string[];
+}

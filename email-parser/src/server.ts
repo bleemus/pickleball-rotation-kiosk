@@ -2,9 +2,10 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cron from "node-cron";
-import { EmailChecker } from "./services/emailChecker";
-import { ReservationStorage } from "./services/reservationStorage";
+import { GraphEmailChecker } from "./services/emailChecker.graph";
+import { ReservationStorage } from "./services/reservationStorage.redis";
 import { Reservation } from "./types/reservation";
+import { connectRedis } from "./services/redis";
 
 dotenv.config();
 
@@ -18,22 +19,41 @@ app.use(express.json());
 // Initialize storage
 const storage = new ReservationStorage();
 
-// Initialize email checker if credentials are provided
-let emailChecker: EmailChecker | null = null;
-if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
-  emailChecker = new EmailChecker(
-    {
-      user: process.env.EMAIL_USER,
-      password: process.env.EMAIL_PASSWORD,
-      host: process.env.EMAIL_HOST || "imap.gmail.com",
-      port: parseInt(process.env.EMAIL_PORT || "993"),
-      tls: process.env.EMAIL_TLS !== "false",
-    },
-    (reservation: Reservation) => {
-      storage.addReservation(reservation);
-    }
-  );
+// Initialize email checker - Microsoft Graph API only
+let emailChecker: GraphEmailChecker | null = null;
 
+// Check if email polling is enabled via feature flag
+const emailPollingEnabled = process.env.ENABLE_EMAIL_POLLING !== "false";
+
+if (emailPollingEnabled) {
+  // Check for Microsoft Graph API configuration
+  if (
+    process.env.GRAPH_TENANT_ID &&
+    process.env.GRAPH_CLIENT_ID &&
+    process.env.GRAPH_CLIENT_SECRET &&
+    process.env.GRAPH_USER_ID
+  ) {
+    emailChecker = new GraphEmailChecker(
+      {
+        tenantId: process.env.GRAPH_TENANT_ID,
+        clientId: process.env.GRAPH_CLIENT_ID,
+        clientSecret: process.env.GRAPH_CLIENT_SECRET,
+        userId: process.env.GRAPH_USER_ID,
+      },
+      async (reservation: Reservation) => {
+        await storage.addReservation(reservation);
+      }
+    );
+    console.log("✅ Using Microsoft Graph API for email checking");
+  } else {
+    console.warn("⚠️  Email polling enabled but Graph API credentials not configured");
+    console.warn("Set: GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET, GRAPH_USER_ID");
+  }
+} else {
+  console.log("📧 Email polling disabled via ENABLE_EMAIL_POLLING=false");
+}
+
+if (emailChecker) {
   // Schedule email checks
   const checkInterval = parseInt(process.env.EMAIL_CHECK_INTERVAL || "5");
   cron.schedule(`*/${checkInterval} * * * *`, async () => {
@@ -46,9 +66,12 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
   });
 
   console.log(`Email checking scheduled every ${checkInterval} minutes`);
-} else {
-  console.warn("Email credentials not configured. Email checking disabled.");
-  console.warn("Set EMAIL_USER and EMAIL_PASSWORD in .env file");
+
+  // Check immediately on startup
+  console.log("Running initial email check on startup...");
+  emailChecker.checkEmails().catch((error) => {
+    console.error("Error in initial email check:", error);
+  });
 }
 
 // Routes
@@ -60,6 +83,7 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
 app.get("/health", (req: Request, res: Response) => {
   res.json({
     status: "ok",
+    emailPollingEnabled: emailPollingEnabled,
     emailEnabled: emailChecker !== null,
     timestamp: new Date().toISOString(),
   });
@@ -69,19 +93,19 @@ app.get("/health", (req: Request, res: Response) => {
  * GET /api/reservations
  * Get all reservations or filter by query params
  */
-app.get("/api/reservations", (req: Request, res: Response) => {
+app.get("/api/reservations", async (req: Request, res: Response) => {
   try {
     const { date, startTime, endTime } = req.query;
 
     if (date || startTime || endTime) {
-      const results = storage.queryReservations({
+      const results = await storage.queryReservations({
         date: date as string,
         startTime: startTime as string,
         endTime: endTime as string,
       });
       res.json(results);
     } else {
-      const results = storage.getAllReservations();
+      const results = await storage.getAllReservations();
       res.json(results);
     }
   } catch (error) {
@@ -94,9 +118,9 @@ app.get("/api/reservations", (req: Request, res: Response) => {
  * GET /api/reservations/today
  * Get today's reservations
  */
-app.get("/api/reservations/today", (req: Request, res: Response) => {
+app.get("/api/reservations/today", async (req: Request, res: Response) => {
   try {
-    const results = storage.getTodayReservations();
+    const results = await storage.getTodayReservations();
     res.json(results);
   } catch (error) {
     console.error("Error getting today's reservations:", error);
@@ -108,11 +132,11 @@ app.get("/api/reservations/today", (req: Request, res: Response) => {
  * GET /api/reservations/current
  * Get reservations matching current time (within 30 minutes)
  */
-app.get("/api/reservations/current", (req: Request, res: Response) => {
+app.get("/api/reservations/current", async (req: Request, res: Response) => {
   try {
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
-    const todayReservations = storage.queryReservations({ date: todayStr });
+    const todayReservations = await storage.queryReservations({ date: todayStr });
 
     // Find reservations starting within the next 30 minutes or currently active
     const currentReservations = todayReservations.filter((reservation) => {
@@ -140,9 +164,9 @@ app.get("/api/reservations/current", (req: Request, res: Response) => {
  * GET /api/reservations/:id
  * Get a specific reservation by ID
  */
-app.get("/api/reservations/:id", (req: Request, res: Response) => {
+app.get("/api/reservations/:id", async (req: Request, res: Response) => {
   try {
-    const reservation = storage.getReservation(req.params.id);
+    const reservation = await storage.getReservation(req.params.id);
     if (reservation) {
       res.json(reservation);
     } else {
@@ -158,16 +182,16 @@ app.get("/api/reservations/:id", (req: Request, res: Response) => {
  * POST /api/reservations
  * Manually add a reservation (for testing or manual entry)
  */
-app.post("/api/reservations", (req: Request, res: Response) => {
+app.post("/api/reservations", async (req: Request, res: Response) => {
   try {
     const reservation: Reservation = {
       ...req.body,
-      id: req.body.id || `res_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: req.body.id || `res_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       date: new Date(req.body.date),
       createdAt: new Date(),
     };
 
-    storage.addReservation(reservation);
+    await storage.addReservation(reservation);
     res.status(201).json(reservation);
   } catch (error) {
     console.error("Error adding reservation:", error);
@@ -179,9 +203,9 @@ app.post("/api/reservations", (req: Request, res: Response) => {
  * DELETE /api/reservations/:id
  * Delete a reservation
  */
-app.delete("/api/reservations/:id", (req: Request, res: Response) => {
+app.delete("/api/reservations/:id", async (req: Request, res: Response) => {
   try {
-    const deleted = storage.deleteReservation(req.params.id);
+    const deleted = await storage.deleteReservation(req.params.id);
     if (deleted) {
       res.json({ success: true });
     } else {
@@ -228,7 +252,20 @@ function parseTime(timeStr: string): { hours: number; minutes: number } | null {
 }
 
 // Start server
-app.listen(port, () => {
-  console.log(`Email parser service listening on port ${port}`);
-  console.log(`Email checking: ${emailChecker ? "enabled" : "disabled"}`);
-});
+async function startServer() {
+  try {
+    // Connect to Redis
+    await connectRedis();
+
+    // Start Express server
+    app.listen(port, () => {
+      console.log(`Email parser service listening on port ${port}`);
+      console.log(`Email checking: ${emailChecker ? "enabled" : "disabled"}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+startServer();

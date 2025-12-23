@@ -132,7 +132,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({});
       const next = vi.fn();
 
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -153,7 +153,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({});
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(String) }));
@@ -171,7 +171,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({});
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(res.json).toHaveBeenCalledWith({
         ssid: "TestNetwork",
@@ -193,7 +193,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({});
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockFlushAllSessions).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({ message: expect.any(String) });
@@ -209,7 +209,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({});
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockFlushAllSessions).not.toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(403);
@@ -226,7 +226,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({});
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(res.json).toHaveBeenCalledWith(mockSession);
     });
@@ -238,7 +238,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({});
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: "No active session" });
@@ -251,7 +251,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({});
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "Redis connection failed" });
@@ -268,7 +268,7 @@ describe("Game Routes", () => {
       });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.createSession).toHaveBeenCalledWith({
         playerNames: ["Alice", "Bob", "Charlie", "Dave"],
@@ -285,7 +285,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({ body: { playerNames: [] } });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: "Invalid player count" });
@@ -300,7 +300,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.getSessionById).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(mockSession);
@@ -332,7 +332,7 @@ describe("Game Routes", () => {
       });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.updateNumCourts).toHaveBeenCalledWith("session-123", 2);
       expect(res.json).toHaveBeenCalledWith(updatedSession);
@@ -383,7 +383,7 @@ describe("Game Routes", () => {
       });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.addPlayer).toHaveBeenCalledWith("session-123", { name: "Eve" });
       expect(res.json).toHaveBeenCalledWith(updatedSession);
@@ -404,7 +404,7 @@ describe("Game Routes", () => {
       });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.removePlayer).toHaveBeenCalledWith("session-123", "4");
       expect(res.json).toHaveBeenCalledWith(updatedSession);
@@ -419,7 +419,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(res.json).toHaveBeenCalledWith(mockSession.players);
     });
@@ -437,7 +437,7 @@ describe("Game Routes", () => {
       });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.togglePlayerSitOut).toHaveBeenCalledWith("session-123", "1");
       expect(res.json).toHaveBeenCalledWith(updatedSession);
@@ -461,7 +461,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.startNextRound).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(sessionWithRound);
@@ -482,7 +482,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.getCurrentRound).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(currentRound);
@@ -497,7 +497,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.cancelCurrentRound).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(mockSession);
@@ -516,7 +516,7 @@ describe("Game Routes", () => {
       });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.completeCurrentRound).toHaveBeenCalledWith("session-123", {
         scores: [{ matchId: "match-1", team1Score: 11, team2Score: 9 }],
@@ -536,7 +536,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.getGameHistory).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(history);
@@ -552,7 +552,7 @@ describe("Game Routes", () => {
       const { req, res } = createMockReqRes({ params: { id: "session-123" } });
 
       const next = vi.fn();
-      handler(req, res, next);
+      await handler(req, res, next);
 
       expect(mockGameService.endSession).toHaveBeenCalledWith("session-123");
       expect(res.json).toHaveBeenCalledWith(endedSession);

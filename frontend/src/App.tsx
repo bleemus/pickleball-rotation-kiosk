@@ -195,7 +195,7 @@ function App() {
       } else {
         // No session yet, add to temporary players list
         const newPlayer: Player = {
-          id: `temp-${Date.now()}`,
+          id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           name,
           gamesPlayed: 0,
           wins: 0,
@@ -205,7 +205,8 @@ function App() {
           consecutiveRoundsSatOut: 0,
           forceSitOut: false,
         };
-        setTempPlayers([...tempPlayers, newPlayer]);
+        // Use functional update to avoid race conditions when adding multiple players
+        setTempPlayers((prevPlayers) => [...prevPlayers, newPlayer]);
       }
     } catch (err) {
       setError((err as Error).message);

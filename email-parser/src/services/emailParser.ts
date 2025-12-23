@@ -48,14 +48,16 @@ export class EmailParser {
       }
 
       // Extract organizer (e.g., "Joseph Arcilla's Reservation")
-      const organizerMatch = emailText.match(/([A-Za-z\s]+)'s Reservation/i);
+      // Look for pattern after court line: Court\n\nOrganizer's Reservation
+      const organizerMatch = emailText.match(/\n\n([A-Za-z\s\-\']+)'s Reservation/i);
       if (organizerMatch) {
         reservation.organizer = organizerMatch[1].trim();
       }
 
       // Extract players
-      // Look for "Players" section followed by bullet points or names
-      const playersSection = emailText.match(/Players[\s\S]*?(?=Reservation Fee|Fee Breakdown|$)/i);
+      // Look for "Players" on its own line followed by player names
+      // Match "Players" followed by newlines and bullet points
+      const playersSection = emailText.match(/Players\s*\n[\s\S]*?(?=\n\s*(?:Reservation Fee|Fee Breakdown|Total:|Status:|The door code))/i);
       if (playersSection) {
         const playerNames: string[] = [];
         const lines = playersSection[0].split("\n");
@@ -103,7 +105,7 @@ export class EmailParser {
    * Generate a unique ID for the reservation
    */
   private generateId(): string {
-    return `res_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `res_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**

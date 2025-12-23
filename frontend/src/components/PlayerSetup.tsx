@@ -52,19 +52,20 @@ export function PlayerSetup({
     return () => clearInterval(interval);
   }, []);
 
-  const handleAddPlayersFromReservation = (reservation: Reservation) => {
+  const handleAddPlayersFromReservation = async (reservation: Reservation) => {
     let addedCount = 0;
     let skippedCount = 0;
 
-    reservation.players.forEach((playerName) => {
+    // Add players sequentially to avoid race conditions
+    for (const playerName of reservation.players) {
       // Check if player already exists
       if (!players.some((p) => p.name.toLowerCase() === playerName.toLowerCase())) {
-        onAddPlayer(playerName);
+        await onAddPlayer(playerName);
         addedCount++;
       } else {
         skippedCount++;
       }
-    });
+    }
 
     if (addedCount > 0) {
       setError(null);
@@ -356,8 +357,18 @@ export function PlayerSetup({
             </p>
           )}
 
+          {/* Pickle Planner Info */}
+          <div className="mt-6 lg:mt-8 mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm lg:text-base text-gray-700 text-center">
+              <span className="font-semibold">Using Pickle Planner?</span> Forward your reservation email to{" "}
+              <span className="font-mono text-blue-600">pickleballkiosk@bleemus.com</span>
+              <br className="hidden sm:block" />
+              <span className="text-gray-600"> and players will appear above within 1 minute</span>
+            </p>
+          </div>
+
           {/* Bottom Buttons - Mobile: Reset + Help side-by-side, Desktop: Help only */}
-          <div className="mt-6 lg:mt-8">
+          <div className="mt-4 lg:mt-6">
             {/* Mobile: Both buttons */}
             <div className="flex lg:hidden gap-2">
               <button

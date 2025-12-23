@@ -113,4 +113,9 @@ export const handlers = [
       ended: true,
     });
   }),
+
+  // Reservation endpoints
+  http.get(`${API_BASE_URL}/reservations/current`, () => {
+    return HttpResponse.json([]);
+  }),
 ];
