@@ -23,6 +23,7 @@ export interface Match {
   team1Score?: number;
   team2Score?: number;
   completed: boolean;
+  servingTeam: 1 | 2; // Which team serves first (1 for team1, 2 for team2)
 }
 
 export interface Round {

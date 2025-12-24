@@ -1,5 +1,6 @@
 import { Round } from "../types/game";
 import { BenchDisplay } from "./BenchDisplay";
+import pickleballIcon from "../assets/icons/pickleball.png";
 
 interface CurrentMatchupsProps {
   round: Round;
@@ -71,17 +72,41 @@ export function CurrentMatchups({
                 <div className="space-y-1 lg:space-y-3 flex-1 flex flex-col justify-center lg:min-h-0">
                   {/* Team 1 */}
                   <div
-                    className={`rounded-lg lg:rounded-2xl p-2 lg:p-4 flex items-center justify-between ${
-                      team1Won ? "bg-green-200 border-2 border-green-600" : "bg-blue-100"
+                    className={`rounded-lg lg:rounded-2xl p-2 lg:p-4 flex items-center ${
+                      team1Won
+                        ? "bg-green-200 border-2 border-green-600"
+                        : match.servingTeam === 1
+                          ? "bg-blue-100 border-2 border-blue-400"
+                          : "bg-blue-100"
                     }`}
                   >
-                    <div className="flex-1">
-                      <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
-                        {match.team1.player1.name}
-                      </p>
-                      <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
-                        {match.team1.player2.name}
-                      </p>
+                    <div className="flex items-center gap-2 lg:gap-3 flex-1">
+                      {match.servingTeam === 1 ? (
+                        <img
+                          src={pickleballIcon}
+                          alt="Serving"
+                          className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                          {match.team1.player1.name}
+                        </p>
+                        <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                          {match.team1.player2.name}
+                        </p>
+                      </div>
+                      {match.servingTeam === 1 ? (
+                        <img
+                          src={pickleballIcon}
+                          alt="Serving"
+                          className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0" />
+                      )}
                     </div>
                     {match.completed && (
                       <div
@@ -101,17 +126,41 @@ export function CurrentMatchups({
 
                   {/* Team 2 */}
                   <div
-                    className={`rounded-lg lg:rounded-2xl p-2 lg:p-4 flex items-center justify-between ${
-                      team2Won ? "bg-green-200 border-2 border-green-600" : "bg-red-100"
+                    className={`rounded-lg lg:rounded-2xl p-2 lg:p-4 flex items-center ${
+                      team2Won
+                        ? "bg-green-200 border-2 border-green-600"
+                        : match.servingTeam === 2
+                          ? "bg-red-100 border-2 border-red-400"
+                          : "bg-red-100"
                     }`}
                   >
-                    <div className="flex-1">
-                      <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
-                        {match.team2.player1.name}
-                      </p>
-                      <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
-                        {match.team2.player2.name}
-                      </p>
+                    <div className="flex items-center gap-2 lg:gap-3 flex-1">
+                      {match.servingTeam === 2 ? (
+                        <img
+                          src={pickleballIcon}
+                          alt="Serving"
+                          className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                          {match.team2.player1.name}
+                        </p>
+                        <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                          {match.team2.player2.name}
+                        </p>
+                      </div>
+                      {match.servingTeam === 2 ? (
+                        <img
+                          src={pickleballIcon}
+                          alt="Serving"
+                          className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0" />
+                      )}
                     </div>
                     {match.completed && (
                       <div

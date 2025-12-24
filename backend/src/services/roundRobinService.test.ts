@@ -251,6 +251,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const result = updateHistory([match], {}, {});
@@ -273,6 +274,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const result = updateHistory([match], {}, {});
@@ -294,6 +296,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const existingPartnershipHistory: PartnershipHistory = {
@@ -316,6 +319,7 @@ describe("roundRobinService", () => {
           completed: true,
           team1Score: 11,
           team2Score: 9,
+          servingTeam: 1,
         },
         {
           id: "match-2",
@@ -325,6 +329,7 @@ describe("roundRobinService", () => {
           completed: true,
           team1Score: 11,
           team2Score: 7,
+          servingTeam: 1,
         },
       ];
 
@@ -346,6 +351,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const existingHistory: PartnershipHistory = {
@@ -369,6 +375,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const existingOpponentHistory: OpponentHistory = {
@@ -396,6 +403,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const existingHistory: PartnershipHistory = {
@@ -418,6 +426,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const initialPartnershipHistory: PartnershipHistory = {

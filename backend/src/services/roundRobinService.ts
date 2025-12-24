@@ -221,6 +221,9 @@ export function generateNextRound(
     const team2Player1 = playerMap.get(matchup.partnerships[1][0])!;
     const team2Player2 = playerMap.get(matchup.partnerships[1][1])!;
 
+    // Randomly assign which team serves (1 or 2)
+    const servingTeam = Math.random() < 0.5 ? 1 : 2;
+
     return {
       id: uuidv4(),
       courtNumber: index + 1,
@@ -233,6 +236,7 @@ export function generateNextRound(
         player2: team2Player2,
       },
       completed: false,
+      servingTeam: servingTeam as 1 | 2,
     };
   });
 
