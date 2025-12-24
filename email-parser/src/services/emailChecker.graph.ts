@@ -145,8 +145,8 @@ export class GraphEmailChecker {
 
     // Remove style and script tags and their contents first.
     // Apply replacements repeatedly to avoid incomplete multi-character sanitization.
-    const styleTagRegex = /<style[^>]*>[\s\S]*?<\/style>/gi;
-    const scriptTagRegex = /<script[^>]*>[\s\S]*?<\/script>/gi;
+    const styleTagRegex = /<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi;
+    const scriptTagRegex = /<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi;
     let previousText: string;
     do {
       previousText = text;
