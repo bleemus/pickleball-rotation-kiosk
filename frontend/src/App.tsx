@@ -248,9 +248,7 @@ function App() {
         setSession(updatedSession);
       } else {
         // No session yet, rename in temporary players list
-        setTempPlayers(
-          tempPlayers.map((p) => (p.id === playerId ? { ...p, name: newName } : p))
-        );
+        setTempPlayers(tempPlayers.map((p) => (p.id === playerId ? { ...p, name: newName } : p)));
       }
     } catch (err) {
       setError((err as Error).message);

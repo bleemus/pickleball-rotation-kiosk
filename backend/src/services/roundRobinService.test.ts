@@ -120,7 +120,9 @@ describe("roundRobinService", () => {
           forceSitOut: i < 5, // 5 players sitting out, only 3 available
         }));
 
-        expect(() => generateNextRound(players, {}, {}, {}, 1)).toThrow("Not enough players available");
+        expect(() => generateNextRound(players, {}, {}, {}, 1)).toThrow(
+          "Not enough players available"
+        );
       });
     });
 
@@ -440,7 +442,12 @@ describe("roundRobinService", () => {
       const updated = updateHistory([match], initialPartnershipHistory, initialOpponentHistory, {});
 
       // Reverse it
-      const reversed = reverseHistory([match], updated.partnershipHistory, updated.opponentHistory, updated.courtHistory);
+      const reversed = reverseHistory(
+        [match],
+        updated.partnershipHistory,
+        updated.opponentHistory,
+        updated.courtHistory
+      );
 
       // Should be back to original
       expect(reversed.partnershipHistory["player-1-player-2"]).toBe(5);

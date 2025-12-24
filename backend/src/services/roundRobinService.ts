@@ -50,11 +50,7 @@ function getOpponentCount(
 /**
  * Gets the number of times two players have been on the same court together
  */
-function getCourtCount(
-  player1Id: string,
-  player2Id: string,
-  courtHistory: CourtHistory
-): number {
+function getCourtCount(player1Id: string, player2Id: string, courtHistory: CourtHistory): number {
   const key = createPairKey(player1Id, player2Id);
   return courtHistory[key] || 0;
 }
