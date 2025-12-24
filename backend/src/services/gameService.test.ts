@@ -225,16 +225,6 @@ describe("gameService", () => {
         "Cannot remove player who is in the current active round"
       );
     });
-
-    it("throws error if removal would drop below minimum players", async () => {
-      const mockSession = createMockSession();
-      mockSession.players = mockSession.players.slice(0, 8); // Exactly 8 players for 2 courts
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
-
-      await expect(removePlayer("test-session-id", "player-1")).rejects.toThrow(
-        "Cannot remove player. Minimum 8 players required for 2 courts"
-      );
-    });
   });
 
   describe("togglePlayerSitOut", () => {

@@ -189,14 +189,6 @@ export async function removePlayer(sessionId: string, playerId: string): Promise
     }
   }
 
-  // Check if removing this player would drop below minimum required
-  const minPlayers = session.numCourts * 4;
-  if (session.players.length <= minPlayers) {
-    throw new Error(
-      `Cannot remove player. Minimum ${minPlayers} players required for ${session.numCourts} court${session.numCourts > 1 ? "s" : ""}`
-    );
-  }
-
   session.players = session.players.filter((p) => p.id !== playerId);
 
   await saveSession(session);
