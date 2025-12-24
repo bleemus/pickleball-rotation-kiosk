@@ -150,9 +150,7 @@ export class GraphEmailChecker {
     let previousText: string;
     do {
       previousText = text;
-      text = text
-        .replace(styleTagRegex, "")
-        .replace(scriptTagRegex, "");
+      text = text.replace(styleTagRegex, "").replace(scriptTagRegex, "");
     } while (text !== previousText);
 
     // Convert block elements to newlines BEFORE removing tags
