@@ -716,6 +716,44 @@ describe("gameService", () => {
         "Cannot change number of courts while a round is in progress"
       );
     });
+
+    it("clears completed round when changing number of courts", async () => {
+      const mockSession = createMockSession({
+        numCourts: 2,
+        currentRound: {
+          roundNumber: 1,
+          matches: [],
+          benchedPlayers: [],
+          completed: true,
+        },
+      });
+      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
+      vi.mocked(redis.saveSession).mockResolvedValue();
+
+      const result = await updateNumCourts("test-session-id", 1);
+
+      expect(result.numCourts).toBe(1);
+      expect(result.currentRound).toBeNull();
+    });
+
+    it("keeps completed round if court number stays the same", async () => {
+      const mockSession = createMockSession({
+        numCourts: 2,
+        currentRound: {
+          roundNumber: 1,
+          matches: [],
+          benchedPlayers: [],
+          completed: true,
+        },
+      });
+      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
+      vi.mocked(redis.saveSession).mockResolvedValue();
+
+      const result = await updateNumCourts("test-session-id", 2);
+
+      expect(result.numCourts).toBe(2);
+      expect(result.currentRound).not.toBeNull();
+    });
   });
 
   describe("endSession", () => {

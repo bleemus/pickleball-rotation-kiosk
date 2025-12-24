@@ -135,6 +135,12 @@ export async function updateNumCourts(sessionId: string, numCourts: number): Pro
     throw new Error("Cannot change number of courts while a round is in progress");
   }
 
+  // If there's a completed round and we're changing the number of courts,
+  // clear the current round to avoid confusion in the UI
+  if (session.currentRound && session.currentRound.completed && session.numCourts !== numCourts) {
+    session.currentRound = null;
+  }
+
   session.numCourts = numCourts;
   await saveSession(session);
   return session;
