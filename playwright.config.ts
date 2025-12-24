@@ -25,7 +25,7 @@ export default defineConfig({
     },
   ],
 
-  // Run backend + frontend dev servers before tests
+  // Run backend + frontend + email-parser dev servers before tests
   webServer: [
     {
       command: "cd backend && npm run dev",
@@ -36,6 +36,18 @@ export default defineConfig({
         NODE_ENV: "test",
         REDIS_URL: "redis://localhost:6379",
         PORT: "3001",
+      },
+    },
+    {
+      command: "cd email-parser && npm run dev",
+      url: "http://localhost:3002/health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120000,
+      env: {
+        NODE_ENV: "test",
+        REDIS_URL: "redis://localhost:6379",
+        PORT: "3002",
+        ENABLE_EMAIL_POLLING: "false",
       },
     },
     {
