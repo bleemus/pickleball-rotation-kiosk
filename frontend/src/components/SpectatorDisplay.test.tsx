@@ -85,6 +85,7 @@ const mockSession: Session = {
   gameHistory: [],
   partnershipHistory: {},
   opponentHistory: {},
+  courtHistory: {},
   numCourts: 1,
   createdAt: Date.now(),
 };

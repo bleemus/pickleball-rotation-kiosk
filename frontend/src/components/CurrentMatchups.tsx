@@ -36,6 +36,14 @@ export function CurrentMatchups({
   const allMatchesComplete = round.matches.every((m) => m.completed);
   const hasAnyScores = round.matches.some((m) => m.completed);
 
+  // Helper function to get dynamic text size based on name length
+  const getNameTextClass = (name: string) => {
+    const length = name.length;
+    if (length > 20) return "text-sm lg:text-base xl:text-lg";
+    if (length > 15) return "text-sm lg:text-lg xl:text-xl";
+    return "text-base lg:text-xl xl:text-2xl";
+  };
+
   return (
     <div className="lg:h-screen bg-gradient-to-br from-green-500 to-blue-600 p-2 lg:p-6 flex flex-col lg:overflow-hidden">
       <div className="max-w-7xl mx-auto w-full flex flex-col lg:h-full">
@@ -80,33 +88,37 @@ export function CurrentMatchups({
                           : "bg-blue-100"
                     }`}
                   >
-                    <div className="flex items-center gap-2 lg:gap-3 flex-1">
-                      {match.servingTeam === 1 ? (
-                        <img
-                          src={pickleballIcon}
-                          alt="Serving"
-                          className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                    <div className="flex items-center flex-1">
+                      <div className="w-10 h-10 lg:w-14 lg:h-14 min-w-[2.5rem] lg:min-w-[3.5rem] flex-shrink-0 mr-2 lg:mr-3 flex items-center justify-center">
+                        {match.servingTeam === 1 ? (
+                          <img
+                            src={pickleballIcon}
+                            alt="Serving"
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col items-center justify-center px-1">
+                        <p className={`${getNameTextClass(match.team1.player1.name)} font-bold text-gray-800 w-full text-center`}>
                           {match.team1.player1.name}
                         </p>
-                        <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                        <p className={`${getNameTextClass(match.team1.player2.name)} font-bold text-gray-800 w-full text-center`}>
                           {match.team1.player2.name}
                         </p>
                       </div>
-                      {match.servingTeam === 1 ? (
-                        <img
-                          src={pickleballIcon}
-                          alt="Serving"
-                          className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0" />
-                      )}
+                      <div className="w-10 h-10 lg:w-14 lg:h-14 min-w-[2.5rem] lg:min-w-[3.5rem] flex-shrink-0 ml-2 lg:ml-3 flex items-center justify-center">
+                        {match.servingTeam === 1 ? (
+                          <img
+                            src={pickleballIcon}
+                            alt="Serving"
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full" />
+                        )}
+                      </div>
                     </div>
                     {match.completed && (
                       <div
@@ -134,33 +146,37 @@ export function CurrentMatchups({
                           : "bg-red-100"
                     }`}
                   >
-                    <div className="flex items-center gap-2 lg:gap-3 flex-1">
-                      {match.servingTeam === 2 ? (
-                        <img
-                          src={pickleballIcon}
-                          alt="Serving"
-                          className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                    <div className="flex items-center flex-1">
+                      <div className="w-10 h-10 lg:w-14 lg:h-14 min-w-[2.5rem] lg:min-w-[3.5rem] flex-shrink-0 mr-2 lg:mr-3 flex items-center justify-center">
+                        {match.servingTeam === 2 ? (
+                          <img
+                            src={pickleballIcon}
+                            alt="Serving"
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col items-center justify-center px-1">
+                        <p className={`${getNameTextClass(match.team2.player1.name)} font-bold text-gray-800 w-full text-center`}>
                           {match.team2.player1.name}
                         </p>
-                        <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-800 text-center">
+                        <p className={`${getNameTextClass(match.team2.player2.name)} font-bold text-gray-800 w-full text-center`}>
                           {match.team2.player2.name}
                         </p>
                       </div>
-                      {match.servingTeam === 2 ? (
-                        <img
-                          src={pickleballIcon}
-                          alt="Serving"
-                          className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 lg:w-14 lg:h-14 flex-shrink-0" />
-                      )}
+                      <div className="w-10 h-10 lg:w-14 lg:h-14 min-w-[2.5rem] lg:min-w-[3.5rem] flex-shrink-0 ml-2 lg:ml-3 flex items-center justify-center">
+                        {match.servingTeam === 2 ? (
+                          <img
+                            src={pickleballIcon}
+                            alt="Serving"
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full" />
+                        )}
+                      </div>
                     </div>
                     {match.completed && (
                       <div

@@ -236,6 +236,29 @@ function App() {
     }
   };
 
+  // Handle renaming player
+  const handleRenamePlayer = async (playerId: string, newName: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (session) {
+        // Session exists, rename player via API
+        const updatedSession = await api.renamePlayer(session.id, playerId, newName);
+        setSession(updatedSession);
+      } else {
+        // No session yet, rename in temporary players list
+        setTempPlayers(
+          tempPlayers.map((p) => (p.id === playerId ? { ...p, name: newName } : p))
+        );
+      }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle toggling player sit out
   const handleToggleSitOut = async (playerId: string) => {
     if (!session) return;
@@ -525,6 +548,7 @@ function App() {
                 sessionId={session.id}
                 onAddPlayer={handleAddPlayer}
                 onRemovePlayer={handleRemovePlayer}
+                onRenamePlayer={handleRenamePlayer}
                 onToggleSitOut={handleToggleSitOut}
                 onUpdateNumCourts={handleUpdateNumCourts}
                 onStartNextRound={handleStartNextRound}

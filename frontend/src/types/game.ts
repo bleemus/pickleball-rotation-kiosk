@@ -53,6 +53,10 @@ export interface OpponentHistory {
   [playerPair: string]: number; // "player1-player2" -> count
 }
 
+export interface CourtHistory {
+  [playerPair: string]: number; // "player1-player2" -> count (how many times they've been on same court together, regardless of team)
+}
+
 export interface Session {
   id: string;
   players: Player[];
@@ -60,6 +64,7 @@ export interface Session {
   gameHistory: GameHistory[];
   partnershipHistory: PartnershipHistory;
   opponentHistory: OpponentHistory;
+  courtHistory: CourtHistory;
   numCourts: number;
   createdAt: number;
   ended?: boolean;
@@ -83,4 +88,9 @@ export interface Reservation {
   court: string;
   organizer: string;
   players: string[];
+}
+
+// API request types
+export interface RenamePlayerRequest {
+  name: string;
 }

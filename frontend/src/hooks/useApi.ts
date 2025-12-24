@@ -12,6 +12,10 @@ interface AddPlayerRequest {
   name: string;
 }
 
+interface RenamePlayerRequest {
+  name: string;
+}
+
 interface CompleteRoundRequest {
   scores: {
     matchId: string;
@@ -154,6 +158,28 @@ export function useApi() {
     return response.json();
   };
 
+  const renamePlayer = async (
+    sessionId: string,
+    playerId: string,
+    name: string
+  ): Promise<Session> => {
+    const response = await fetch(
+      `${API_BASE_URL}/session/${sessionId}/players/${playerId}/rename`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name } as RenamePlayerRequest),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to rename player");
+    }
+
+    return response.json();
+  };
+
   const getPlayers = async (sessionId: string): Promise<Player[]> => {
     const response = await fetch(`${API_BASE_URL}/session/${sessionId}/players`);
 
@@ -291,6 +317,7 @@ export function useApi() {
     deleteSession,
     addPlayer,
     removePlayer,
+    renamePlayer,
     getPlayers,
     togglePlayerSitOut,
     startNextRound,

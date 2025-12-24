@@ -45,6 +45,7 @@ function createMockSession(overrides: Partial<Session> = {}): Session {
     gameHistory: [],
     partnershipHistory: {},
     opponentHistory: {},
+    courtHistory: {},
     numCourts: 2,
     createdAt: Date.now(),
     ...overrides,

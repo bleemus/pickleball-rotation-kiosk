@@ -3,6 +3,7 @@ import {
   Match,
   PartnershipHistory,
   OpponentHistory,
+  CourtHistory,
   MatchupScore,
   Team,
 } from "../types/game";
@@ -10,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const PARTNERSHIP_PENALTY = 10;
 const OPPONENT_PENALTY = 5;
+const COURT_PENALTY = 7; // Penalty for being on same court together (whether teammate or opponent)
 const BENCH_BONUS = -20; // Negative because lower scores are better
 const GAMES_PLAYED_PENALTY = 8; // Penalty for each game played (encourages less-played players, ensures new players get priority)
 const CONSECUTIVE_BENCH_BONUS = -100; // Strong bonus (negative) to prioritize players who sat out last round
@@ -46,13 +48,26 @@ function getOpponentCount(
 }
 
 /**
+ * Gets the number of times two players have been on the same court together
+ */
+function getCourtCount(
+  player1Id: string,
+  player2Id: string,
+  courtHistory: CourtHistory
+): number {
+  const key = createPairKey(player1Id, player2Id);
+  return courtHistory[key] || 0;
+}
+
+/**
  * Calculates the score for a potential matchup (4 players)
  * Lower scores are better
  */
 function calculateMatchupScore(
   players: Player[],
   partnershipHistory: PartnershipHistory,
-  opponentHistory: OpponentHistory
+  opponentHistory: OpponentHistory,
+  courtHistory: CourtHistory
 ): MatchupScore {
   if (players.length !== 4) {
     throw new Error("Matchup must have exactly 4 players");
@@ -104,6 +119,15 @@ function calculateMatchupScore(
       for (const j of team2) {
         const opponentCount = getOpponentCount(players[i].id, players[j].id, opponentHistory);
         score += opponentCount * OPPONENT_PENALTY;
+      }
+    }
+
+    // Calculate court history penalty (all 4 players on same court)
+    // Check all pairs of the 4 players (6 combinations total)
+    for (let i = 0; i < players.length; i++) {
+      for (let j = i + 1; j < players.length; j++) {
+        const courtCount = getCourtCount(players[i].id, players[j].id, courtHistory);
+        score += courtCount * COURT_PENALTY;
       }
     }
 
@@ -162,6 +186,7 @@ export function generateNextRound(
   players: Player[],
   partnershipHistory: PartnershipHistory,
   opponentHistory: OpponentHistory,
+  courtHistory: CourtHistory,
   numCourts: number = 2
 ): { matches: Match[]; benchedPlayers: Player[] } {
   const minPlayers = numCourts * 4;
@@ -187,7 +212,7 @@ export function generateNextRound(
 
   // Calculate scores for each combination
   const scoredMatchups = allCombinations.map((combo) =>
-    calculateMatchupScore(combo, partnershipHistory, opponentHistory)
+    calculateMatchupScore(combo, partnershipHistory, opponentHistory, courtHistory)
   );
 
   // Sort by score (lower is better)
@@ -250,18 +275,21 @@ export function generateNextRound(
 }
 
 /**
- * Updates partnership and opponent history based on completed matches
+ * Updates partnership, opponent, and court history based on completed matches
  */
 export function updateHistory(
   matches: Match[],
   partnershipHistory: PartnershipHistory,
-  opponentHistory: OpponentHistory
+  opponentHistory: OpponentHistory,
+  courtHistory: CourtHistory
 ): {
   partnershipHistory: PartnershipHistory;
   opponentHistory: OpponentHistory;
+  courtHistory: CourtHistory;
 } {
   const newPartnershipHistory = { ...partnershipHistory };
   const newOpponentHistory = { ...opponentHistory };
+  const newCourtHistory = { ...courtHistory };
 
   for (const match of matches) {
     // Update partnerships
@@ -284,27 +312,47 @@ export function updateHistory(
         newOpponentHistory[opponentKey] = (newOpponentHistory[opponentKey] || 0) + 1;
       }
     }
+
+    // Update court history (all 4 players on the same court)
+    const allPlayers = [
+      match.team1.player1.id,
+      match.team1.player2.id,
+      match.team2.player1.id,
+      match.team2.player2.id,
+    ];
+
+    // Track all pairs (6 combinations for 4 players)
+    for (let i = 0; i < allPlayers.length; i++) {
+      for (let j = i + 1; j < allPlayers.length; j++) {
+        const courtKey = createPairKey(allPlayers[i], allPlayers[j]);
+        newCourtHistory[courtKey] = (newCourtHistory[courtKey] || 0) + 1;
+      }
+    }
   }
 
   return {
     partnershipHistory: newPartnershipHistory,
     opponentHistory: newOpponentHistory,
+    courtHistory: newCourtHistory,
   };
 }
 
 /**
- * Reverses partnership and opponent history for matches (used when resubmitting scores)
+ * Reverses partnership, opponent, and court history for matches (used when resubmitting scores)
  */
 export function reverseHistory(
   matches: Match[],
   partnershipHistory: PartnershipHistory,
-  opponentHistory: OpponentHistory
+  opponentHistory: OpponentHistory,
+  courtHistory: CourtHistory
 ): {
   partnershipHistory: PartnershipHistory;
   opponentHistory: OpponentHistory;
+  courtHistory: CourtHistory;
 } {
   const newPartnershipHistory = { ...partnershipHistory };
   const newOpponentHistory = { ...opponentHistory };
+  const newCourtHistory = { ...courtHistory };
 
   for (const match of matches) {
     // Reverse partnerships
@@ -333,10 +381,28 @@ export function reverseHistory(
         }
       }
     }
+
+    // Reverse court history
+    const allPlayers = [
+      match.team1.player1.id,
+      match.team1.player2.id,
+      match.team2.player1.id,
+      match.team2.player2.id,
+    ];
+
+    for (let i = 0; i < allPlayers.length; i++) {
+      for (let j = i + 1; j < allPlayers.length; j++) {
+        const courtKey = createPairKey(allPlayers[i], allPlayers[j]);
+        if (newCourtHistory[courtKey] && newCourtHistory[courtKey] > 0) {
+          newCourtHistory[courtKey] -= 1;
+        }
+      }
+    }
   }
 
   return {
     partnershipHistory: newPartnershipHistory,
     opponentHistory: newOpponentHistory,
+    courtHistory: newCourtHistory,
   };
 }

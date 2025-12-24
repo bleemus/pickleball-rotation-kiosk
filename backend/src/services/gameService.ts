@@ -6,6 +6,7 @@ import {
   GameHistory,
   CreateSessionRequest,
   AddPlayerRequest,
+  RenamePlayerRequest,
   CompleteRoundRequest,
 } from "../types/game";
 import {
@@ -86,6 +87,7 @@ export async function createSession(request: CreateSessionRequest): Promise<Sess
     gameHistory: [],
     partnershipHistory: {},
     opponentHistory: {},
+    courtHistory: {},
     numCourts,
     createdAt: Date.now(),
   };
@@ -196,6 +198,52 @@ export async function removePlayer(sessionId: string, playerId: string): Promise
 }
 
 /**
+ * Renames a player in a session
+ */
+export async function renamePlayer(
+  sessionId: string,
+  playerId: string,
+  request: RenamePlayerRequest
+): Promise<Session> {
+  const session = await getSessionById(sessionId);
+
+  const player = session.players.find((p) => p.id === playerId);
+  if (!player) {
+    throw new Error(`Player ${playerId} not found in session`);
+  }
+
+  // Validate name using the same logic as createPlayer
+  const trimmedName = request.name.trim();
+
+  if (!trimmedName) {
+    throw new Error("Player name cannot be empty");
+  }
+
+  if (trimmedName.length > 30) {
+    throw new Error("Player name must be 30 characters or less");
+  }
+
+  if (/[<>"']/.test(trimmedName)) {
+    throw new Error("Player name contains invalid characters");
+  }
+
+  // Check if another player already has this name (case-insensitive)
+  const existingPlayer = session.players.find(
+    (p) => p.id !== playerId && p.name.toLowerCase() === trimmedName.toLowerCase()
+  );
+
+  if (existingPlayer) {
+    throw new Error(`Player ${trimmedName} already exists in this session`);
+  }
+
+  // Update the player's name (preserving player ID and all stats)
+  player.name = trimmedName;
+
+  await saveSession(session);
+  return session;
+}
+
+/**
  * Toggles a player's forceSitOut flag for the next round
  */
 export async function togglePlayerSitOut(sessionId: string, playerId: string): Promise<Session> {
@@ -234,6 +282,7 @@ export async function startNextRound(sessionId: string): Promise<Session> {
     playersToUse,
     session.partnershipHistory,
     session.opponentHistory,
+    session.courtHistory,
     session.numCourts
   );
 
@@ -357,14 +406,16 @@ export async function completeCurrentRound(
         }
       }
 
-      // Reverse partnership and opponent history
-      const { partnershipHistory, opponentHistory } = reverseHistory(
+      // Reverse partnership, opponent, and court history
+      const { partnershipHistory, opponentHistory, courtHistory } = reverseHistory(
         session.currentRound.matches,
         session.partnershipHistory,
-        session.opponentHistory
+        session.opponentHistory,
+        session.courtHistory
       );
       session.partnershipHistory = partnershipHistory;
       session.opponentHistory = opponentHistory;
+      session.courtHistory = courtHistory;
 
       // Remove old history entries
       session.gameHistory = session.gameHistory.filter(
@@ -493,17 +544,19 @@ export async function completeCurrentRound(
       session.gameHistory.push(historyEntry);
     }
 
-    // Update partnership and opponent history only for completed matches
+    // Update partnership, opponent, and court history only for completed matches
     const completedMatches = session.currentRound.matches.filter((m) => m.completed);
     if (completedMatches.length > 0) {
-      const { partnershipHistory, opponentHistory } = updateHistory(
+      const { partnershipHistory, opponentHistory, courtHistory } = updateHistory(
         completedMatches,
         session.partnershipHistory,
-        session.opponentHistory
+        session.opponentHistory,
+        session.courtHistory
       );
 
       session.partnershipHistory = partnershipHistory;
       session.opponentHistory = opponentHistory;
+      session.courtHistory = courtHistory;
     }
 
     // Only mark round as completed if ALL matches have scores

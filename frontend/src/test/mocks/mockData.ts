@@ -161,6 +161,7 @@ export const mockSession: Session = {
   gameHistory: [],
   partnershipHistory: {},
   opponentHistory: {},
+  courtHistory: {},
   numCourts: 2,
   createdAt: Date.now(),
   ended: false,
