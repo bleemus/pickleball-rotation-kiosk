@@ -36,6 +36,7 @@ export default defineConfig({
         NODE_ENV: "test",
         REDIS_URL: "redis://localhost:6379",
         PORT: "3001",
+        EMAIL_PARSER_URL: "http://localhost:3002",
       },
     },
     {
