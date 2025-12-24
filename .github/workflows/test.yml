@@ -38,6 +38,7 @@ jobs:
             package-lock.json
             backend/package-lock.json
             frontend/package-lock.json
+            email-parser/package-lock.json
 
       - name: Install dependencies
         id: install
@@ -45,6 +46,7 @@ jobs:
           npm ci
           cd backend && npm ci
           cd ../frontend && npm ci
+          cd ../email-parser && npm ci
 
       - name: Check formatting
         id: format
