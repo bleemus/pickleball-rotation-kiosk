@@ -32,6 +32,7 @@ Thumbs.db
 # Temporary files
 *.tmp
 .cache/
+.troubleshoot/
 
 # Docker volumes
 docker-compose.override.yml
