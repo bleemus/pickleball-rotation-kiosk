@@ -179,6 +179,14 @@ export class GraphEmailChecker {
       .replace(/&apos;/g, "'")
       .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
 
+    // After decoding entities, strip any tags that may have been introduced.
+    // Use a loop to ensure multi-step patterns are fully removed.
+    let previousAfterDecode: string;
+    do {
+      previousAfterDecode = text;
+      text = text.replace(/<[^>]*>/g, "");
+    } while (text !== previousAfterDecode);
+
     // Clean up whitespace while preserving newlines
     text = text
       .split("\n")
