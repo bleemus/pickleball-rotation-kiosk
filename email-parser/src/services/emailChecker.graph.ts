@@ -3,6 +3,7 @@ import { ClientSecretCredential } from "@azure/identity";
 import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
 import { EmailParser } from "./emailParser";
 import { Reservation } from "../types/reservation";
+import sanitizeHtml from "sanitize-html";
 
 // Microsoft Graph types
 interface Message {
@@ -141,32 +142,15 @@ export class GraphEmailChecker {
   private htmlToText(html: string): string {
     if (!html) return "";
 
-    let text = html;
-
-    // Remove style and script tags and their contents first.
-    // Apply replacements repeatedly to avoid incomplete multi-character sanitization.
-    const styleTagRegex = /<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi;
-    const scriptTagRegex = /<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi;
-    let previousText: string;
-    do {
-      previousText = text;
-      text = text.replace(styleTagRegex, "").replace(scriptTagRegex, "");
-    } while (text !== previousText);
-
-    // Convert block elements to newlines BEFORE removing tags
-    // List items get their own line with bullet
-    text = text.replace(/<li[^>]*>/gi, "\n• ");
-    text = text.replace(/<\/li>/gi, "\n");
-
-    // Block elements also get newlines
-    text = text.replace(/<br\s*\/?>/gi, "\n");
-    text = text.replace(/<\/?(div|p|tr|h[1-6]|ul|ol)[^>]*>/gi, "\n");
-
-    // Table cells get spaces
-    text = text.replace(/<\/?td[^>]*>/gi, " ");
-
-    // Remove remaining HTML tags
-    text = text.replace(/<[^>]*>/g, "");
+    // First, use a well-tested sanitizer to remove all HTML tags, including
+    // script/style blocks and their contents. This avoids incomplete
+    // multi-character sanitization issues from custom regexes.
+    let text = sanitizeHtml(html, {
+      allowedTags: [],
+      allowedAttributes: {},
+      // Ensure script/style and other potentially dangerous content are removed.
+      disallowedTagsMode: "discard",
+    });
 
     // Decode HTML entities
     text = text
@@ -179,15 +163,7 @@ export class GraphEmailChecker {
       .replace(/&apos;/g, "'")
       .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
 
-    // After decoding entities, strip any tags that may have been introduced.
-    // Use a loop to ensure multi-step patterns are fully removed.
-    let previousAfterDecode: string;
-    do {
-      previousAfterDecode = text;
-      text = text.replace(/<[^>]*>/g, "");
-    } while (text !== previousAfterDecode);
-
-    // Clean up whitespace while preserving newlines
+    // Clean up whitespace while preserving newlines where present
     text = text
       .split("\n")
       .map((line) => line.trim())
