@@ -143,9 +143,17 @@ export class GraphEmailChecker {
 
     let text = html;
 
-    // Remove style and script tags and their contents first
-    text = text.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
-    text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+    // Remove style and script tags and their contents first.
+    // Apply replacements repeatedly to avoid incomplete multi-character sanitization.
+    const styleTagRegex = /<style[^>]*>[\s\S]*?<\/style>/gi;
+    const scriptTagRegex = /<script[^>]*>[\s\S]*?<\/script>/gi;
+    let previousText: string;
+    do {
+      previousText = text;
+      text = text
+        .replace(styleTagRegex, "")
+        .replace(scriptTagRegex, "");
+    } while (text !== previousText);
 
     // Convert block elements to newlines BEFORE removing tags
     // List items get their own line with bullet
