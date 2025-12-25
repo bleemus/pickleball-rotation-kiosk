@@ -155,13 +155,13 @@ export class GraphEmailChecker {
     // Decode HTML entities
     text = text
       .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
       .replace(/&lt;/g, "<")
       .replace(/&gt;/g, ">")
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .replace(/&apos;/g, "'")
-      .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
+      .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+      .replace(/&amp;/g, "&");
 
     // Clean up whitespace while preserving newlines where present
     text = text
