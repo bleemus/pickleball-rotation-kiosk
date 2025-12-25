@@ -10,6 +10,7 @@ A kiosk application for managing round-robin pickleball games across 2 courts wi
 - **Score Tracking**: Complete game history with win/loss records and point differential
 - **Player Management**: Add/remove players between rounds, manual sit-out control
 - **Score Editing**: Edit previous round scores with automatic stat recalculation
+- **Email Integration**: Automatically imports players from Pickle Planner reservation emails
 - **Spectator Display**: Dedicated full-screen view with auto-scrolling stats and live match updates
 - **Previous Round Results**: Shows completed match scores while waiting between rounds
 - **Customizable Branding**: Configure app name via environment variable
@@ -36,10 +37,23 @@ A kiosk application for managing round-robin pickleball games across 2 courts wi
 - RESTful API design
 - Health check endpoints
 
+### Email Parser Service
+
+- Microsoft Graph API integration for email checking
+- Supports both Graph API (OAuth2) and IMAP fallback
+- Automatic Pickle Planner reservation parsing
+- Redis storage with 7-day TTL for reservations
+- REST API for reservation queries
+- Checks for new emails every 1 minute
+- Lightweight and Raspberry Pi compatible
+
 ### Data Layer
 
-- Redis for session state and game history
-- 24-hour session expiration
+- Redis for all persistent data:
+  - Game sessions (24-hour TTL)
+  - Email reservations (7-day TTL)
+- Shared Redis instance across services
+- Automatic cleanup of expired data
 
 ### Deployment
 
@@ -61,7 +75,7 @@ A kiosk application for managing round-robin pickleball games across 2 courts wi
 git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
 cd pickleball-rotation-kiosk
 
-# Start all services (Redis, backend, frontend)
+# Start all services (Redis, backend, frontend, email-parser)
 make up
 
 # View logs
@@ -72,6 +86,12 @@ make down
 ```
 
 Access at **http://localhost**
+
+**Services:**
+
+- Frontend: http://localhost (port 80)
+- Backend API: http://localhost:3001
+- Email Parser: http://localhost:3002
 
 **Common Commands:**
 
@@ -118,15 +138,15 @@ For active development with hot-reload, see [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOP
 
 ```bash
 # Install dependencies
-cd backend && npm install
-cd ../frontend && npm install
+make install
 
-# Start all services with Docker Compose
-docker compose up -d redis  # Start only Redis
+# Start Redis
+docker compose up -d redis
 
 # In separate terminals:
-cd backend && npm run dev    # Backend on :3001
-cd frontend && npm run dev   # Frontend on :3000
+cd backend && npm run dev       # Backend on :3001
+cd frontend && npm run dev      # Frontend on :3000
+cd email-parser && npm run dev  # Email Parser on :3002
 ```
 
 ### Environment Variables
@@ -135,14 +155,10 @@ Create environment files:
 
 **Backend** (`backend/.env`):
 
-```bash
-cp backend/.env.example backend/.env
-```
-
 ```env
 PORT=3001
 REDIS_URL=redis://localhost:6379
-NODE_ENV=development
+EMAIL_PARSER_URL=http://localhost:3002
 ```
 
 **Frontend** (`frontend/.env`):
@@ -156,6 +172,56 @@ VITE_API_URL=http://localhost:3001/api
 VITE_DEBUG_MODE=false  # Set to true to enable debug features
 VITE_APP_NAME=Pickleball Kiosk  # Customize the app name shown throughout the UI
 ```
+
+**Email Parser** (`email-parser/.env`):
+
+```bash
+cp email-parser/.env.example email-parser/.env
+```
+
+```env
+# Microsoft Graph API Configuration (Recommended)
+GRAPH_TENANT_ID=your-tenant-id
+GRAPH_CLIENT_ID=your-client-id
+GRAPH_CLIENT_SECRET=your-client-secret
+GRAPH_USER_ID=your-email@example.com
+
+# OR: IMAP Configuration (Fallback)
+# EMAIL_USER=your-email@example.com
+# EMAIL_PASSWORD=your-app-password
+# EMAIL_HOST=imap.gmail.com
+# EMAIL_PORT=993
+# EMAIL_TLS=true
+
+# Check interval in minutes
+EMAIL_CHECK_INTERVAL=1
+
+# Service Configuration
+PORT=3002
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379
+```
+
+**Microsoft Graph API Setup (Recommended):**
+
+The email parser uses Microsoft Graph API for reliable, OAuth2-based email access. See [email-parser/GRAPH_API_SETUP.md](email-parser/GRAPH_API_SETUP.md) for complete setup instructions including:
+
+1. Creating Azure App Registration
+2. Configuring Mail.ReadWrite permissions
+3. Setting up Application Access Policy
+4. Generating client secrets
+
+**IMAP Fallback (Gmail/Outlook):**
+
+If Graph API is not configured, the service falls back to IMAP. For Gmail:
+
+1. Enable IMAP in Gmail settings
+2. Enable 2-Step Verification
+3. Generate App Password at https://myaccount.google.com/apppasswords
+4. Use the app password (not your regular password) in `EMAIL_PASSWORD`
+
+See [email-parser/README.md](email-parser/README.md) for detailed email parser documentation.
 
 ## Management Commands
 

@@ -7,6 +7,7 @@ interface PlayerManagerProps {
   sessionId?: string;
   onAddPlayer: (name: string) => void;
   onRemovePlayer: (playerId: string) => void;
+  onRenamePlayer: (playerId: string, newName: string) => void;
   onToggleSitOut: (playerId: string) => void;
   onUpdateNumCourts: (numCourts: number) => void;
   onStartNextRound: () => void;
@@ -23,6 +24,7 @@ export function PlayerManager({
   numCourts,
   onAddPlayer,
   onRemovePlayer,
+  onRenamePlayer,
   onToggleSitOut,
   onUpdateNumCourts,
   onStartNextRound,
@@ -36,6 +38,9 @@ export function PlayerManager({
   const [playerName, setPlayerName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCourtSelector, setShowCourtSelector] = useState(false);
+  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [renameError, setRenameError] = useState<string | null>(null);
   const playerInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddPlayer = (e: React.FormEvent) => {
@@ -70,6 +75,47 @@ export function PlayerManager({
     if (confirm(`Are you sure you want to remove ${playerName} from the session?`)) {
       onRemovePlayer(playerId);
     }
+  };
+
+  const handleStartEdit = (playerId: string, currentName: string) => {
+    setEditingPlayerId(playerId);
+    setEditingName(currentName);
+    setRenameError(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPlayerId(null);
+    setEditingName("");
+    setRenameError(null);
+  };
+
+  const handleSaveEdit = (playerId: string) => {
+    const trimmedName = editingName.trim();
+
+    if (!trimmedName) {
+      setRenameError("Player name cannot be empty");
+      return;
+    }
+
+    if (trimmedName.length > 30) {
+      setRenameError("Player name must be 30 characters or less");
+      return;
+    }
+
+    // Check if another player already has this name (case-insensitive)
+    const nameExists = players.some(
+      (p) => p.id !== playerId && p.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (nameExists) {
+      setRenameError("Player name already exists");
+      return;
+    }
+
+    onRenamePlayer(playerId, trimmedName);
+    setEditingPlayerId(null);
+    setEditingName("");
+    setRenameError(null);
   };
 
   return (
@@ -196,45 +242,89 @@ export function PlayerManager({
               {players.map((player) => (
                 <div
                   key={player.id}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl ${
+                  className={`flex flex-col px-4 py-3 rounded-xl ${
                     player.forceSitOut ? "bg-orange-100 border-2 border-orange-400" : "bg-gray-100"
                   }`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm lg:text-base font-medium truncate block">
-                      {player.name}
-                      {player.forceSitOut && (
-                        <span className="ml-2 text-orange-600 text-xs font-bold">
-                          (Sitting Out)
-                        </span>
+                  {editingPlayerId === player.id ? (
+                    // Edit mode
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        maxLength={30}
+                        className="w-full px-3 py-2 text-sm lg:text-base border-2 border-blue-400 rounded-lg focus:outline-none focus:border-blue-600"
+                        autoFocus
+                      />
+                      {renameError && (
+                        <p className="text-xs text-red-600 font-semibold">{renameError}</p>
                       )}
-                    </span>
-                    <span className="text-xs text-gray-600">
-                      {player.wins}W - {player.losses}L • {player.gamesPlayed} games
-                    </span>
-                  </div>
-                  <div className="flex gap-1 ml-2">
-                    <button
-                      onClick={() => onToggleSitOut(player.id)}
-                      className={`px-4 py-1.5 text-xs lg:text-sm font-semibold rounded-lg ${
-                        player.forceSitOut
-                          ? "bg-green-500 text-white hover:bg-green-600"
-                          : "bg-orange-500 text-white hover:bg-orange-600"
-                      } transition-colors flex-shrink-0`}
-                      disabled={loading}
-                      title={player.forceSitOut ? "Allow to play" : "Sit out next round"}
-                    >
-                      {player.forceSitOut ? "Play" : "Sit"}
-                    </button>
-                    <button
-                      onClick={() => handleRemovePlayer(player.id, player.name)}
-                      className="text-red-500 hover:text-red-700 text-lg font-bold flex-shrink-0"
-                      disabled={loading}
-                      title="Remove player"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSaveEdit(player.id)}
+                          className="flex-1 px-3 py-1.5 bg-green-500 text-white text-xs lg:text-sm font-semibold rounded-lg hover:bg-green-600 transition-colors"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="flex-1 px-3 py-1.5 bg-gray-500 text-white text-xs lg:text-sm font-semibold rounded-lg hover:bg-gray-600 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // View mode
+                    <>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm lg:text-base font-medium truncate block">
+                            {player.name}
+                            {player.forceSitOut && (
+                              <span className="ml-2 text-orange-600 text-xs font-bold">
+                                (Sitting Out)
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-xs text-gray-600">
+                            {player.wins}W - {player.losses}L • {player.gamesPlayed} games
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleStartEdit(player.id, player.name)}
+                          className="flex-1 px-3 py-1.5 text-xs lg:text-sm font-semibold rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                          disabled={loading}
+                          title="Edit player name"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => onToggleSitOut(player.id)}
+                          className={`flex-1 px-3 py-1.5 text-xs lg:text-sm font-semibold rounded-lg ${
+                            player.forceSitOut
+                              ? "bg-green-500 text-white hover:bg-green-600"
+                              : "bg-orange-500 text-white hover:bg-orange-600"
+                          } transition-colors`}
+                          disabled={loading}
+                          title={player.forceSitOut ? "Allow to play" : "Sit out next round"}
+                        >
+                          {player.forceSitOut ? "Play" : "Sit"}
+                        </button>
+                        <button
+                          onClick={() => handleRemovePlayer(player.id, player.name)}
+                          className="px-3 py-1.5 text-red-500 hover:text-red-700 text-lg font-bold"
+                          disabled={loading}
+                          title="Remove player"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

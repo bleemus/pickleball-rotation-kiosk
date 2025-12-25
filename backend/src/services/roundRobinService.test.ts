@@ -28,7 +28,7 @@ describe("roundRobinService", () => {
     describe("Basic Functionality", () => {
       it("generates matches for 1 court with 4 players", () => {
         const players = createPlayers(4);
-        const result = generateNextRound(players, {}, {}, 1);
+        const result = generateNextRound(players, {}, {}, {}, 1);
 
         expect(result.matches).toHaveLength(1);
         expect(result.benchedPlayers).toHaveLength(0);
@@ -38,7 +38,7 @@ describe("roundRobinService", () => {
 
       it("generates matches for 2 courts with 8 players", () => {
         const players = createPlayers(8);
-        const result = generateNextRound(players, {}, {}, 2);
+        const result = generateNextRound(players, {}, {}, {}, 2);
 
         expect(result.matches).toHaveLength(2);
         expect(result.benchedPlayers).toHaveLength(0);
@@ -48,7 +48,7 @@ describe("roundRobinService", () => {
 
       it("generates matches for 3 courts with 12 players", () => {
         const players = createPlayers(12);
-        const result = generateNextRound(players, {}, {}, 3);
+        const result = generateNextRound(players, {}, {}, {}, 3);
 
         expect(result.matches).toHaveLength(3);
         expect(result.benchedPlayers).toHaveLength(0);
@@ -56,7 +56,7 @@ describe("roundRobinService", () => {
 
       it("benches extra players when there are more than needed", () => {
         const players = createPlayers(10);
-        const result = generateNextRound(players, {}, {}, 2);
+        const result = generateNextRound(players, {}, {}, {}, 2);
 
         expect(result.matches).toHaveLength(2);
         expect(result.benchedPlayers).toHaveLength(2); // 10 - 8 = 2 benched
@@ -64,7 +64,7 @@ describe("roundRobinService", () => {
 
       it("each match has 4 unique players", () => {
         const players = createPlayers(8);
-        const result = generateNextRound(players, {}, {}, 2);
+        const result = generateNextRound(players, {}, {}, {}, 2);
 
         for (const match of result.matches) {
           const playerIds = [
@@ -80,7 +80,7 @@ describe("roundRobinService", () => {
 
       it("no player appears in multiple matches", () => {
         const players = createPlayers(12);
-        const result = generateNextRound(players, {}, {}, 3);
+        const result = generateNextRound(players, {}, {}, {}, 3);
 
         const allPlayerIds: string[] = [];
         for (const match of result.matches) {
@@ -101,7 +101,7 @@ describe("roundRobinService", () => {
       it("throws error if not enough players for courts", () => {
         const players = createPlayers(4);
 
-        expect(() => generateNextRound(players, {}, {}, 2)).toThrow(
+        expect(() => generateNextRound(players, {}, {}, {}, 2)).toThrow(
           "Need at least 8 players to generate a round with 2 courts"
         );
       });
@@ -109,7 +109,7 @@ describe("roundRobinService", () => {
       it("throws error if not enough players for 1 court", () => {
         const players = createPlayers(3);
 
-        expect(() => generateNextRound(players, {}, {}, 1)).toThrow(
+        expect(() => generateNextRound(players, {}, {}, {}, 1)).toThrow(
           "Need at least 4 players to generate a round with 1 court"
         );
       });
@@ -120,7 +120,9 @@ describe("roundRobinService", () => {
           forceSitOut: i < 5, // 5 players sitting out, only 3 available
         }));
 
-        expect(() => generateNextRound(players, {}, {}, 1)).toThrow("Not enough players available");
+        expect(() => generateNextRound(players, {}, {}, {}, 1)).toThrow(
+          "Not enough players available"
+        );
       });
     });
 
@@ -130,7 +132,7 @@ describe("roundRobinService", () => {
         players[0].forceSitOut = true;
         players[1].forceSitOut = true;
 
-        const result = generateNextRound(players, {}, {}, 1);
+        const result = generateNextRound(players, {}, {}, {}, 1);
 
         // Check that forceSitOut players are not in matches
         const matchPlayerIds = new Set<string>();
@@ -149,7 +151,7 @@ describe("roundRobinService", () => {
         const players = createPlayers(8);
         players[0].forceSitOut = true;
 
-        const result = generateNextRound(players, {}, {}, 1);
+        const result = generateNextRound(players, {}, {}, {}, 1);
 
         const benchedIds = result.benchedPlayers.map((p) => p.id);
         expect(benchedIds).toContain("player-1");
@@ -163,7 +165,7 @@ describe("roundRobinService", () => {
           "player-1-player-2": 5, // Strong partnership history
         };
 
-        const result = generateNextRound(players, partnershipHistory, {}, 2);
+        const result = generateNextRound(players, partnershipHistory, {}, {}, 2);
 
         // Check that player-1 and player-2 are not on the same team
         for (const match of result.matches) {
@@ -192,7 +194,7 @@ describe("roundRobinService", () => {
         players[4].roundsSatOut = 0;
         players[5].roundsSatOut = 0;
 
-        const result = generateNextRound(players, {}, {}, 1);
+        const result = generateNextRound(players, {}, {}, {}, 1);
 
         // Players who sat out more should be playing
         const matchPlayerIds = new Set<string>();
@@ -220,7 +222,7 @@ describe("roundRobinService", () => {
         players[4].consecutiveRoundsSatOut = 0;
         players[5].consecutiveRoundsSatOut = 0;
 
-        const result = generateNextRound(players, {}, {}, 1);
+        const result = generateNextRound(players, {}, {}, {}, 1);
 
         // Players who sat out consecutively should definitely be playing
         const matchPlayerIds = new Set<string>();
@@ -251,9 +253,10 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
-      const result = updateHistory([match], {}, {});
+      const result = updateHistory([match], {}, {}, {});
 
       // Check partnership keys
       const team1Key = ["player-1", "player-2"].sort().join("-");
@@ -273,9 +276,10 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
-      const result = updateHistory([match], {}, {});
+      const result = updateHistory([match], {}, {}, {});
 
       // Check opponent history (4 pairs: 1v3, 1v4, 2v3, 2v4)
       expect(result.opponentHistory[["player-1", "player-3"].sort().join("-")]).toBe(1);
@@ -294,13 +298,14 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const existingPartnershipHistory: PartnershipHistory = {
         "player-1-player-2": 2,
       };
 
-      const result = updateHistory([match], existingPartnershipHistory, {});
+      const result = updateHistory([match], existingPartnershipHistory, {}, {});
 
       expect(result.partnershipHistory["player-1-player-2"]).toBe(3);
     });
@@ -316,6 +321,7 @@ describe("roundRobinService", () => {
           completed: true,
           team1Score: 11,
           team2Score: 9,
+          servingTeam: 1,
         },
         {
           id: "match-2",
@@ -325,10 +331,11 @@ describe("roundRobinService", () => {
           completed: true,
           team1Score: 11,
           team2Score: 7,
+          servingTeam: 1,
         },
       ];
 
-      const result = updateHistory(matches, {}, {});
+      const result = updateHistory(matches, {}, {}, {});
 
       expect(result.partnershipHistory["player-1-player-2"]).toBe(1);
       expect(result.partnershipHistory["player-5-player-6"]).toBe(1);
@@ -346,6 +353,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const existingHistory: PartnershipHistory = {
@@ -353,7 +361,7 @@ describe("roundRobinService", () => {
         "player-3-player-4": 2,
       };
 
-      const result = reverseHistory([match], existingHistory, {});
+      const result = reverseHistory([match], existingHistory, {}, {});
 
       expect(result.partnershipHistory["player-1-player-2"]).toBe(2);
       expect(result.partnershipHistory["player-3-player-4"]).toBe(1);
@@ -369,6 +377,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const existingOpponentHistory: OpponentHistory = {
@@ -378,7 +387,7 @@ describe("roundRobinService", () => {
         "player-2-player-4": 2,
       };
 
-      const result = reverseHistory([match], {}, existingOpponentHistory);
+      const result = reverseHistory([match], {}, existingOpponentHistory, {});
 
       expect(result.opponentHistory["player-1-player-3"]).toBe(1);
       expect(result.opponentHistory["player-1-player-4"]).toBe(1);
@@ -396,13 +405,14 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const existingHistory: PartnershipHistory = {
         "player-1-player-2": 0,
       };
 
-      const result = reverseHistory([match], existingHistory, {});
+      const result = reverseHistory([match], existingHistory, {}, {});
 
       // Should not decrement since it would go negative
       expect(result.partnershipHistory["player-1-player-2"]).toBe(0);
@@ -418,6 +428,7 @@ describe("roundRobinService", () => {
         completed: true,
         team1Score: 11,
         team2Score: 9,
+        servingTeam: 1,
       };
 
       const initialPartnershipHistory: PartnershipHistory = {
@@ -428,10 +439,15 @@ describe("roundRobinService", () => {
       };
 
       // Update history
-      const updated = updateHistory([match], initialPartnershipHistory, initialOpponentHistory);
+      const updated = updateHistory([match], initialPartnershipHistory, initialOpponentHistory, {});
 
       // Reverse it
-      const reversed = reverseHistory([match], updated.partnershipHistory, updated.opponentHistory);
+      const reversed = reverseHistory(
+        [match],
+        updated.partnershipHistory,
+        updated.opponentHistory,
+        updated.courtHistory
+      );
 
       // Should be back to original
       expect(reversed.partnershipHistory["player-1-player-2"]).toBe(5);

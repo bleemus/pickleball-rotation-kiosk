@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Round } from "../types/game";
+import pickleballIcon from "../assets/icons/pickleball.png";
 
 interface MatchScore {
   matchId: string;
@@ -36,6 +37,22 @@ export function ScoreEntry({ round, onSubmitScores, onCancel, loading }: ScoreEn
 
   const [error, setError] = useState<string | null>(null);
   const [matchErrors, setMatchErrors] = useState<Record<string, string>>({});
+
+  // Helper function to get dynamic text size based on name length
+  const getNameTextClass = (name: string, isMobile: boolean = false) => {
+    const length = name.length;
+    if (isMobile) {
+      // Mobile sizes
+      if (length > 20) return "text-xs";
+      if (length > 15) return "text-xs";
+      return "text-sm";
+    } else {
+      // Desktop sizes
+      if (length > 20) return "text-base xl:text-lg";
+      if (length > 15) return "text-lg xl:text-xl";
+      return "text-xl xl:text-2xl";
+    }
+  };
 
   const handleScoreChange = (matchId: string, team: "team1" | "team2", value: string) => {
     // Only allow numbers
@@ -142,62 +159,122 @@ export function ScoreEntry({ round, onSubmitScores, onCancel, loading }: ScoreEn
               {/* Mobile Layout (stacked) */}
               <div className="lg:hidden space-y-3">
                 {/* Team 1 */}
-                <div className="bg-blue-100 rounded-xl p-3">
+                <div
+                  className={`bg-blue-100 rounded-xl p-3 overflow-hidden ${match.servingTeam === 1 ? "border-2 border-blue-400" : ""}`}
+                >
                   <h3 className="text-xs font-semibold text-blue-800 mb-1.5">Team 1</h3>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 space-y-0.5">
-                      <p className="text-sm font-bold text-gray-800">{match.team1.player1.name}</p>
-                      <p className="text-sm font-bold text-gray-800">{match.team1.player2.name}</p>
+                  <div className="flex items-center gap-2">
+                    {match.servingTeam === 1 ? (
+                      <img src={pickleballIcon} alt="Serving" className="w-10 h-10 flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 space-y-0.5 min-w-0">
+                      <p
+                        className={`${getNameTextClass(match.team1.player1.name, true)} font-bold text-gray-800 text-center truncate`}
+                      >
+                        {match.team1.player1.name}
+                      </p>
+                      <p
+                        className={`${getNameTextClass(match.team1.player2.name, true)} font-bold text-gray-800 text-center truncate`}
+                      >
+                        {match.team1.player2.name}
+                      </p>
                     </div>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="Score"
-                      value={scores[match.id].team1Score}
-                      onChange={(e) => handleScoreChange(match.id, "team1", e.target.value)}
-                      onFocus={(e) => e.target.select()}
-                      className="w-20 px-3 py-2 text-xl font-bold text-center border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-500"
-                      disabled={loading}
-                    />
+                    {match.servingTeam === 1 ? (
+                      <img src={pickleballIcon} alt="Serving" className="w-10 h-10 flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 flex-shrink-0" />
+                    )}
                   </div>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="Score"
+                    value={scores[match.id].team1Score}
+                    onChange={(e) => handleScoreChange(match.id, "team1", e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full mt-2 px-3 py-2 text-xl font-bold text-center border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    disabled={loading}
+                  />
                 </div>
 
                 {/* Team 2 */}
-                <div className="bg-red-100 rounded-xl p-3">
+                <div
+                  className={`bg-red-100 rounded-xl p-3 overflow-hidden ${match.servingTeam === 2 ? "border-2 border-red-400" : ""}`}
+                >
                   <h3 className="text-xs font-semibold text-red-800 mb-1.5">Team 2</h3>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 space-y-0.5">
-                      <p className="text-sm font-bold text-gray-800">{match.team2.player1.name}</p>
-                      <p className="text-sm font-bold text-gray-800">{match.team2.player2.name}</p>
+                  <div className="flex items-center gap-2">
+                    {match.servingTeam === 2 ? (
+                      <img src={pickleballIcon} alt="Serving" className="w-10 h-10 flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 space-y-0.5 min-w-0">
+                      <p
+                        className={`${getNameTextClass(match.team2.player1.name, true)} font-bold text-gray-800 text-center truncate`}
+                      >
+                        {match.team2.player1.name}
+                      </p>
+                      <p
+                        className={`${getNameTextClass(match.team2.player2.name, true)} font-bold text-gray-800 text-center truncate`}
+                      >
+                        {match.team2.player2.name}
+                      </p>
                     </div>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="Score"
-                      value={scores[match.id].team2Score}
-                      onChange={(e) => handleScoreChange(match.id, "team2", e.target.value)}
-                      onFocus={(e) => e.target.select()}
-                      className="w-20 px-3 py-2 text-xl font-bold text-center border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-500"
-                      disabled={loading}
-                    />
+                    {match.servingTeam === 2 ? (
+                      <img src={pickleballIcon} alt="Serving" className="w-10 h-10 flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 flex-shrink-0" />
+                    )}
                   </div>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="Score"
+                    value={scores[match.id].team2Score}
+                    onChange={(e) => handleScoreChange(match.id, "team2", e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full mt-2 px-3 py-2 text-xl font-bold text-center border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-500"
+                    disabled={loading}
+                  />
                 </div>
               </div>
 
               {/* Desktop/Tablet Layout (side by side) */}
               <div className="hidden lg:grid grid-cols-3 gap-6 items-center">
                 {/* Team 1 */}
-                <div className="bg-blue-100 rounded-2xl p-6">
-                  <h3 className="text-lg xl:text-xl font-semibold text-blue-800 mb-3">Team 1</h3>
-                  <div className="space-y-2 mb-4">
-                    <p className="text-xl xl:text-2xl font-bold text-gray-800 truncate">
-                      {match.team1.player1.name}
-                    </p>
-                    <p className="text-xl xl:text-2xl font-bold text-gray-800 truncate">
-                      {match.team1.player2.name}
-                    </p>
+                <div
+                  className={`bg-blue-100 rounded-2xl p-6 overflow-hidden ${match.servingTeam === 1 ? "border-2 border-blue-400" : ""}`}
+                >
+                  <h3 className="text-lg xl:text-xl font-semibold text-blue-800 mb-3 text-center">
+                    Team 1
+                  </h3>
+                  <div className="flex items-center gap-3 mb-4">
+                    {match.servingTeam === 1 ? (
+                      <img src={pickleballIcon} alt="Serving" className="w-16 h-16 flex-shrink-0" />
+                    ) : (
+                      <div className="w-16 h-16 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <p
+                        className={`${getNameTextClass(match.team1.player1.name)} font-bold text-gray-800 text-center truncate`}
+                      >
+                        {match.team1.player1.name}
+                      </p>
+                      <p
+                        className={`${getNameTextClass(match.team1.player2.name)} font-bold text-gray-800 text-center truncate`}
+                      >
+                        {match.team1.player2.name}
+                      </p>
+                    </div>
+                    {match.servingTeam === 1 ? (
+                      <img src={pickleballIcon} alt="Serving" className="w-16 h-16 flex-shrink-0" />
+                    ) : (
+                      <div className="w-16 h-16 flex-shrink-0" />
+                    )}
                   </div>
                   <input
                     type="number"
@@ -218,15 +295,35 @@ export function ScoreEntry({ round, onSubmitScores, onCancel, loading }: ScoreEn
                 </div>
 
                 {/* Team 2 */}
-                <div className="bg-red-100 rounded-2xl p-6">
-                  <h3 className="text-lg xl:text-xl font-semibold text-red-800 mb-3">Team 2</h3>
-                  <div className="space-y-2 mb-4">
-                    <p className="text-xl xl:text-2xl font-bold text-gray-800 truncate">
-                      {match.team2.player1.name}
-                    </p>
-                    <p className="text-xl xl:text-2xl font-bold text-gray-800 truncate">
-                      {match.team2.player2.name}
-                    </p>
+                <div
+                  className={`bg-red-100 rounded-2xl p-6 overflow-hidden ${match.servingTeam === 2 ? "border-2 border-red-400" : ""}`}
+                >
+                  <h3 className="text-lg xl:text-xl font-semibold text-red-800 mb-3 text-center">
+                    Team 2
+                  </h3>
+                  <div className="flex items-center gap-3 mb-4">
+                    {match.servingTeam === 2 ? (
+                      <img src={pickleballIcon} alt="Serving" className="w-16 h-16 flex-shrink-0" />
+                    ) : (
+                      <div className="w-16 h-16 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <p
+                        className={`${getNameTextClass(match.team2.player1.name)} font-bold text-gray-800 text-center truncate`}
+                      >
+                        {match.team2.player1.name}
+                      </p>
+                      <p
+                        className={`${getNameTextClass(match.team2.player2.name)} font-bold text-gray-800 text-center truncate`}
+                      >
+                        {match.team2.player2.name}
+                      </p>
+                    </div>
+                    {match.servingTeam === 2 ? (
+                      <img src={pickleballIcon} alt="Serving" className="w-16 h-16 flex-shrink-0" />
+                    ) : (
+                      <div className="w-16 h-16 flex-shrink-0" />
+                    )}
                   </div>
                   <input
                     type="number"

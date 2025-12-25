@@ -6,6 +6,7 @@ import {
   getActiveSession,
   addPlayer,
   removePlayer,
+  renamePlayer,
   togglePlayerSitOut,
   updateNumCourts,
   startNextRound,
@@ -16,7 +17,12 @@ import {
   deleteSessionById,
   endSession,
 } from "../services/gameService";
-import { CreateSessionRequest, AddPlayerRequest, CompleteRoundRequest } from "../types/game";
+import {
+  CreateSessionRequest,
+  AddPlayerRequest,
+  RenamePlayerRequest,
+  CompleteRoundRequest,
+} from "../types/game";
 import { flushAllSessions } from "../services/redis";
 
 const router = Router();
@@ -200,6 +206,17 @@ router.post("/session/:id/players", async (req: Request, res: Response) => {
 router.delete("/session/:id/players/:playerId", async (req: Request, res: Response) => {
   try {
     const session = await removePlayer(req.params.id, req.params.playerId);
+    res.json(session);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+  }
+});
+
+// Rename player in session
+router.patch("/session/:id/players/:playerId/rename", async (req: Request, res: Response) => {
+  try {
+    const request: RenamePlayerRequest = req.body;
+    const session = await renamePlayer(req.params.id, req.params.playerId, request);
     res.json(session);
   } catch (error) {
     res.status(400).json({ error: (error as Error).message });

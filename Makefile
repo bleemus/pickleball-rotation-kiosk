@@ -1,28 +1,33 @@
-.PHONY: help build up down logs restart clean dev dev-down install test test-unit test-e2e test-all test-ui
+.PHONY: help build up down logs restart clean dev dev-down install test test-unit test-e2e test-all test-ui email-logs email-health email-check
 
 help:
 	@echo "Pickleball Kiosk - Make Commands"
 	@echo "================================="
 	@echo ""
 	@echo "Development:"
-	@echo "  make install   - Install dependencies for backend and frontend"
-	@echo "  make dev       - Start development servers (backend + frontend + Redis)"
-	@echo "  make dev-down  - Stop development Redis container"
-	@echo "  make test      - Run type checking"
+	@echo "  make install      - Install dependencies for backend, frontend, and email-parser"
+	@echo "  make dev          - Start development servers (backend + frontend + email-parser + Redis)"
+	@echo "  make dev-down     - Stop development Redis container"
+	@echo "  make test         - Run type checking"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make test-unit - Run unit tests (Vitest)"
-	@echo "  make test-e2e  - Run E2E tests (Playwright)"
-	@echo "  make test-all  - Run all tests (type check + unit + E2E)"
-	@echo "  make test-ui   - Open Vitest UI"
+	@echo "  make test-unit    - Run unit tests (Vitest)"
+	@echo "  make test-e2e     - Run E2E tests (Playwright)"
+	@echo "  make test-all     - Run all tests (type check + unit + E2E)"
+	@echo "  make test-ui      - Open Vitest UI"
 	@echo ""
 	@echo "Docker:"
-	@echo "  make build     - Build Docker images"
-	@echo "  make up        - Start services with auto-detected HOST_IP"
-	@echo "  make down      - Stop all services"
-	@echo "  make logs      - View logs (all services)"
-	@echo "  make restart   - Restart all services with fresh HOST_IP"
-	@echo "  make clean     - Remove all containers and volumes"
+	@echo "  make build        - Build Docker images (redis + backend + frontend + email-parser)"
+	@echo "  make up           - Start all services with auto-detected HOST_IP"
+	@echo "  make down         - Stop all services"
+	@echo "  make logs         - View logs (all services)"
+	@echo "  make restart      - Restart all services with fresh HOST_IP"
+	@echo "  make clean        - Remove all containers and volumes"
+	@echo ""
+	@echo "Email Parser:"
+	@echo "  make email-logs   - View email-parser logs"
+	@echo "  make email-health - Check email-parser health"
+	@echo "  make email-check  - Manually trigger email check"
 
 # Development commands
 install:
@@ -30,7 +35,9 @@ install:
 	@cd backend && npm install
 	@echo "📦 Installing frontend dependencies..."
 	@cd frontend && npm install
-	@echo "✅ Dependencies installed!"
+	@echo "📦 Installing email-parser dependencies..."
+	@cd email-parser && npm install
+	@echo "✅ All dependencies installed!"
 
 dev:
 	@echo "🚀 Starting development servers..."
@@ -47,7 +54,13 @@ dev:
 		docker run -d --name dev-redis -p 6379:6379 redis:7-alpine; \
 		echo "✅ Redis created and started"; \
 	fi
-	@cd backend && npm run dev & cd frontend && npm run dev
+	@echo ""
+	@echo "Starting services:"
+	@echo "  Backend:      http://localhost:3001"
+	@echo "  Frontend:     http://localhost:3000"
+	@echo "  Email Parser: http://localhost:3002"
+	@echo ""
+	@cd backend && npm run dev & cd frontend && npm run dev & cd email-parser && npm run dev
 
 dev-down:
 	@echo "🛑 Stopping development Redis container..."
@@ -63,6 +76,7 @@ test:
 	@echo "🔍 Running type checks..."
 	@cd backend && npm run typecheck
 	@cd frontend && npm run typecheck
+	@cd email-parser && npm run typecheck
 	@echo "✅ Type checking complete!"
 
 # Docker Compose commands
@@ -75,9 +89,14 @@ up:
 	@export HOST_IP=$$(./get-host-ip.sh) && docker-compose up -d
 	@echo "✅ Services started!"
 	@echo ""
-	@echo "Frontend: http://localhost"
-	@echo "Backend:  http://localhost:3001"
-	@echo "Health:   http://localhost:3001/health"
+	@echo "Access points:"
+	@echo "  Frontend:     http://localhost"
+	@echo "  Backend:      http://localhost:3001"
+	@echo "  Email Parser: http://localhost:3002"
+	@echo ""
+	@echo "Health checks:"
+	@echo "  Backend:      http://localhost:3001/health"
+	@echo "  Email Parser: http://localhost:3002/health"
 
 down:
 	@docker-compose down
@@ -126,7 +145,20 @@ test-all:
 	@make test
 	@make test-unit
 	@make test-e2e
-	@echo "✅ All tests complete!"
+
+# Email Parser commands
+email-logs:
+	@echo "📧 Email parser logs:"
+	@docker-compose logs -f email-parser
+
+email-health:
+	@echo "📧 Checking email-parser health..."
+	@curl -s http://localhost:3002/health | python3 -m json.tool || echo "❌ Email parser not responding"
+
+email-check:
+	@echo "📧 Manually triggering email check..."
+	@curl -X POST http://localhost:3002/api/check-emails
+	@echo "✅ Email check triggered!"
 
 test-ui:
 	@echo "🎨 Opening Vitest UI..."

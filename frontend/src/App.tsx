@@ -195,7 +195,7 @@ function App() {
       } else {
         // No session yet, add to temporary players list
         const newPlayer: Player = {
-          id: `temp-${Date.now()}`,
+          id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           name,
           gamesPlayed: 0,
           wins: 0,
@@ -205,7 +205,8 @@ function App() {
           consecutiveRoundsSatOut: 0,
           forceSitOut: false,
         };
-        setTempPlayers([...tempPlayers, newPlayer]);
+        // Use functional update to avoid race conditions when adding multiple players
+        setTempPlayers((prevPlayers) => [...prevPlayers, newPlayer]);
       }
     } catch (err) {
       setError((err as Error).message);
@@ -227,6 +228,27 @@ function App() {
       } else {
         // No session yet, remove from temporary players list
         setTempPlayers(tempPlayers.filter((p) => p.id !== playerId));
+      }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle renaming player
+  const handleRenamePlayer = async (playerId: string, newName: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (session) {
+        // Session exists, rename player via API
+        const updatedSession = await api.renamePlayer(session.id, playerId, newName);
+        setSession(updatedSession);
+      } else {
+        // No session yet, rename in temporary players list
+        setTempPlayers(tempPlayers.map((p) => (p.id === playerId ? { ...p, name: newName } : p)));
       }
     } catch (err) {
       setError((err as Error).message);
@@ -524,6 +546,7 @@ function App() {
                 sessionId={session.id}
                 onAddPlayer={handleAddPlayer}
                 onRemovePlayer={handleRemovePlayer}
+                onRenamePlayer={handleRenamePlayer}
                 onToggleSitOut={handleToggleSitOut}
                 onUpdateNumCourts={handleUpdateNumCourts}
                 onStartNextRound={handleStartNextRound}

@@ -1,7 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Player } from "../types/game";
+import { Reservation } from "../types/reservation";
 import { HelpButton } from "./HelpModal";
 import { APP_NAME } from "../config";
+import { useApi } from "../hooks/useApi";
 
 const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "true";
 
@@ -25,7 +27,58 @@ export function PlayerSetup({
   const [playerName, setPlayerName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [numCourts, setNumCourts] = useState(2);
+  const [currentReservations, setCurrentReservations] = useState<Reservation[]>([]);
+  const [_loadingReservations, setLoadingReservations] = useState(false);
   const playerInputRef = useRef<HTMLInputElement>(null);
+  const api = useApi();
+
+  // Poll for current reservations every 30 seconds
+  useEffect(() => {
+    const fetchReservations = async () => {
+      setLoadingReservations(true);
+      try {
+        const reservations = await api.getCurrentReservations();
+        setCurrentReservations(reservations);
+      } catch (error) {
+        console.error("Error fetching reservations:", error);
+      } finally {
+        setLoadingReservations(false);
+      }
+    };
+
+    fetchReservations();
+    const interval = setInterval(fetchReservations, 30000); // Poll every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleAddPlayersFromReservation = async (reservation: Reservation) => {
+    let addedCount = 0;
+    let skippedCount = 0;
+
+    // Add players sequentially to avoid race conditions
+    for (const playerName of reservation.players) {
+      // Check if player already exists
+      if (!players.some((p) => p.name.toLowerCase() === playerName.toLowerCase())) {
+        await onAddPlayer(playerName);
+        addedCount++;
+      } else {
+        skippedCount++;
+      }
+    }
+
+    if (addedCount > 0) {
+      setError(null);
+    }
+
+    // Show feedback
+    if (skippedCount > 0) {
+      setError(
+        `Added ${addedCount} player${addedCount !== 1 ? "s" : ""}. ${skippedCount} player${skippedCount !== 1 ? "s were" : " was"} already in the list.`
+      );
+      setTimeout(() => setError(null), 3000);
+    }
+  };
 
   const handleAddPlayer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +217,44 @@ export function PlayerSetup({
                 : `Add at least ${numCourts * 4} players to start the game (${numCourts} ${numCourts === 1 ? "court" : "courts"} × 4 players)`}
             </p>
 
+            {/* Current Reservations */}
+            {currentReservations.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-lg lg:text-xl font-semibold mb-2 text-gray-700">
+                  Current Reservations
+                </h3>
+                <div className="space-y-2">
+                  {currentReservations.map((reservation) => (
+                    <div
+                      key={reservation.id}
+                      className="bg-gradient-to-r from-green-100 to-blue-100 border-2 border-green-300 rounded-xl p-4"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800 text-base lg:text-lg">
+                            {reservation.startTime} - {reservation.endTime}
+                            {reservation.court && ` • ${reservation.court}`}
+                          </div>
+                          <div className="text-sm lg:text-base text-gray-700 mt-1">
+                            {reservation.players.length} player
+                            {reservation.players.length !== 1 ? "s" : ""}:{" "}
+                            {reservation.players.join(", ")}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleAddPlayersFromReservation(reservation)}
+                          disabled={loading}
+                          className="flex-shrink-0 px-3 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                        >
+                          Add All
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <form
               onSubmit={handleAddPlayer}
               className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-4 lg:mb-6"
@@ -267,8 +358,18 @@ export function PlayerSetup({
             </p>
           )}
 
+          {/* Pickle Planner Info */}
+          <div className="mt-6 lg:mt-8 mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm lg:text-base text-gray-700 text-center">
+              <span className="font-semibold">Using Pickle Planner?</span> Forward your reservation
+              email to <span className="font-mono text-blue-600">pickleballkiosk@bleemus.com</span>
+              <br className="hidden sm:block" />
+              <span className="text-gray-600"> and players will appear above within 1 minute</span>
+            </p>
+          </div>
+
           {/* Bottom Buttons - Mobile: Reset + Help side-by-side, Desktop: Help only */}
-          <div className="mt-6 lg:mt-8">
+          <div className="mt-4 lg:mt-6">
             {/* Mobile: Both buttons */}
             <div className="flex lg:hidden gap-2">
               <button

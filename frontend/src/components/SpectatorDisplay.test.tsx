@@ -76,6 +76,7 @@ const mockSession: Session = {
         team1: { player1: mockPlayers[0], player2: mockPlayers[1] },
         team2: { player1: mockPlayers[2], player2: mockPlayers[3] },
         completed: false,
+        servingTeam: 1,
       },
     ],
     benchedPlayers: [],
@@ -84,6 +85,7 @@ const mockSession: Session = {
   gameHistory: [],
   partnershipHistory: {},
   opponentHistory: {},
+  courtHistory: {},
   numCourts: 1,
   createdAt: Date.now(),
 };

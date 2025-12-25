@@ -15,6 +15,7 @@ describe("PlayerManager", () => {
     sessionId: "test-session",
     onAddPlayer: vi.fn(),
     onRemovePlayer: vi.fn(),
+    onRenamePlayer: vi.fn(),
     onToggleSitOut: vi.fn(),
     onUpdateNumCourts: vi.fn(),
     onStartNextRound: vi.fn(),

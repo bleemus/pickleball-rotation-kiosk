@@ -103,6 +103,7 @@ export const mockMatch: Match = {
     player2: mockPlayers[3],
   },
   completed: false,
+  servingTeam: 1,
 };
 
 export const mockMatch2: Match = {
@@ -117,6 +118,7 @@ export const mockMatch2: Match = {
     player2: mockPlayers[7],
   },
   completed: false,
+  servingTeam: 2,
 };
 
 export const mockRound: Round = {
@@ -159,6 +161,7 @@ export const mockSession: Session = {
   gameHistory: [],
   partnershipHistory: {},
   opponentHistory: {},
+  courtHistory: {},
   numCourts: 2,
   createdAt: Date.now(),
   ended: false,

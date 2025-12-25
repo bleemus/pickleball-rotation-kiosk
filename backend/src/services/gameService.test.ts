@@ -45,6 +45,7 @@ function createMockSession(overrides: Partial<Session> = {}): Session {
     gameHistory: [],
     partnershipHistory: {},
     opponentHistory: {},
+    courtHistory: {},
     numCourts: 2,
     createdAt: Date.now(),
     ...overrides,
@@ -213,6 +214,7 @@ describe("gameService", () => {
                 player2: { id: "player-4", name: "Player4" } as Player,
               },
               completed: false,
+              servingTeam: 1,
             },
           ],
           benchedPlayers: [],
@@ -223,16 +225,6 @@ describe("gameService", () => {
 
       await expect(removePlayer("test-session-id", "player-1")).rejects.toThrow(
         "Cannot remove player who is in the current active round"
-      );
-    });
-
-    it("throws error if removal would drop below minimum players", async () => {
-      const mockSession = createMockSession();
-      mockSession.players = mockSession.players.slice(0, 8); // Exactly 8 players for 2 courts
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
-
-      await expect(removePlayer("test-session-id", "player-1")).rejects.toThrow(
-        "Cannot remove player. Minimum 8 players required for 2 courts"
       );
     });
   });
@@ -479,6 +471,7 @@ describe("gameService", () => {
                 },
               },
               completed: false,
+              servingTeam: 1,
             },
           ],
           benchedPlayers: [],
@@ -516,6 +509,7 @@ describe("gameService", () => {
                 player2: { id: "player-4", name: "Player4" } as Player,
               },
               completed: false,
+              servingTeam: 1,
             },
           ],
           benchedPlayers: [],
@@ -551,6 +545,7 @@ describe("gameService", () => {
                 player2: { id: "player-4", name: "Player4" } as Player,
               },
               completed: false,
+              servingTeam: 1,
             },
           ],
           benchedPlayers: [],
@@ -661,6 +656,7 @@ describe("gameService", () => {
                 },
               },
               completed: false,
+              servingTeam: 1,
             },
           ],
           benchedPlayers: [],
@@ -715,6 +711,44 @@ describe("gameService", () => {
       await expect(updateNumCourts("test-session-id", 3)).rejects.toThrow(
         "Cannot change number of courts while a round is in progress"
       );
+    });
+
+    it("clears completed round when changing number of courts", async () => {
+      const mockSession = createMockSession({
+        numCourts: 2,
+        currentRound: {
+          roundNumber: 1,
+          matches: [],
+          benchedPlayers: [],
+          completed: true,
+        },
+      });
+      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
+      vi.mocked(redis.saveSession).mockResolvedValue();
+
+      const result = await updateNumCourts("test-session-id", 1);
+
+      expect(result.numCourts).toBe(1);
+      expect(result.currentRound).toBeNull();
+    });
+
+    it("keeps completed round if court number stays the same", async () => {
+      const mockSession = createMockSession({
+        numCourts: 2,
+        currentRound: {
+          roundNumber: 1,
+          matches: [],
+          benchedPlayers: [],
+          completed: true,
+        },
+      });
+      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
+      vi.mocked(redis.saveSession).mockResolvedValue();
+
+      const result = await updateNumCourts("test-session-id", 2);
+
+      expect(result.numCourts).toBe(2);
+      expect(result.currentRound).not.toBeNull();
     });
   });
 

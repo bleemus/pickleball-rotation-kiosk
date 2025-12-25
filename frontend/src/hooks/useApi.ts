@@ -1,4 +1,5 @@
 import { Session, Player, Round, GameHistory } from "../types/game";
+import { Reservation } from "../types/reservation";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -8,6 +9,10 @@ interface CreateSessionRequest {
 }
 
 interface AddPlayerRequest {
+  name: string;
+}
+
+interface RenamePlayerRequest {
   name: string;
 }
 
@@ -153,6 +158,28 @@ export function useApi() {
     return response.json();
   };
 
+  const renamePlayer = async (
+    sessionId: string,
+    playerId: string,
+    name: string
+  ): Promise<Session> => {
+    const response = await fetch(
+      `${API_BASE_URL}/session/${sessionId}/players/${playerId}/rename`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name } as RenamePlayerRequest),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to rename player");
+    }
+
+    return response.json();
+  };
+
   const getPlayers = async (sessionId: string): Promise<Player[]> => {
     const response = await fetch(`${API_BASE_URL}/session/${sessionId}/players`);
 
@@ -261,6 +288,27 @@ export function useApi() {
     return response.json();
   };
 
+  const getCurrentReservations = async (): Promise<Reservation[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/reservations/current`);
+
+      if (!response.ok) {
+        // If email parser service is down, return empty array instead of throwing
+        if (response.status === 503) {
+          console.warn("Reservation service unavailable");
+          return [];
+        }
+        await handleApiError(response, "Failed to get current reservations");
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("Error fetching reservations:", error);
+      // Return empty array on network errors to avoid breaking the UI
+      return [];
+    }
+  };
+
   return {
     createSession,
     updateNumCourts,
@@ -269,6 +317,7 @@ export function useApi() {
     deleteSession,
     addPlayer,
     removePlayer,
+    renamePlayer,
     getPlayers,
     togglePlayerSitOut,
     startNextRound,
@@ -277,5 +326,6 @@ export function useApi() {
     completeRound,
     getGameHistory,
     endSession,
+    getCurrentReservations,
   };
 }

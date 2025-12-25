@@ -17,10 +17,11 @@ docker run -d -p 6379:6379 redis:7-alpine
 # Install dependencies
 make install
 
-# Run both frontend and backend dev servers
+# Run all development servers
 make dev
-# Backend:  http://localhost:3001
-# Frontend: http://localhost:3000
+# Backend:      http://localhost:3001
+# Frontend:     http://localhost:3000
+# Email Parser: http://localhost:3002
 
 # Run all tests (type checking + unit + E2E)
 make test
@@ -65,6 +66,13 @@ npm run typecheck    # Type check without building
 npm test             # Run unit tests (Vitest)
 npm run test:watch   # Unit tests in watch mode
 
+# Email Parser only
+cd email-parser
+npm run dev          # Development server with hot reload
+npm run build        # Compile TypeScript
+npm run start        # Run compiled code
+npm run typecheck    # Type check without building
+
 # E2E Tests
 npx playwright test              # Run all 16 E2E tests
 npx playwright test --ui         # Interactive mode
@@ -82,12 +90,25 @@ npx playwright test --headed     # With browser visible
 ### Running Tests
 
 ```bash
-make test                        # Run all tests
-cd frontend && npm test          # Unit tests only
-npx playwright test              # E2E tests only
+make test-all                    # Run all tests (type check + unit + E2E)
+make test                        # Type checking only
+make test-unit                   # Unit tests only (Vitest)
+make test-e2e                    # E2E tests only (Playwright - auto-starts services)
+npx playwright test --ui         # E2E tests with interactive UI
 ```
 
+**Note**: E2E tests automatically start backend and frontend dev servers. Redis must be running first (handled by `make test-e2e`).
+
 ## Architecture
+
+### Services Overview
+
+The application consists of four services:
+
+1. **Frontend** (React + TypeScript + Vite) - Port 3000 (dev) / Port 80 (prod)
+2. **Backend** (Express + TypeScript) - Port 3001
+3. **Email Parser** (Express + TypeScript + Microsoft Graph API) - Port 3002
+4. **Redis** (Data persistence) - Port 6379
 
 ### Data Flow
 
@@ -95,6 +116,7 @@ npx playwright test              # E2E tests only
 2. **Round Generation**: Frontend calls `/api/session/:id/round` → Backend uses round-robin algorithm → Returns matches + benched players
 3. **Score Submission**: Frontend submits scores → Backend updates player stats, partnership/opponent history → Marks round complete
 4. **State Persistence**: All session state stored in Redis with 24-hour TTL, session ID stored in localStorage
+5. **Email Integration**: Email Parser service checks Microsoft Graph API for Pickle Planner emails → Parses reservations → Stores in Redis with 7-day TTL → Frontend polls for current reservations
 
 ### Round-Robin Algorithm (backend/src/services/roundRobinService.ts)
 
@@ -191,16 +213,22 @@ Types are duplicated between frontend and backend (must be kept in sync):
 
 ### Redis Schema
 
-**Keys**:
+**Game Sessions** (backend/src/services/redis.ts):
 
 - `session:{sessionId}` → JSON-serialized Session object
+- TTL: 24 hours (86400 seconds)
 
-**TTL**: 24 hours (86400 seconds)
+**Email Reservations** (email-parser/src/services/reservationStorage.redis.ts):
 
-**Connection** (backend/src/services/redis.ts):
+- `reservation:{reservationId}` → JSON-serialized Reservation object
+- `reservation:index` → Set of all reservation IDs (for fast enumeration)
+- TTL: 7 days (604800 seconds)
+
+**Connection**:
 
 - URL from `REDIS_URL` environment variable (default: `redis://localhost:6379`)
 - Graceful shutdown handlers for SIGTERM/SIGINT
+- Shared Redis instance used by both backend and email-parser services
 
 ## Development Notes
 
@@ -261,6 +289,7 @@ make down
 PORT=3001
 REDIS_URL=redis://localhost:6379
 NODE_ENV=development
+EMAIL_PARSER_URL=http://localhost:3002
 
 # WiFi credentials to display in QR code on spectator screen
 # Both SSID and PASSWORD are required for WiFi QR code to appear
@@ -274,6 +303,30 @@ NODE_ENV=development
 VITE_API_URL=http://localhost:3001/api
 ```
 
+**Email Parser** (email-parser/.env):
+
+```env
+# Microsoft Graph API Configuration
+GRAPH_TENANT_ID=your-tenant-id
+GRAPH_CLIENT_ID=your-client-id
+GRAPH_CLIENT_SECRET=your-client-secret
+GRAPH_USER_ID=your-email@example.com
+
+# Check interval in minutes
+EMAIL_CHECK_INTERVAL=1
+
+# Feature flag to enable/disable email polling
+# Set to "false" to disable email polling (useful if email service breaks)
+# When disabled, service still runs but returns empty reservation lists
+ENABLE_EMAIL_POLLING=true
+
+# Service Configuration
+PORT=3002
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379
+```
+
 For network access (other devices on LAN), use machine's IP in `VITE_API_URL`.
 
 **WiFi Configuration**:
@@ -283,6 +336,24 @@ For network access (other devices on LAN), use machine's IP in `VITE_API_URL`.
 - Set in docker-compose.yml or .env file
 - QR code will only appear if WIFI_SSID is configured
 - Example: `WIFI_SSID=YourNetwork WIFI_PASSWORD=YourPassword make up`
+
+**Email Parser Setup**:
+
+See [email-parser/GRAPH_API_SETUP.md](email-parser/GRAPH_API_SETUP.md) for complete Microsoft Graph API configuration instructions.
+
+**Email Polling Feature Flag**:
+
+The email polling feature can be disabled if it stops working or causes issues:
+
+- Set `ENABLE_EMAIL_POLLING=false` in `email-parser/.env` (local development)
+- Set `ENABLE_EMAIL_POLLING=false` before `make up` (Docker deployment)
+- Example: `ENABLE_EMAIL_POLLING=false make up`
+- When disabled:
+  - Email parser service still runs (no crashes)
+  - No emails are checked/polled
+  - API endpoints return empty arrays `[]`
+  - Frontend continues to work without reservation data
+- Check status: `curl http://localhost:3002/health` (look for `emailPollingEnabled: false`)
 
 ### Debugging
 
@@ -298,16 +369,30 @@ For network access (other devices on LAN), use machine's IP in `VITE_API_URL`.
 - React DevTools for component state inspection
 - Network tab to monitor API calls
 
+**Email Parser**:
+
+- Console logs with ISO timestamps: `[2025-12-22T10:30:00.000Z] Checking for new emails...`
+- View logs: `make email-logs` or `docker-compose logs -f email-parser`
+- Health check: `curl http://localhost:3002/health`
+- Manually trigger email check: `curl -X POST http://localhost:3002/api/check-emails`
+- Check reservations: `curl http://localhost:3002/api/reservations`
+- Check current reservations: `curl http://localhost:3002/api/reservations/current`
+- View Redis data: `redis-cli SMEMBERS reservation:index` then `redis-cli GET reservation:<id>`
+
 ### Docker Deployment
 
 The project uses multi-stage builds for optimized production images:
 
-- **Backend**: Compiles TypeScript, runs with Node.js
-- **Frontend**: Vite build, served by Nginx on port 80
-- **Redis**: Standard redis:7-alpine image with volume persistence
+- **Backend**: Compiles TypeScript, runs with Node.js (port 3001)
+- **Frontend**: Vite build, served by Nginx (port 80)
+- **Email Parser**: Compiles TypeScript, runs with Node.js (port 3002)
+- **Redis**: Standard redis:7-alpine image with volume persistence (port 6379)
 
 Access in production:
 
 - Frontend: http://localhost (port 80)
 - Backend: http://localhost:3001
-- Health check: http://localhost:3001/health
+- Email Parser: http://localhost:3002
+- Health checks:
+  - Backend: http://localhost:3001/health
+  - Email Parser: http://localhost:3002/health

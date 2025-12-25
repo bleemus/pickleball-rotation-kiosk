@@ -3,6 +3,7 @@ import QRCode from "react-qr-code";
 import { Session } from "../types/game";
 import { BenchDisplay } from "./BenchDisplay";
 import { APP_NAME, SPECTATOR_DARK_MODE } from "../config";
+import pickleballIcon from "../assets/icons/pickleball.png";
 
 interface SpectatorDisplayProps {
   apiUrl: string;
@@ -699,43 +700,67 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                     <div className="space-y-4 flex-1 flex flex-col justify-center px-8 lg:px-16 xl:px-24">
                       {/* Team 1 */}
                       <div
-                        className={`rounded-2xl p-6 flex items-center justify-between ${
+                        className={`rounded-2xl p-6 flex items-center ${
                           team1Won
                             ? darkMode
                               ? "bg-green-900 border-4 border-green-500"
                               : "bg-green-200 border-4 border-green-600"
-                            : darkMode
-                              ? "bg-gray-700"
-                              : "bg-cyan-200"
+                            : match.servingTeam === 1
+                              ? darkMode
+                                ? "bg-gray-700 border-4 border-cyan-500"
+                                : "bg-cyan-200 border-4 border-blue-400"
+                              : darkMode
+                                ? "bg-gray-700"
+                                : "bg-cyan-200"
                         }`}
                       >
-                        <div className="flex-1">
-                          <p
-                            className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
-                              team1Won
-                                ? darkMode
-                                  ? "text-green-300"
-                                  : "text-gray-800"
-                                : darkMode
-                                  ? "text-cyan-300"
-                                  : "text-gray-800"
-                            }`}
-                          >
-                            {match.team1.player1.name}
-                          </p>
-                          <p
-                            className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
-                              team1Won
-                                ? darkMode
-                                  ? "text-green-300"
-                                  : "text-gray-800"
-                                : darkMode
-                                  ? "text-cyan-300"
-                                  : "text-gray-800"
-                            }`}
-                          >
-                            {match.team1.player2.name}
-                          </p>
+                        <div className="flex items-center gap-4 flex-1">
+                          {match.servingTeam === 1 ? (
+                            <img
+                              src={pickleballIcon}
+                              alt="Serving"
+                              className="w-20 h-20 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
+                                team1Won
+                                  ? darkMode
+                                    ? "text-green-300"
+                                    : "text-gray-800"
+                                  : darkMode
+                                    ? "text-cyan-300"
+                                    : "text-gray-800"
+                              }`}
+                            >
+                              {match.team1.player1.name}
+                            </p>
+                            <p
+                              className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
+                                team1Won
+                                  ? darkMode
+                                    ? "text-green-300"
+                                    : "text-gray-800"
+                                  : darkMode
+                                    ? "text-cyan-300"
+                                    : "text-gray-800"
+                              }`}
+                            >
+                              {match.team1.player2.name}
+                            </p>
+                          </div>
+                          {match.servingTeam === 1 ? (
+                            <img
+                              src={pickleballIcon}
+                              alt="Serving"
+                              className="w-20 h-20 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 flex-shrink-0" />
+                          )}
                         </div>
                         {match.completed && (
                           <div
@@ -763,43 +788,67 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
 
                       {/* Team 2 */}
                       <div
-                        className={`rounded-2xl p-6 flex items-center justify-between ${
+                        className={`rounded-2xl p-6 flex items-center ${
                           team2Won
                             ? darkMode
                               ? "bg-green-900 border-4 border-green-500"
                               : "bg-green-200 border-4 border-green-600"
-                            : darkMode
-                              ? "bg-gray-700"
-                              : "bg-purple-200"
+                            : match.servingTeam === 2
+                              ? darkMode
+                                ? "bg-gray-700 border-4 border-purple-300"
+                                : "bg-purple-200 border-4 border-red-400"
+                              : darkMode
+                                ? "bg-gray-700"
+                                : "bg-purple-200"
                         }`}
                       >
-                        <div className="flex-1">
-                          <p
-                            className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
-                              team2Won
-                                ? darkMode
-                                  ? "text-green-300"
-                                  : "text-gray-800"
-                                : darkMode
-                                  ? "text-purple-300"
-                                  : "text-gray-800"
-                            }`}
-                          >
-                            {match.team2.player1.name}
-                          </p>
-                          <p
-                            className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
-                              team2Won
-                                ? darkMode
-                                  ? "text-green-300"
-                                  : "text-gray-800"
-                                : darkMode
-                                  ? "text-purple-300"
-                                  : "text-gray-800"
-                            }`}
-                          >
-                            {match.team2.player2.name}
-                          </p>
+                        <div className="flex items-center gap-4 flex-1">
+                          {match.servingTeam === 2 ? (
+                            <img
+                              src={pickleballIcon}
+                              alt="Serving"
+                              className="w-20 h-20 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
+                                team2Won
+                                  ? darkMode
+                                    ? "text-green-300"
+                                    : "text-gray-800"
+                                  : darkMode
+                                    ? "text-purple-300"
+                                    : "text-gray-800"
+                              }`}
+                            >
+                              {match.team2.player1.name}
+                            </p>
+                            <p
+                              className={`font-bold text-center break-words w-full ${getPlayerNameSize(round.matches.length)} ${
+                                team2Won
+                                  ? darkMode
+                                    ? "text-green-300"
+                                    : "text-gray-800"
+                                  : darkMode
+                                    ? "text-purple-300"
+                                    : "text-gray-800"
+                              }`}
+                            >
+                              {match.team2.player2.name}
+                            </p>
+                          </div>
+                          {match.servingTeam === 2 ? (
+                            <img
+                              src={pickleballIcon}
+                              alt="Serving"
+                              className="w-20 h-20 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 flex-shrink-0" />
+                          )}
                         </div>
                         {match.completed && (
                           <div
