@@ -160,14 +160,14 @@ export class GraphEmailChecker {
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .replace(/&apos;/g, "'")
-      .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+      .replace(/&#(\d+);/g, (match: string, dec: string) => String.fromCharCode(parseInt(dec, 10)))
       .replace(/&amp;/g, "&");
 
     // Clean up whitespace while preserving newlines where present
     text = text
       .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
       .join("\n");
 
     return text;
