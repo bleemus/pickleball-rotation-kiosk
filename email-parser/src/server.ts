@@ -94,6 +94,18 @@ app.get("/health", (req: Request, res: Response) => {
  * Get all reservations or filter by query params
  */
 app.get("/api/reservations", async (req: Request, res: Response) => {
+  // Return 503 if email service is not enabled/configured
+  if (!emailChecker) {
+    res.status(503).json({
+      error: "Email service not available",
+      emailPollingEnabled,
+      reason: emailPollingEnabled
+        ? "Graph API credentials not configured"
+        : "Email polling disabled",
+    });
+    return;
+  }
+
   try {
     const { date, startTime, endTime } = req.query;
 
@@ -119,6 +131,18 @@ app.get("/api/reservations", async (req: Request, res: Response) => {
  * Get today's reservations
  */
 app.get("/api/reservations/today", async (req: Request, res: Response) => {
+  // Return 503 if email service is not enabled/configured
+  if (!emailChecker) {
+    res.status(503).json({
+      error: "Email service not available",
+      emailPollingEnabled,
+      reason: emailPollingEnabled
+        ? "Graph API credentials not configured"
+        : "Email polling disabled",
+    });
+    return;
+  }
+
   try {
     const results = await storage.getTodayReservations();
     res.json(results);
@@ -133,6 +157,18 @@ app.get("/api/reservations/today", async (req: Request, res: Response) => {
  * Get reservations matching current time (within 30 minutes)
  */
 app.get("/api/reservations/current", async (req: Request, res: Response) => {
+  // Return 503 if email service is not enabled/configured
+  if (!emailChecker) {
+    res.status(503).json({
+      error: "Email service not available",
+      emailPollingEnabled,
+      reason: emailPollingEnabled
+        ? "Graph API credentials not configured"
+        : "Email polling disabled",
+    });
+    return;
+  }
+
   try {
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
