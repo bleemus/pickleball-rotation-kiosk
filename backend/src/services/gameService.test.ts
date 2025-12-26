@@ -10,12 +10,12 @@ import {
   completeCurrentRound,
   updateNumCourts,
   endSession,
-} from "./gameService";
-import * as redis from "./redis";
-import { Session, Player } from "../types/game";
+} from "./gameService.js";
+import * as redis from "./redis.js";
+import { Session, Player } from "../types/game.js";
 
 // Mock redis module
-vi.mock("./redis", () => ({
+vi.mock("./redis.js", () => ({
   saveSession: vi.fn(),
   getSession: vi.fn(),
   deleteSession: vi.fn(),
@@ -232,8 +232,9 @@ describe("gameService", () => {
   describe("togglePlayerSitOut", () => {
     it("toggles forceSitOut flag to true", async () => {
       const mockSession = createMockSession();
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
-      vi.mocked(redis.saveSession).mockResolvedValue();
+      vi.mocked(redis.updateSessionAtomic).mockImplementation(async (sessionId, callback) => {
+        return callback(mockSession);
+      });
 
       const result = await togglePlayerSitOut("test-session-id", "player-1");
 
@@ -243,8 +244,9 @@ describe("gameService", () => {
     it("toggles forceSitOut flag back to false", async () => {
       const mockSession = createMockSession();
       mockSession.players[0].forceSitOut = true;
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
-      vi.mocked(redis.saveSession).mockResolvedValue();
+      vi.mocked(redis.updateSessionAtomic).mockImplementation(async (sessionId, callback) => {
+        return callback(mockSession);
+      });
 
       const result = await togglePlayerSitOut("test-session-id", "player-1");
 
@@ -253,7 +255,9 @@ describe("gameService", () => {
 
     it("throws error if player not found", async () => {
       const mockSession = createMockSession();
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
+      vi.mocked(redis.updateSessionAtomic).mockImplementation(async (sessionId, callback) => {
+        return callback(mockSession);
+      });
 
       await expect(togglePlayerSitOut("test-session-id", "nonexistent")).rejects.toThrow(
         "Player nonexistent not found in session"
@@ -599,7 +603,7 @@ describe("gameService", () => {
       ).rejects.toThrow("No scores provided");
     });
 
-    it("clears forceSitOut flags when round completes", async () => {
+    it("preserves forceSitOut flags when round completes (cleared on next round start)", async () => {
       const mockSession = createMockSession({
         currentRound: {
           roundNumber: 1,
@@ -673,15 +677,17 @@ describe("gameService", () => {
         scores: [{ matchId: "match-1", team1Score: 11, team2Score: 9 }],
       });
 
-      expect(result.players[0].forceSitOut).toBe(false);
+      // forceSitOut is cleared in startNextRound, not completeCurrentRound
+      expect(result.players[0].forceSitOut).toBe(true);
     });
   });
 
   describe("updateNumCourts", () => {
     it("updates number of courts", async () => {
       const mockSession = createMockSession();
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
-      vi.mocked(redis.saveSession).mockResolvedValue();
+      vi.mocked(redis.updateSessionAtomic).mockImplementation(async (sessionId, callback) => {
+        return callback(mockSession);
+      });
 
       const result = await updateNumCourts("test-session-id", 3);
 
@@ -690,7 +696,9 @@ describe("gameService", () => {
 
     it("throws error for less than 1 court", async () => {
       const mockSession = createMockSession();
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
+      vi.mocked(redis.updateSessionAtomic).mockImplementation(async (sessionId, callback) => {
+        return callback(mockSession);
+      });
 
       await expect(updateNumCourts("test-session-id", 0)).rejects.toThrow(
         "Number of courts must be at least 1"
@@ -706,7 +714,9 @@ describe("gameService", () => {
           completed: false,
         },
       });
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
+      vi.mocked(redis.updateSessionAtomic).mockImplementation(async (sessionId, callback) => {
+        return callback(mockSession);
+      });
 
       await expect(updateNumCourts("test-session-id", 3)).rejects.toThrow(
         "Cannot change number of courts while a round is in progress"
@@ -723,8 +733,9 @@ describe("gameService", () => {
           completed: true,
         },
       });
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
-      vi.mocked(redis.saveSession).mockResolvedValue();
+      vi.mocked(redis.updateSessionAtomic).mockImplementation(async (sessionId, callback) => {
+        return callback(mockSession);
+      });
 
       const result = await updateNumCourts("test-session-id", 1);
 
@@ -742,8 +753,9 @@ describe("gameService", () => {
           completed: true,
         },
       });
-      vi.mocked(redis.getSession).mockResolvedValue(mockSession);
-      vi.mocked(redis.saveSession).mockResolvedValue();
+      vi.mocked(redis.updateSessionAtomic).mockImplementation(async (sessionId, callback) => {
+        return callback(mockSession);
+      });
 
       const result = await updateNumCourts("test-session-id", 2);
 

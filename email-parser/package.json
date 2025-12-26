@@ -2,6 +2,7 @@
   "name": "email-parser",
   "version": "1.0.0",
   "description": "Email parser service for pickleball reservations",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",

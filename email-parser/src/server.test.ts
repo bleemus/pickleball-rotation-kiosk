@@ -4,7 +4,7 @@ import express, { Express } from "express";
 import cors from "cors";
 
 // Mock dependencies before imports
-vi.mock("./services/redis", () => ({
+vi.mock("./services/redis.js", () => ({
   default: {
     set: vi.fn(),
     get: vi.fn(),
@@ -22,9 +22,9 @@ vi.mock("node-cron", () => ({
   },
 }));
 
-import redisClient from "./services/redis";
-import { ReservationStorage } from "./services/reservationStorage.redis";
-import type { Reservation } from "./types/reservation";
+import redisClient from "./services/redis.js";
+import { ReservationStorage } from "./services/reservationStorage.redis.js";
+import type { Reservation } from "./types/reservation.js";
 
 describe("Email Parser API", () => {
   let app: Express;

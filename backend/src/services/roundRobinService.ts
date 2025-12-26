@@ -6,7 +6,7 @@ import {
   CourtHistory,
   MatchupScore,
   Team,
-} from "../types/game";
+} from "../types/game.js";
 import { v4 as uuidv4 } from "uuid";
 
 const PARTNERSHIP_PENALTY = 10;

@@ -2,10 +2,10 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cron from "node-cron";
-import { GraphEmailChecker } from "./services/emailChecker.graph";
-import { ReservationStorage } from "./services/reservationStorage.redis";
-import { Reservation } from "./types/reservation";
-import { connectRedis } from "./services/redis";
+import { GraphEmailChecker } from "./services/emailChecker.graph.js";
+import { ReservationStorage } from "./services/reservationStorage.redis.js";
+import { Reservation } from "./types/reservation.js";
+import { connectRedis } from "./services/redis.js";
 
 dotenv.config();
 

@@ -1,4 +1,4 @@
-import { Reservation, ReservationQuery } from "../types/reservation";
+import { Reservation, ReservationQuery } from "../types/reservation.js";
 import * as fs from "fs";
 import * as path from "path";
 

@@ -1,5 +1,5 @@
 import { createClient, RedisClientType } from "redis";
-import { Session } from "../types/game";
+import { Session } from "../types/game.js";
 
 let redisClient: RedisClientType | null = null;
 

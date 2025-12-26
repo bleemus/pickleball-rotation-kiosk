@@ -16,14 +16,14 @@ import {
   getGameHistory,
   deleteSessionById,
   endSession,
-} from "../services/gameService";
+} from "../services/gameService.js";
 import {
   CreateSessionRequest,
   AddPlayerRequest,
   RenamePlayerRequest,
   CompleteRoundRequest,
-} from "../types/game";
-import { flushAllSessions } from "../services/redis";
+} from "../types/game.js";
+import { flushAllSessions } from "../services/redis.js";
 
 const router = Router();
 

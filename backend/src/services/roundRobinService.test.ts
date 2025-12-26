@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { generateNextRound, updateHistory, reverseHistory } from "./roundRobinService";
-import { Player, Match, PartnershipHistory, OpponentHistory } from "../types/game";
+import { generateNextRound, updateHistory, reverseHistory } from "./roundRobinService.js";
+import { Player, Match, PartnershipHistory, OpponentHistory } from "../types/game.js";
 
 // Helper to create a player
 function createPlayer(id: string, name: string, overrides: Partial<Player> = {}): Player {

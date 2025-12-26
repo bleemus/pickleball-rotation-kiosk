@@ -1,4 +1,4 @@
-import { Reservation } from "../types/reservation";
+import { Reservation } from "../types/reservation.js";
 
 /**
  * Parses a Pickle Planner reservation email and extracts reservation details

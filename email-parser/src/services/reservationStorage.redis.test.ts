@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { ReservationStorage } from "./reservationStorage.redis";
-import type { Reservation } from "../types/reservation";
+import { ReservationStorage } from "./reservationStorage.redis.js";
+import type { Reservation } from "../types/reservation.js";
 
 // Mock Redis client
-vi.mock("./redis", () => ({
+vi.mock("./redis.js", () => ({
   default: {
     set: vi.fn(),
     get: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock("./redis", () => ({
   },
 }));
 
-import redisClient from "./redis";
+import redisClient from "./redis.js";
 
 describe("ReservationStorage", () => {
   let storage: ReservationStorage;

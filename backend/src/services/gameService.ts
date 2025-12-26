@@ -8,7 +8,7 @@ import {
   AddPlayerRequest,
   RenamePlayerRequest,
   CompleteRoundRequest,
-} from "../types/game";
+} from "../types/game.js";
 import {
   saveSession,
   getSession,
@@ -16,8 +16,8 @@ import {
   getActiveSessionId,
   setActiveSession,
   updateSessionAtomic,
-} from "./redis";
-import { generateNextRound, updateHistory, reverseHistory } from "./roundRobinService";
+} from "./redis.js";
+import { generateNextRound, updateHistory, reverseHistory } from "./roundRobinService.js";
 
 /**
  * Shuffles an array using Fisher-Yates algorithm

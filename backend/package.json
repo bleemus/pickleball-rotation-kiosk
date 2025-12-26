@@ -2,6 +2,7 @@
   "name": "pickleball-kiosk-backend",
   "version": "1.0.0",
   "description": "Backend API for Pickleball Kiosk round-robin management",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

@@ -37,8 +37,8 @@ import {
   updateSessionAtomic,
   flushAllSessions,
   closeRedis,
-} from "./redis";
-import { Session } from "../types/game";
+} from "./redis.js";
+import { Session } from "../types/game.js";
 
 const mockSession: Session = {
   id: "test-session-123",

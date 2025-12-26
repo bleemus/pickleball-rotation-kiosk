@@ -1,7 +1,7 @@
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
-import { EmailParser } from "./emailParser";
-import { Reservation } from "../types/reservation";
+import { EmailParser } from "./emailParser.js";
+import { Reservation } from "../types/reservation.js";
 
 const timestamp = () => new Date().toISOString();
 

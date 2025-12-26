@@ -19,16 +19,16 @@ const mockGameService = vi.hoisted(() => ({
   endSession: vi.fn(),
 }));
 
-vi.mock("../services/gameService", () => mockGameService);
+vi.mock("../services/gameService.js", () => mockGameService);
 
 // Mock redis
 const mockFlushAllSessions = vi.hoisted(() => vi.fn());
-vi.mock("../services/redis", () => ({
+vi.mock("../services/redis.js", () => ({
   flushAllSessions: mockFlushAllSessions,
 }));
 
 // Import the router after mocking
-import router from "./game";
+import router from "./game.js";
 
 // Helper to create mock request/response
 function createMockReqRes(options: {
@@ -201,7 +201,7 @@ describe("Game Routes", () => {
       process.env.NODE_ENV = originalEnv;
     });
 
-    it("should return 403 in production", async () => {
+    it("should return 404 in production to hide endpoint", async () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = "production";
 
@@ -212,7 +212,8 @@ describe("Game Routes", () => {
       await handler(req, res, next);
 
       expect(mockFlushAllSessions).not.toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: "Not found" });
 
       process.env.NODE_ENV = originalEnv;
     });
@@ -231,7 +232,7 @@ describe("Game Routes", () => {
       expect(res.json).toHaveBeenCalledWith(mockSession);
     });
 
-    it("should return 404 when no active session", async () => {
+    it("should return null when no active session (expected state)", async () => {
       mockGameService.getActiveSession.mockResolvedValue(null);
 
       const handler = getRouteHandler("GET", "/session/active");
@@ -240,8 +241,8 @@ describe("Game Routes", () => {
       const next = vi.fn();
       await handler(req, res, next);
 
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: "No active session" });
+      // Returns 200 with null (expected state, not an error)
+      expect(res.json).toHaveBeenCalledWith(null);
     });
 
     it("should return 500 on error", async () => {

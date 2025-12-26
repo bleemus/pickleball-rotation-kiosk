@@ -1,9 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { initRedis, closeRedis } from "./services/redis";
-import gameRoutes from "./routes/game";
-import reservationRoutes from "./routes/reservations";
+import { initRedis, closeRedis } from "./services/redis.js";
+import gameRoutes from "./routes/game.js";
+import reservationRoutes from "./routes/reservations.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;

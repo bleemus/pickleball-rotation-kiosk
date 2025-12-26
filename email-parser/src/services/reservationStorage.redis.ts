@@ -1,5 +1,5 @@
-import { Reservation, ReservationQuery } from "../types/reservation";
-import redisClient from "./redis";
+import { Reservation, ReservationQuery } from "../types/reservation.js";
+import redisClient from "./redis.js";
 
 const RESERVATION_KEY_PREFIX = "reservation:";
 const RESERVATION_INDEX_KEY = "reservation:index";

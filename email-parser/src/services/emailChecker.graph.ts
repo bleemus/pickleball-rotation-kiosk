@@ -1,8 +1,8 @@
 import { Client } from "@microsoft/microsoft-graph-client";
 import { ClientSecretCredential } from "@azure/identity";
 import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
-import { EmailParser } from "./emailParser";
-import { Reservation } from "../types/reservation";
+import { EmailParser } from "./emailParser.js";
+import { Reservation } from "../types/reservation.js";
 import sanitizeHtml from "sanitize-html";
 
 // Microsoft Graph types

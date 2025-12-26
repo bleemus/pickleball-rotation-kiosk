@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EmailParser } from "./emailParser";
+import { EmailParser } from "./emailParser.js";
 
 describe("EmailParser", () => {
   const parser = new EmailParser();
