@@ -66,12 +66,7 @@ if (emailChecker) {
   });
 
   console.log(`Email checking scheduled every ${checkInterval} minutes`);
-
-  // Check immediately on startup
-  console.log("Running initial email check on startup...");
-  emailChecker.checkEmails().catch((error) => {
-    console.error("Error in initial email check:", error);
-  });
+  console.log("First email check will run at the next scheduled interval");
 }
 
 // Routes
@@ -94,15 +89,9 @@ app.get("/health", (req: Request, res: Response) => {
  * Get all reservations or filter by query params
  */
 app.get("/api/reservations", async (req: Request, res: Response) => {
-  // Return 503 if email service is not enabled/configured
+  // Return empty array if email service is not enabled/configured (feature disabled, not an error)
   if (!emailChecker) {
-    res.status(503).json({
-      error: "Email service not available",
-      emailPollingEnabled,
-      reason: emailPollingEnabled
-        ? "Graph API credentials not configured"
-        : "Email polling disabled",
-    });
+    res.json([]);
     return;
   }
 
@@ -131,15 +120,9 @@ app.get("/api/reservations", async (req: Request, res: Response) => {
  * Get today's reservations
  */
 app.get("/api/reservations/today", async (req: Request, res: Response) => {
-  // Return 503 if email service is not enabled/configured
+  // Return empty array if email service is not enabled/configured (feature disabled, not an error)
   if (!emailChecker) {
-    res.status(503).json({
-      error: "Email service not available",
-      emailPollingEnabled,
-      reason: emailPollingEnabled
-        ? "Graph API credentials not configured"
-        : "Email polling disabled",
-    });
+    res.json([]);
     return;
   }
 
@@ -157,15 +140,9 @@ app.get("/api/reservations/today", async (req: Request, res: Response) => {
  * Get reservations matching current time (within 30 minutes)
  */
 app.get("/api/reservations/current", async (req: Request, res: Response) => {
-  // Return 503 if email service is not enabled/configured
+  // Return empty array if email service is not enabled/configured (feature disabled, not an error)
   if (!emailChecker) {
-    res.status(503).json({
-      error: "Email service not available",
-      emailPollingEnabled,
-      reason: emailPollingEnabled
-        ? "Graph API credentials not configured"
-        : "Email polling disabled",
-    });
+    res.json([]);
     return;
   }
 

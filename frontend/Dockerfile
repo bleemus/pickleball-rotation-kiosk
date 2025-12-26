@@ -8,6 +8,9 @@ ARG VITE_SPECTATOR_DARK_MODE
 
 WORKDIR /app
 
+# Update npm to latest version
+RUN npm install -g npm@latest
+
 # Copy package files
 COPY package*.json ./
 
@@ -32,10 +35,14 @@ FROM nginx:alpine
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration template
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+# Set default backend host (can be overridden by environment variable)
+ENV BACKEND_HOST=backend
 
 # Expose port
 EXPOSE 80
 
+# nginx will automatically substitute environment variables in templates
 CMD ["nginx", "-g", "daemon off;"]

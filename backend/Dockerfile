@@ -2,6 +2,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Update npm to latest version
+RUN npm install -g npm@latest
+
 # Copy package files
 COPY package*.json ./
 COPY tsconfig.json ./
@@ -19,6 +22,9 @@ RUN npm run build
 FROM node:20-alpine
 
 WORKDIR /app
+
+# Update npm to latest version
+RUN npm install -g npm@latest
 
 # Copy package files
 COPY package*.json ./

@@ -293,6 +293,16 @@ export function useApi() {
     serviceAvailable: boolean;
   }> => {
     try {
+      // First check if email service is enabled
+      const healthResponse = await fetch(`${API_BASE_URL}/reservations/health`);
+      const health = await healthResponse.json();
+
+      // If email service is not enabled, return empty with serviceAvailable: false
+      if (!health.emailEnabled) {
+        return { reservations: [], serviceAvailable: false };
+      }
+
+      // Email service is enabled, fetch current reservations
       const response = await fetch(`${API_BASE_URL}/reservations/current`);
 
       if (!response.ok) {

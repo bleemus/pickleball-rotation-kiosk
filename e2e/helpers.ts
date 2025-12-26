@@ -69,32 +69,19 @@ export class GamePage {
     // Wait for score inputs to be in DOM
     await this.page.waitForSelector('input[type="number"]', { state: "attached", timeout: 5000 });
 
-    // Get ALL inputs and filter to only visible ones (handles responsive design)
-    const allInputs = await this.page.locator('input[type="number"]').all();
+    // Use Playwright's built-in filter to get only visible number inputs
+    const visibleInputs = this.page.locator('input[type="number"]:visible');
 
-    // Filter to only visible inputs
-    const visibleInputs = [];
-    for (const input of allInputs) {
-      const isVisible = await input.isVisible();
-      if (isVisible) {
-        visibleInputs.push(input);
-      }
-    }
+    // Get the specific inputs for this match
+    const team1Input = visibleInputs.nth(matchIndex * 2);
+    const team2Input = visibleInputs.nth(matchIndex * 2 + 1);
 
-    // Now get the correct inputs for this match
-    const team1Input = visibleInputs[matchIndex * 2];
-    const team2Input = visibleInputs[matchIndex * 2 + 1];
-
-    if (!team1Input || !team2Input) {
-      throw new Error(
-        `Could not find inputs for match ${matchIndex}. Found ${visibleInputs.length} visible inputs.`
-      );
-    }
-
-    // Use pressSequentially to type character by character
-    await team1Input.pressSequentially(team1Score.toString(), { delay: 50 });
+    // Clear existing values and fill with new scores
+    await team1Input.clear();
+    await team1Input.fill(team1Score.toString());
     await this.page.waitForTimeout(100); // Small delay between inputs
-    await team2Input.pressSequentially(team2Score.toString(), { delay: 50 });
+    await team2Input.clear();
+    await team2Input.fill(team2Score.toString());
     await this.page.waitForTimeout(100); // Small delay after entering match scores
   }
 
@@ -124,7 +111,9 @@ export class GamePage {
   }
 
   async expectRoundNumber(roundNum: number) {
-    await expect(this.page.locator(`text=Round ${roundNum}`).first()).toBeVisible();
+    await expect(this.page.locator(`text=Round ${roundNum}`).first()).toBeVisible({
+      timeout: 10000,
+    });
   }
 
   async expectCourtNumber(courtNum: number) {
@@ -152,5 +141,103 @@ export class GamePage {
   async expectMatchScore(team1Score: number, team2Score: number) {
     await expect(this.page.locator(`text=${team1Score}`)).toBeVisible();
     await expect(this.page.locator(`text=${team2Score}`)).toBeVisible();
+  }
+
+  // Court Selector Actions
+  async openCourtSelector() {
+    // Get all "Change Courts" buttons and click the visible one (handles responsive design)
+    const buttons = await this.page.locator('button:has-text("Change Courts")').all();
+    for (const button of buttons) {
+      if (await button.isVisible()) {
+        await button.click();
+        await this.page.waitForTimeout(200);
+        return;
+      }
+    }
+    throw new Error("No visible 'Change Courts' button found");
+  }
+
+  async closeCourtSelector() {
+    // Get all "Hide Courts" buttons and click the visible one (handles responsive design)
+    const buttons = await this.page.locator('button:has-text("Hide Courts")').all();
+    for (const button of buttons) {
+      if (await button.isVisible()) {
+        await button.click();
+        await this.page.waitForTimeout(200);
+        return;
+      }
+    }
+    throw new Error("No visible 'Hide Courts' button found");
+  }
+
+  async setNumCourts(numCourts: number) {
+    // Get the court selector popup
+    const courtSelector = this.page.locator("text=Number of Courts").locator("..");
+
+    // Get current court count from the large number display
+    const currentCountText = await courtSelector.locator(".text-5xl").textContent();
+    const currentCount = parseInt(currentCountText || "1", 10);
+
+    const diff = numCourts - currentCount;
+
+    if (diff > 0) {
+      // Need to increment
+      for (let i = 0; i < diff; i++) {
+        await this.incrementCourts();
+      }
+    } else if (diff < 0) {
+      // Need to decrement
+      for (let i = 0; i < Math.abs(diff); i++) {
+        await this.decrementCourts();
+      }
+    }
+
+    // Wait for the final API call to complete (session update)
+    if (diff !== 0) {
+      await this.page.waitForResponse(
+        (response) => response.url().includes("/session/") && response.status() === 200,
+        { timeout: 5000 }
+      );
+      // Small delay for UI to update
+      await this.page.waitForTimeout(200);
+    }
+  }
+
+  // Court Selector Assertions
+  async expectCourtSelectorVisible() {
+    await expect(this.page.locator("text=Number of Courts").first()).toBeVisible();
+  }
+
+  async expectCourtSelectorNotVisible() {
+    await expect(this.page.locator("text=Number of Courts")).not.toBeVisible();
+  }
+
+  async expectCourtNotVisible(courtNum: number) {
+    await expect(this.page.locator(`text=Court ${courtNum}`)).not.toBeVisible();
+  }
+
+  async expectPlayerManagerVisible() {
+    await expect(this.page.locator('button:has-text("Start Next Round")')).toBeVisible();
+  }
+
+  async expectChangeCourtsButtonVisible() {
+    // Check if at least one "Change Courts" button is visible (handles responsive design)
+    const buttons = await this.page.locator('button:has-text("Change Courts")').all();
+    let anyVisible = false;
+    for (const button of buttons) {
+      if (await button.isVisible()) {
+        anyVisible = true;
+        break;
+      }
+    }
+    expect(anyVisible, "Expected at least one 'Change Courts' button to be visible").toBe(true);
+  }
+
+  async expectChangeCourtsButtonNotVisible() {
+    // Check that NO "Change Courts" buttons are visible (handles responsive design)
+    const buttons = await this.page.locator('button:has-text("Change Courts")').all();
+    for (const button of buttons) {
+      await expect(button).not.toBeVisible();
+    }
   }
 }

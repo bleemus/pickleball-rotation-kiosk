@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Round } from "../types/game";
 import pickleballIcon from "../assets/icons/pickleball.png";
 
@@ -37,6 +37,30 @@ export function ScoreEntry({ round, onSubmitScores, onCancel, loading }: ScoreEn
 
   const [error, setError] = useState<string | null>(null);
   const [matchErrors, setMatchErrors] = useState<Record<string, string>>({});
+
+  // Reset scores state when round changes (critical for edit mode and round transitions)
+  useEffect(() => {
+    setScores(
+      Object.fromEntries(
+        round.matches.map((match) => [
+          match.id,
+          {
+            matchId: match.id,
+            team1Score:
+              match.team1Score !== undefined && match.team1Score !== null
+                ? match.team1Score.toString()
+                : "",
+            team2Score:
+              match.team2Score !== undefined && match.team2Score !== null
+                ? match.team2Score.toString()
+                : "",
+          },
+        ])
+      )
+    );
+    setError(null);
+    setMatchErrors({});
+  }, [round.roundNumber]); // Reset when round number changes
 
   // Helper function to get dynamic text size based on name length
   const getNameTextClass = (name: string, isMobile: boolean = false) => {

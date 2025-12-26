@@ -122,8 +122,9 @@ router.get("/wifi-info", (req: Request, res: Response) => {
 // Test cleanup endpoint - flush all Redis session data (development/test only)
 router.post("/test/cleanup", async (req: Request, res: Response) => {
   // Only allow in development or test environments
+  // Return 404 in production to hide endpoint existence
   if (process.env.NODE_ENV === "production") {
-    res.status(403).json({ error: "Test cleanup endpoint disabled in production" });
+    res.status(404).json({ error: "Not found" });
     return;
   }
 
@@ -139,10 +140,7 @@ router.post("/test/cleanup", async (req: Request, res: Response) => {
 router.get("/session/active", async (req: Request, res: Response) => {
   try {
     const session = await getActiveSession();
-    if (!session) {
-      res.status(404).json({ error: "No active session" });
-      return;
-    }
+    // Return null if no active session (expected state, not an error)
     res.json(session);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -257,8 +255,10 @@ router.post("/session/:id/round", async (req: Request, res: Response) => {
 router.get("/session/:id/round/current", async (req: Request, res: Response) => {
   try {
     const round = await getCurrentRound(req.params.id);
+    // Return null if no current round (expected state, not an error)
     res.json(round);
   } catch (error) {
+    // Session not found is an actual error
     res.status(404).json({ error: (error as Error).message });
   }
 });

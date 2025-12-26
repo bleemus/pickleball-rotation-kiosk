@@ -11,6 +11,8 @@ const mockHistory: GameHistory[] = [
     courtNumber: 1,
     team1Players: ["Alice", "Bob"],
     team2Players: ["Charlie", "Dave"],
+    team1PlayerIds: ["alice-id", "bob-id"],
+    team2PlayerIds: ["charlie-id", "dave-id"],
     team1Score: 11,
     team2Score: 9,
     timestamp: Date.now() - 3600000, // 1 hour ago
@@ -21,6 +23,8 @@ const mockHistory: GameHistory[] = [
     courtNumber: 2,
     team1Players: ["Eve", "Frank"],
     team2Players: ["Grace", "Heidi"],
+    team1PlayerIds: ["eve-id", "frank-id"],
+    team2PlayerIds: ["grace-id", "heidi-id"],
     team1Score: 8,
     team2Score: 11,
     timestamp: Date.now() - 3500000,
@@ -31,6 +35,8 @@ const mockHistory: GameHistory[] = [
     courtNumber: 1,
     team1Players: ["Alice", "Charlie"],
     team2Players: ["Bob", "Dave"],
+    team1PlayerIds: ["alice-id", "charlie-id"],
+    team2PlayerIds: ["bob-id", "dave-id"],
     team1Score: 11,
     team2Score: 7,
     timestamp: Date.now() - 1800000, // 30 mins ago

@@ -60,8 +60,16 @@ export function CurrentMatchups({
           className={`grid ${gridColsClass} gap-2 lg:gap-6 mb-2 lg:mb-4 lg:flex-1 lg:min-h-0 lg:overflow-auto`}
         >
           {round.matches.map((match) => {
-            const team1Won = match.completed && match.team1Score! > match.team2Score!;
-            const team2Won = match.completed && match.team2Score! > match.team1Score!;
+            const team1Won =
+              match.completed &&
+              match.team1Score != null &&
+              match.team2Score != null &&
+              match.team1Score > match.team2Score;
+            const team2Won =
+              match.completed &&
+              match.team2Score != null &&
+              match.team1Score != null &&
+              match.team2Score > match.team1Score;
 
             return (
               <div

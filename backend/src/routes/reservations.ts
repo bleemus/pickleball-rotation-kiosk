@@ -5,6 +5,26 @@ const router = Router();
 const EMAIL_PARSER_URL = process.env.EMAIL_PARSER_URL || "http://localhost:3002";
 
 /**
+ * GET /api/reservations/health
+ * Check if email service is available and enabled
+ */
+router.get("/health", async (req: Request, res: Response) => {
+  try {
+    const response = await fetch(`${EMAIL_PARSER_URL}/health`);
+
+    if (!response.ok) {
+      throw new Error(`Email parser service returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Error checking email service health:", error);
+    res.json({ status: "unavailable", emailPollingEnabled: false, emailEnabled: false });
+  }
+});
+
+/**
  * GET /api/reservations/current
  * Get reservations for the current time
  */
