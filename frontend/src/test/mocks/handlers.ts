@@ -30,8 +30,8 @@ export const handlers = [
   }),
 
   http.get(`${API_BASE_URL}/session/active`, () => {
-    // Default: no active session
-    return new HttpResponse(null, { status: 404 });
+    // Default: no active session (return null, not 404)
+    return HttpResponse.json(null);
   }),
 
   http.delete(`${API_BASE_URL}/session/:id`, () => {
@@ -115,6 +115,14 @@ export const handlers = [
   }),
 
   // Reservation endpoints
+  http.get(`${API_BASE_URL}/reservations/health`, () => {
+    return HttpResponse.json({
+      status: "ok",
+      emailPollingEnabled: false,
+      emailEnabled: false,
+    });
+  }),
+
   http.get(`${API_BASE_URL}/reservations/current`, () => {
     return HttpResponse.json([]);
   }),

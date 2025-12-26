@@ -124,28 +124,28 @@ export async function getActiveSession(): Promise<Session | null> {
 
 /**
  * Updates the number of courts in a session
+ * Uses atomic updates to prevent race conditions
  */
 export async function updateNumCourts(sessionId: string, numCourts: number): Promise<Session> {
-  const session = await getSessionById(sessionId);
+  return await updateSessionAtomic(sessionId, (session) => {
+    if (numCourts < 1) {
+      throw new Error("Number of courts must be at least 1");
+    }
 
-  if (numCourts < 1) {
-    throw new Error("Number of courts must be at least 1");
-  }
+    // Check if there's a round in progress
+    if (session.currentRound && !session.currentRound.completed) {
+      throw new Error("Cannot change number of courts while a round is in progress");
+    }
 
-  // Check if there's a round in progress
-  if (session.currentRound && !session.currentRound.completed) {
-    throw new Error("Cannot change number of courts while a round is in progress");
-  }
+    // If there's a completed round and we're changing the number of courts,
+    // clear the current round to avoid confusion in the UI
+    if (session.currentRound && session.currentRound.completed && session.numCourts !== numCourts) {
+      session.currentRound = null;
+    }
 
-  // If there's a completed round and we're changing the number of courts,
-  // clear the current round to avoid confusion in the UI
-  if (session.currentRound && session.currentRound.completed && session.numCourts !== numCourts) {
-    session.currentRound = null;
-  }
-
-  session.numCourts = numCourts;
-  await saveSession(session);
-  return session;
+    session.numCourts = numCourts;
+    return session;
+  });
 }
 
 /**
@@ -176,9 +176,9 @@ export async function addPlayer(sessionId: string, request: AddPlayerRequest): P
 export async function removePlayer(sessionId: string, playerId: string): Promise<Session> {
   const session = await getSessionById(sessionId);
 
-  // Check if player is in current round
+  // Check if player is in current round (either in matches or benched)
   if (session.currentRound && !session.currentRound.completed) {
-    const isInCurrentRound = session.currentRound.matches.some(
+    const isInMatches = session.currentRound.matches.some(
       (match) =>
         match.team1.player1.id === playerId ||
         match.team1.player2.id === playerId ||
@@ -186,11 +186,14 @@ export async function removePlayer(sessionId: string, playerId: string): Promise
         match.team2.player2.id === playerId
     );
 
-    if (isInCurrentRound) {
+    const isBenched = session.currentRound.benchedPlayers.some((p) => p.id === playerId);
+
+    if (isInMatches || isBenched) {
       throw new Error("Cannot remove player who is in the current active round");
     }
   }
 
+  // Allow removal even if below minimum - UI will disable "Start Round" button
   session.players = session.players.filter((p) => p.id !== playerId);
 
   await saveSession(session);
@@ -245,20 +248,20 @@ export async function renamePlayer(
 
 /**
  * Toggles a player's forceSitOut flag for the next round
+ * Uses atomic updates to prevent race conditions
  */
 export async function togglePlayerSitOut(sessionId: string, playerId: string): Promise<Session> {
-  const session = await getSessionById(sessionId);
+  return await updateSessionAtomic(sessionId, (session) => {
+    const player = session.players.find((p) => p.id === playerId);
+    if (!player) {
+      throw new Error(`Player ${playerId} not found in session`);
+    }
 
-  const player = session.players.find((p) => p.id === playerId);
-  if (!player) {
-    throw new Error(`Player ${playerId} not found in session`);
-  }
+    // Toggle the forceSitOut flag atomically
+    player.forceSitOut = !player.forceSitOut;
 
-  // Toggle the forceSitOut flag
-  player.forceSitOut = !player.forceSitOut;
-
-  await saveSession(session);
-  return session;
+    return session;
+  });
 }
 
 /**
@@ -272,7 +275,16 @@ export async function startNextRound(sessionId: string): Promise<Session> {
     throw new Error("Current round is not completed yet");
   }
 
-  const roundNumber = session.currentRound ? session.currentRound.roundNumber + 1 : 1;
+  // Calculate round number: if currentRound exists, increment it; otherwise check game history
+  // Game history might have entries from previous rounds even if currentRound was cleared
+  let roundNumber = 1;
+  if (session.currentRound) {
+    roundNumber = session.currentRound.roundNumber + 1;
+  } else if (session.gameHistory.length > 0) {
+    // Find the highest round number in game history
+    const maxRoundInHistory = Math.max(...session.gameHistory.map((h) => h.roundNumber));
+    roundNumber = maxRoundInHistory + 1;
+  }
 
   // For the first round, shuffle players randomly
   const playersToUse = roundNumber === 1 ? shuffleArray(session.players) : session.players;
@@ -296,8 +308,9 @@ export async function startNextRound(sessionId: string): Promise<Session> {
       // Player is playing this round - reset consecutive counter
       player.consecutiveRoundsSatOut = 0;
     }
-    // Note: forceSitOut flag is cleared when round is COMPLETED, not when started
-    // This preserves the flag if round is canceled
+    // Clear forceSitOut flag when starting a new round
+    // This prevents the flag from persisting if partial scores were submitted
+    player.forceSitOut = false;
   }
 
   session.currentRound = {
@@ -378,31 +391,40 @@ export async function completeCurrentRound(
         const team1Won = entry.team1Score > entry.team2Score;
         const pointDiff = entry.team1Score - entry.team2Score;
 
-        // Find players by name (since history stores names, not IDs)
-        for (const playerName of entry.team1Players) {
-          const player = session.players.find((p) => p.name === playerName);
-          if (player) {
-            player.gamesPlayed = Math.max(0, player.gamesPlayed - 1);
-            if (team1Won) {
-              player.wins = Math.max(0, player.wins - 1);
-            } else {
-              player.losses = Math.max(0, player.losses - 1);
-            }
-            player.pointDifferential -= pointDiff;
+        // Use player IDs for reliable lookup (fallback to names for backward compatibility)
+        const team1Ids = entry.team1PlayerIds || [];
+        const team2Ids = entry.team2PlayerIds || [];
+
+        for (const playerId of team1Ids) {
+          const player = session.players.find((p) => p.id === playerId);
+          if (!player) {
+            throw new Error(
+              `Player ${playerId} not found - cannot reverse stats. This should not happen.`
+            );
           }
+          player.gamesPlayed = Math.max(0, player.gamesPlayed - 1);
+          if (team1Won) {
+            player.wins = Math.max(0, player.wins - 1);
+          } else {
+            player.losses = Math.max(0, player.losses - 1);
+          }
+          player.pointDifferential -= pointDiff;
         }
 
-        for (const playerName of entry.team2Players) {
-          const player = session.players.find((p) => p.name === playerName);
-          if (player) {
-            player.gamesPlayed = Math.max(0, player.gamesPlayed - 1);
-            if (!team1Won) {
-              player.wins = Math.max(0, player.wins - 1);
-            } else {
-              player.losses = Math.max(0, player.losses - 1);
-            }
-            player.pointDifferential += pointDiff;
+        for (const playerId of team2Ids) {
+          const player = session.players.find((p) => p.id === playerId);
+          if (!player) {
+            throw new Error(
+              `Player ${playerId} not found - cannot reverse stats. This should not happen.`
+            );
           }
+          player.gamesPlayed = Math.max(0, player.gamesPlayed - 1);
+          if (!team1Won) {
+            player.wins = Math.max(0, player.wins - 1);
+          } else {
+            player.losses = Math.max(0, player.losses - 1);
+          }
+          player.pointDifferential += pointDiff;
         }
       }
 
@@ -463,28 +485,34 @@ export async function completeCurrentRound(
 
         for (const playerId of team1PlayerIds) {
           const player = session.players.find((p) => p.id === playerId);
-          if (player) {
-            player.gamesPlayed -= 1;
-            if (oldTeam1Won) {
-              player.wins -= 1;
-            } else {
-              player.losses -= 1;
-            }
-            player.pointDifferential -= oldPointDiff;
+          if (!player) {
+            throw new Error(
+              `Player ${playerId} not found in session. Cannot reverse stats for match score change.`
+            );
           }
+          player.gamesPlayed -= 1;
+          if (oldTeam1Won) {
+            player.wins -= 1;
+          } else {
+            player.losses -= 1;
+          }
+          player.pointDifferential -= oldPointDiff;
         }
 
         for (const playerId of team2PlayerIds) {
           const player = session.players.find((p) => p.id === playerId);
-          if (player) {
-            player.gamesPlayed -= 1;
-            if (!oldTeam1Won) {
-              player.wins -= 1;
-            } else {
-              player.losses -= 1;
-            }
-            player.pointDifferential += oldPointDiff;
+          if (!player) {
+            throw new Error(
+              `Player ${playerId} not found in session. Cannot reverse stats for match score change.`
+            );
           }
+          player.gamesPlayed -= 1;
+          if (!oldTeam1Won) {
+            player.wins -= 1;
+          } else {
+            player.losses -= 1;
+          }
+          player.pointDifferential += oldPointDiff;
         }
 
         // Remove old history entry
@@ -505,28 +533,34 @@ export async function completeCurrentRound(
 
       for (const playerId of team1PlayerIds) {
         const player = session.players.find((p) => p.id === playerId);
-        if (player) {
-          player.gamesPlayed += 1;
-          if (team1Won) {
-            player.wins += 1;
-          } else {
-            player.losses += 1;
-          }
-          player.pointDifferential += pointDiff;
+        if (!player) {
+          throw new Error(
+            `Player ${playerId} not found in session. Cannot update stats for match completion.`
+          );
         }
+        player.gamesPlayed += 1;
+        if (team1Won) {
+          player.wins += 1;
+        } else {
+          player.losses += 1;
+        }
+        player.pointDifferential += pointDiff;
       }
 
       for (const playerId of team2PlayerIds) {
         const player = session.players.find((p) => p.id === playerId);
-        if (player) {
-          player.gamesPlayed += 1;
-          if (!team1Won) {
-            player.wins += 1;
-          } else {
-            player.losses += 1;
-          }
-          player.pointDifferential -= pointDiff;
+        if (!player) {
+          throw new Error(
+            `Player ${playerId} not found in session. Cannot update stats for match completion.`
+          );
         }
+        player.gamesPlayed += 1;
+        if (!team1Won) {
+          player.wins += 1;
+        } else {
+          player.losses += 1;
+        }
+        player.pointDifferential -= pointDiff;
       }
 
       // Add to game history
@@ -536,6 +570,8 @@ export async function completeCurrentRound(
         courtNumber: match.courtNumber,
         team1Players: [match.team1.player1.name, match.team1.player2.name],
         team2Players: [match.team2.player1.name, match.team2.player2.name],
+        team1PlayerIds: [match.team1.player1.id, match.team1.player2.id],
+        team2PlayerIds: [match.team2.player1.id, match.team2.player2.id],
         team1Score: scoreInput.team1Score,
         team2Score: scoreInput.team2Score,
         timestamp: Date.now(),
@@ -562,13 +598,6 @@ export async function completeCurrentRound(
     // Only mark round as completed if ALL matches have scores
     const allMatchesCompleted = session.currentRound.matches.every((m) => m.completed);
     session.currentRound.completed = allMatchesCompleted;
-
-    // Clear forceSitOut flags only when round is fully completed
-    if (allMatchesCompleted) {
-      for (const player of session.players) {
-        player.forceSitOut = false;
-      }
-    }
 
     // Return modified session (will be saved atomically by updateSessionAtomic)
     return session;

@@ -37,8 +37,10 @@ export interface GameHistory {
   matchId: string;
   roundNumber: number;
   courtNumber: number;
-  team1Players: string[];
+  team1Players: string[]; // player names (for UI display)
   team2Players: string[];
+  team1PlayerIds: string[]; // player IDs (for stat reversal)
+  team2PlayerIds: string[];
   team1Score: number;
   team2Score: number;
   timestamp: number;

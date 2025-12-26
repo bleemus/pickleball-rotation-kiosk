@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Player } from "../types/game";
 import { Reservation } from "../types/reservation";
-import { HelpButton } from "./HelpModal";
 import { APP_NAME } from "../config";
 import { useApi } from "../hooks/useApi";
 
@@ -377,24 +376,17 @@ export function PlayerSetup({
             </div>
           )}
 
-          {/* Bottom Buttons - Mobile: Reset + Help side-by-side, Desktop: Help only */}
+          {/* Bottom Button - Mobile: Reset button */}
           <div className="mt-4 lg:mt-6">
-            {/* Mobile: Both buttons */}
-            <div className="flex lg:hidden gap-2">
+            {/* Mobile: Reset button */}
+            <div className="lg:hidden">
               <button
                 onClick={onResetSession}
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                className="w-full px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
               >
                 Reset
               </button>
-              <div className="flex-1">
-                <HelpButton />
-              </div>
-            </div>
-            {/* Desktop: Help only (Reset is top-left) */}
-            <div className="hidden lg:block">
-              <HelpButton />
             </div>
           </div>
         </div>

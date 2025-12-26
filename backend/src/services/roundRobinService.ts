@@ -118,10 +118,11 @@ function calculateMatchupScore(
       }
     }
 
-    // Calculate court history penalty (all 4 players on same court)
-    // Check all pairs of the 4 players (6 combinations total)
-    for (let i = 0; i < players.length; i++) {
-      for (let j = i + 1; j < players.length; j++) {
+    // Calculate court history penalty (cross-team pairs only)
+    // Check only cross-team pairs (4 combinations) to normalize weight with opponent history
+    // This avoids giving excessive weight to court history compared to partnership/opponent penalties
+    for (const i of team1) {
+      for (const j of team2) {
         const courtCount = getCourtCount(players[i].id, players[j].id, courtHistory);
         score += courtCount * COURT_PENALTY;
       }

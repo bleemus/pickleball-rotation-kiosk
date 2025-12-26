@@ -8,7 +8,6 @@ import { ScoreEntry } from "./components/ScoreEntry";
 import { ScoreHistory } from "./components/ScoreHistory";
 import { PlayerStats } from "./components/PlayerStats";
 import { PlayerManager } from "./components/PlayerManager";
-import { HelpButton } from "./components/HelpModal";
 import { SessionSummary } from "./components/SessionSummary";
 
 const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "true";
@@ -559,28 +558,20 @@ function App() {
               />
             )}
           </div>
-
-          {/* Bottom Buttons - Desktop only: Help button */}
-          <div className="hidden lg:block p-2 lg:p-8">
-            <HelpButton />
-          </div>
         </div>
 
         {/* Player Stats - Right Sidebar on Desktop, Flows below on Mobile */}
         <div className="lg:hidden">
           <PlayerStats players={session.players} />
-          {/* Mobile: Reset + Help buttons below stats */}
-          <div className="p-4 flex gap-2">
+          {/* Mobile: Reset button below stats */}
+          <div className="p-4">
             <button
               onClick={handleResetSession}
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+              className="w-full px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
             >
               Reset
             </button>
-            <div className="flex-1">
-              <HelpButton />
-            </div>
           </div>
         </div>
         <div className="hidden lg:block">

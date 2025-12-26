@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Player } from "../types/game";
 
 interface PlayerManagerProps {
@@ -38,6 +38,13 @@ export function PlayerManager({
   const [playerName, setPlayerName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCourtSelector, setShowCourtSelector] = useState(false);
+
+  // Calculate active player count once to avoid repeated filtering
+  const activePlayerCount = useMemo(
+    () => players.filter((p) => !p.forceSitOut).length,
+    [players]
+  );
+  const minPlayersRequired = numCourts * 4;
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [renameError, setRenameError] = useState<string | null>(null);
@@ -140,27 +147,32 @@ export function PlayerManager({
 
       {/* Number of Courts Selector - Popup */}
       {showCourtSelector && (
-        <div className="fixed bottom-16 left-4 bg-white rounded-xl shadow-2xl p-4 z-10 border-2 border-indigo-500">
-          <h3 className="text-lg font-semibold mb-2 text-gray-800">Number of Courts</h3>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min="1"
-              value={numCourts}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (value >= 1) {
-                  onUpdateNumCourts(value);
-                }
-              }}
-              className="w-20 px-3 py-2 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-center font-bold"
+        <div className="fixed bottom-16 left-4 bg-white rounded-xl shadow-2xl p-4 lg:p-6 z-10 border-2 border-indigo-500 min-w-[280px]">
+          <h3 className="text-lg lg:text-xl font-semibold mb-3 text-gray-800 text-center">
+            Number of Courts
+          </h3>
+          <div className="flex items-center justify-center gap-4 mb-3">
+            <button
+              onClick={() => onUpdateNumCourts(Math.max(1, numCourts - 1))}
+              disabled={loading || numCourts <= 1}
+              className="w-14 h-14 bg-red-500 text-white text-3xl font-bold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              −
+            </button>
+            <div className="text-center">
+              <div className="text-5xl font-bold text-gray-800">{numCourts}</div>
+              <div className="text-sm text-gray-600">{numCourts === 1 ? "Court" : "Courts"}</div>
+            </div>
+            <button
+              onClick={() => onUpdateNumCourts(numCourts + 1)}
               disabled={loading}
-            />
-            <span className="text-gray-600 text-sm">
-              {numCourts === 1 ? "court" : "courts"}
-              <br />
-              (requires {numCourts * 4})
-            </span>
+              className="w-14 h-14 bg-green-500 text-white text-3xl font-bold rounded-lg hover:bg-green-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              +
+            </button>
+          </div>
+          <div className="text-center text-sm text-gray-600">
+            Need at least {numCourts * 4} players
           </div>
         </div>
       )}
@@ -174,15 +186,15 @@ export function PlayerManager({
         <div className="mb-6 lg:mb-8 space-y-3">
           <button
             onClick={onStartNextRound}
-            disabled={loading || players.filter((p) => !p.forceSitOut).length < numCourts * 4}
+            disabled={loading || activePlayerCount < minPlayersRequired}
             className="w-full px-8 py-5 lg:py-6 bg-green-500 text-white text-2xl lg:text-3xl xl:text-4xl font-bold rounded-2xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
           >
             {loading ? "Starting..." : "Start Next Round"}
           </button>
-          {players.filter((p) => !p.forceSitOut).length < numCourts * 4 && (
+          {activePlayerCount < minPlayersRequired && (
             <p className="text-center text-red-600 mt-2 text-sm lg:text-base font-semibold">
-              Need at least {numCourts * 4} active players (
-              {players.filter((p) => !p.forceSitOut).length} currently active)
+              Need at least {minPlayersRequired} active players ({activePlayerCount} currently
+              active)
             </p>
           )}
 

@@ -83,7 +83,7 @@ npm run start        # Run compiled code
 npm run typecheck    # Type check without building
 
 # E2E Tests
-npx playwright test              # Run all 16 E2E tests
+npx playwright test              # Run all 31 E2E tests
 npx playwright test --ui         # Interactive mode
 npx playwright test --headed     # With browser visible
 ```
@@ -92,8 +92,8 @@ npx playwright test --headed     # With browser visible
 
 ### Test Suite
 
-- **E2E Tests**: 16 Playwright tests covering setup, gameplay, score validation, and session recovery
-- **Unit Tests**: Vitest tests for components and hooks
+- **E2E Tests**: 31 Playwright tests covering setup, gameplay, score validation, session recovery, and spectator view
+- **Unit Tests**: 247 Vitest tests for components and hooks
 - **Type Checking**: Full TypeScript safety across frontend and backend
 
 ### Running Tests
@@ -173,21 +173,35 @@ All routes in `backend/src/routes/game.ts`:
 **Session Management**:
 
 - `POST /api/session` - Create session with initial players
-- `GET /api/session/:id` - Retrieve session
+- `GET /api/session/:id` - Retrieve session (404 if not found)
+- `GET /api/session/active` - Get active session (200 with null if none exists)
 - `DELETE /api/session/:id` - Delete session
 
 **Player Management**:
 
 - `POST /api/session/:id/players` - Add player
-- `DELETE /api/session/:id/players/:playerId` - Remove player (not during active round)
+- `DELETE /api/session/:id/players/:playerId` - Remove player (not during active round, allows removal below minimum)
 - `GET /api/session/:id/players` - Get all players
 
 **Round Management**:
 
 - `POST /api/session/:id/round` - Generate and start next round
-- `GET /api/session/:id/round/current` - Get current round
+- `GET /api/session/:id/round/current` - Get current round (200 with null if no current round)
 - `POST /api/session/:id/round/complete` - Submit scores and complete round
 - `GET /api/session/:id/history` - Get game history
+
+**Reservation Management** (backend/src/routes/reservations.ts):
+
+- `GET /api/reservations/health` - Check if email service is enabled (returns `{emailEnabled: boolean}`)
+- `GET /api/reservations/current` - Get current reservations (200 with `[]` if disabled)
+- `GET /api/reservations/today` - Get today's reservations (200 with `[]` if disabled)
+
+**HTTP Status Code Philosophy**:
+
+- `200 OK` with `null` or `[]` = Feature working, no data (expected state)
+- `404 Not Found` = Requested resource doesn't exist (actual error)
+- `503 Service Unavailable` = Service is down (actual error)
+- This distinction prevents error log spam when features are intentionally disabled or empty
 
 ### Type System
 
@@ -208,17 +222,25 @@ Types are duplicated between frontend and backend (must be kept in sync):
 
 **Main Components** (frontend/src/components/):
 
-- `PlayerSetup.tsx`: Initial player entry screen
+- `PlayerSetup.tsx`: Initial player entry screen with Pickle Planner integration
 - `CurrentMatchups.tsx`: Displays active matches for both courts + bench
 - `ScoreEntry.tsx`: Score input form for completed matches
 - `BenchDisplay.tsx`: Shows benched players
 - `ScoreHistory.tsx`: Full game history view
-- `AdminControls.tsx`: Floating controls for history, reset, next round
+- `PlayerManager.tsx`: Player roster management between rounds
+- `SessionSummary.tsx`: Final rankings when session ends
+- `SpectatorDisplay.tsx`: Kiosk view for spectators
 
 **Hooks**:
 
 - `useGameState.ts`: Local state management and localStorage persistence
 - `useApi.ts`: API client wrapper around fetch
+
+**Test Utilities** (frontend/src/test/):
+
+- `mocks/handlers.ts`: MSW mock handlers for API endpoints
+- `mocks/mockData.ts`: Test fixtures for sessions, players, rounds
+- Mock handlers include `/api/reservations/health` returning `emailEnabled: false` by default
 
 ### Redis Schema
 
@@ -280,15 +302,27 @@ make build && make up
 make down
 ```
 
+### Why No Parallel E2E Testing?
+
+Parallel E2E testing with isolated Docker stacks was explored but removed because:
+
+1. **Test fixtures don't support multi-port environments** - The `cleanState` fixture clears data from the backend, but doesn't know which backend port/instance to clean when tests run in parallel
+2. **Data isolation complexity** - Each worker needs its own isolated Redis, backend, and frontend, requiring complex port coordination
+3. **Doesn't improve production testing** - Sequential tests already use the real production nginx config and stack
+4. **Minimal time savings** - Tests complete in ~1.7 minutes sequentially, which is already fast
+5. **Harder to debug** - Multiple stacks mean multiple log streams to check when tests fail
+
+**The sequential test approach (`make test-e2e`) is preferred** because it's simpler, more reliable, tests the actual production configuration, and completes quickly.
+
 ### Common Gotchas
 
 1. **Type sync**: Frontend and backend types must match exactly
-2. **Player removal**: Cannot remove players in active rounds (backend/src/services/gameService.ts:100-114)
-3. **Minimum players**: Sessions require minimum 4 players at all times
-4. **Redis connection**: Backend won't start without Redis running
-5. **Session ID**: Stored in localStorage as `sessionId`, cleared on reset
-6. **Score completion**: All matches in round must have scores submitted before round is marked complete
-7. **roundsSatOut counter**: Reset to 0 when player plays (backend/src/services/gameService.ts:214,227), incremented when benched (gameService.ts:149-153)
+2. **Player removal**: Cannot remove players during active rounds (in matches or benched), but can remove below minimum player count - UI disables "Start Round" button when insufficient players
+3. **Redis connection**: Backend won't start without Redis running
+4. **Session ID**: Stored in localStorage as `sessionId`, cleared on reset
+5. **Score completion**: All matches in round must have scores submitted before round is marked complete
+6. **roundsSatOut counter**: Reset to 0 when player plays, incremented when benched
+7. **Email polling**: First email check happens at scheduled interval (not immediately on startup) to avoid hammering the API during tests
 
 ### Environment Variables
 
@@ -360,9 +394,11 @@ The email polling feature can be disabled if it stops working or causes issues:
 - When disabled:
   - Email parser service still runs (no crashes)
   - No emails are checked/polled
-  - API endpoints return empty arrays `[]`
-  - Frontend continues to work without reservation data
+  - API endpoints return `200 OK` with empty arrays `[]` (not error codes)
+  - Frontend checks `/api/reservations/health` to detect if email is enabled
+  - Pickle Planner message is hidden when `emailEnabled: false`
 - Check status: `curl http://localhost:3002/health` (look for `emailPollingEnabled: false`)
+- **Startup behavior**: Email checks are scheduled (cron) and do NOT run immediately on startup - first check happens at the scheduled interval to avoid hammering the API during E2E tests
 
 ### Debugging
 

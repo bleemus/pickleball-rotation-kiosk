@@ -9,8 +9,39 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+// CORS configuration - restrict to known origins in production, allow all in development/test
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+  "http://localhost:3000",
+  "http://localhost",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1",
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      // In production, restrict to allowed origins only
+      // In development/test, allow all origins for testing flexibility
+      if (process.env.NODE_ENV === "production") {
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      } else {
+        // Development/test mode - allow all origins
+        callback(null, true);
+      }
+    },
+    credentials: true,
+  })
+);
+
+// JSON body parser with size limit to prevent DoS
+app.use(express.json({ limit: "100kb" }));
 
 // Health check endpoint
 app.get("/health", (req, res) => {

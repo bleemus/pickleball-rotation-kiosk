@@ -148,6 +148,8 @@ export const mockGameHistory: GameHistory[] = [
     courtNumber: 1,
     team1Players: ["Alice", "Bob"],
     team2Players: ["Charlie", "Dave"],
+    team1PlayerIds: ["player-1", "player-2"],
+    team2PlayerIds: ["player-3", "player-4"],
     team1Score: 11,
     team2Score: 9,
     timestamp: Date.now() - 10000,
