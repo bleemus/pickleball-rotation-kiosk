@@ -43,7 +43,9 @@ test.describe("Court Changes During Gameplay", () => {
     await game.expectCourtSelectorNotVisible();
 
     // Wait for the "Start Next Round" button to be enabled (court change applied)
-    await expect(page.locator('button:has-text("Start Next Round")')).toBeEnabled({ timeout: 10000 });
+    await expect(page.locator('button:has-text("Start Next Round")')).toBeEnabled({
+      timeout: 10000,
+    });
     await page.waitForTimeout(500);
 
     // Start Round 2
@@ -55,7 +57,7 @@ test.describe("Court Changes During Gameplay", () => {
     await game.expectCourtNotVisible(2);
 
     // Verify bench is shown (4 players benched: 8 total - 4 playing = 4 benched)
-    await expect(page.locator('text=On the Bench')).toBeVisible();
+    await expect(page.locator("text=On the Bench")).toBeVisible();
   });
 
   test("should increase courts with sufficient players", async ({ page, cleanState }) => {
@@ -80,7 +82,7 @@ test.describe("Court Changes During Gameplay", () => {
     // Verify Round 1 has 1 court (5 benched: 9 total - 4 playing = 5 benched)
     await game.expectRoundNumber(1);
     await game.expectCourtNumber(1);
-    await expect(page.locator('text=On the Bench')).toBeVisible();
+    await expect(page.locator("text=On the Bench")).toBeVisible();
 
     // Submit scores
     await game.enterScoresMode();
@@ -97,7 +99,9 @@ test.describe("Court Changes During Gameplay", () => {
     await game.closeCourtSelector();
 
     // Wait for the "Start Next Round" button to be enabled (court change applied)
-    await expect(page.locator('button:has-text("Start Next Round")')).toBeEnabled({ timeout: 10000 });
+    await expect(page.locator('button:has-text("Start Next Round")')).toBeEnabled({
+      timeout: 10000,
+    });
     await page.waitForTimeout(500);
 
     // Start Round 2
@@ -109,7 +113,7 @@ test.describe("Court Changes During Gameplay", () => {
     await game.expectCourtNumber(2);
 
     // Verify bench is shown (1 player benched: 9 - 8 = 1)
-    await expect(page.locator('text=On the Bench')).toBeVisible();
+    await expect(page.locator("text=On the Bench")).toBeVisible();
   });
 
   test("should hide court selector during active round", async ({ page, cleanState }) => {
@@ -199,7 +203,9 @@ test.describe("Court Changes During Gameplay", () => {
     await game.closeCourtSelector();
 
     // Wait for the "Start Next Round" button to be enabled (court change applied)
-    await expect(page.locator('button:has-text("Start Next Round")')).toBeEnabled({ timeout: 10000 });
+    await expect(page.locator('button:has-text("Start Next Round")')).toBeEnabled({
+      timeout: 10000,
+    });
     await page.waitForTimeout(500);
 
     // Play Round 2 with 1 court
@@ -221,8 +227,8 @@ test.describe("Court Changes During Gameplay", () => {
     await page.waitForTimeout(300);
 
     // Verify game history shows Round 1 with 2 courts, Round 2 with 1 court
-    await expect(page.locator('text=Round 1').first()).toBeVisible();
-    await expect(page.locator('text=Round 2').first()).toBeVisible();
+    await expect(page.locator("text=Round 1").first()).toBeVisible();
+    await expect(page.locator("text=Round 2").first()).toBeVisible();
 
     // Close history
     await page.click('button:has-text("Close")');
@@ -253,10 +259,10 @@ test.describe("Court Changes During Gameplay", () => {
 
     // Verify error message appears (don't try to click disabled button)
     // Check for the warning message in the player list section
-    await expect(page.locator('text=Need at least 8 players to start a round')).toBeVisible();
+    await expect(page.locator("text=Need at least 8 players to start a round")).toBeVisible();
 
     // Verify round does not start (still showing PlayerManager with Round 1 completed)
     await game.expectPlayerManagerVisible();
-    await expect(page.locator('text=Round 2')).not.toBeVisible();
+    await expect(page.locator("text=Round 2")).not.toBeVisible();
   });
 });

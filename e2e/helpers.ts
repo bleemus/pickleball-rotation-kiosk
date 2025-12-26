@@ -111,7 +111,9 @@ export class GamePage {
   }
 
   async expectRoundNumber(roundNum: number) {
-    await expect(this.page.locator(`text=Round ${roundNum}`).first()).toBeVisible({ timeout: 10000 });
+    await expect(this.page.locator(`text=Round ${roundNum}`).first()).toBeVisible({
+      timeout: 10000,
+    });
   }
 
   async expectCourtNumber(courtNum: number) {
@@ -170,11 +172,11 @@ export class GamePage {
 
   async setNumCourts(numCourts: number) {
     // Get the court selector popup
-    const courtSelector = this.page.locator('text=Number of Courts').locator('..');
+    const courtSelector = this.page.locator("text=Number of Courts").locator("..");
 
     // Get current court count from the large number display
-    const currentCountText = await courtSelector.locator('.text-5xl').textContent();
-    const currentCount = parseInt(currentCountText || '1', 10);
+    const currentCountText = await courtSelector.locator(".text-5xl").textContent();
+    const currentCount = parseInt(currentCountText || "1", 10);
 
     const diff = numCourts - currentCount;
 
@@ -193,7 +195,7 @@ export class GamePage {
     // Wait for the final API call to complete (session update)
     if (diff !== 0) {
       await this.page.waitForResponse(
-        (response) => response.url().includes('/session/') && response.status() === 200,
+        (response) => response.url().includes("/session/") && response.status() === 200,
         { timeout: 5000 }
       );
       // Small delay for UI to update
@@ -203,11 +205,11 @@ export class GamePage {
 
   // Court Selector Assertions
   async expectCourtSelectorVisible() {
-    await expect(this.page.locator('text=Number of Courts').first()).toBeVisible();
+    await expect(this.page.locator("text=Number of Courts").first()).toBeVisible();
   }
 
   async expectCourtSelectorNotVisible() {
-    await expect(this.page.locator('text=Number of Courts')).not.toBeVisible();
+    await expect(this.page.locator("text=Number of Courts")).not.toBeVisible();
   }
 
   async expectCourtNotVisible(courtNum: number) {

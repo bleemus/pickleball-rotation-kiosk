@@ -40,10 +40,7 @@ export function PlayerManager({
   const [showCourtSelector, setShowCourtSelector] = useState(false);
 
   // Calculate active player count once to avoid repeated filtering
-  const activePlayerCount = useMemo(
-    () => players.filter((p) => !p.forceSitOut).length,
-    [players]
-  );
+  const activePlayerCount = useMemo(() => players.filter((p) => !p.forceSitOut).length, [players]);
   const minPlayersRequired = numCourts * 4;
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
