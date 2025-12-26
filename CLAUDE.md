@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git Workflow Preferences
+
+**IMPORTANT: Do NOT commit changes automatically.**
+
+- Always show the user what changes were made
+- Let the user review changes before committing
+- The user will manually commit when ready
+- Exception: Only commit if the user explicitly asks you to commit
+
 ## Project Overview
 
 A kiosk application for managing round-robin pickleball games across 2 courts with intelligent player rotation and score tracking. Built with React + TypeScript frontend, Express + TypeScript backend, and Redis for session state.
