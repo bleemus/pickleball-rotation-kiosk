@@ -29,6 +29,7 @@ export function PlayerSetup({
   const [numCourts, setNumCourts] = useState(2);
   const [currentReservations, setCurrentReservations] = useState<Reservation[]>([]);
   const [_loadingReservations, setLoadingReservations] = useState(false);
+  const [emailServiceAvailable, setEmailServiceAvailable] = useState(false);
   const playerInputRef = useRef<HTMLInputElement>(null);
   const api = useApi();
 
@@ -37,10 +38,12 @@ export function PlayerSetup({
     const fetchReservations = async () => {
       setLoadingReservations(true);
       try {
-        const reservations = await api.getCurrentReservations();
+        const { reservations, serviceAvailable } = await api.getCurrentReservations();
         setCurrentReservations(reservations);
+        setEmailServiceAvailable(serviceAvailable);
       } catch (error) {
         console.error("Error fetching reservations:", error);
+        setEmailServiceAvailable(false);
       } finally {
         setLoadingReservations(false);
       }
@@ -358,15 +361,21 @@ export function PlayerSetup({
             </p>
           )}
 
-          {/* Pickle Planner Info */}
-          <div className="mt-6 lg:mt-8 mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm lg:text-base text-gray-700 text-center">
-              <span className="font-semibold">Using Pickle Planner?</span> Forward your reservation
-              email to <span className="font-mono text-blue-600">pickleballkiosk@bleemus.com</span>
-              <br className="hidden sm:block" />
-              <span className="text-gray-600"> and players will appear above within 1 minute</span>
-            </p>
-          </div>
+          {/* Pickle Planner Info - Only show if email service is available */}
+          {emailServiceAvailable && (
+            <div className="mt-6 lg:mt-8 mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm lg:text-base text-gray-700 text-center">
+                <span className="font-semibold">Using Pickle Planner?</span> Forward your
+                reservation email to{" "}
+                <span className="font-mono text-blue-600">pickleballkiosk@bleemus.com</span>
+                <br className="hidden sm:block" />
+                <span className="text-gray-600">
+                  {" "}
+                  and players will appear above within 1 minute
+                </span>
+              </p>
+            </div>
+          )}
 
           {/* Bottom Buttons - Mobile: Reset + Help side-by-side, Desktop: Help only */}
           <div className="mt-4 lg:mt-6">

@@ -288,24 +288,28 @@ export function useApi() {
     return response.json();
   };
 
-  const getCurrentReservations = async (): Promise<Reservation[]> => {
+  const getCurrentReservations = async (): Promise<{
+    reservations: Reservation[];
+    serviceAvailable: boolean;
+  }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/reservations/current`);
 
       if (!response.ok) {
-        // If email parser service is down, return empty array instead of throwing
+        // If email parser service is down, return empty array with serviceAvailable: false
         if (response.status === 503) {
           console.warn("Reservation service unavailable");
-          return [];
+          return { reservations: [], serviceAvailable: false };
         }
         await handleApiError(response, "Failed to get current reservations");
       }
 
-      return response.json();
+      const reservations = await response.json();
+      return { reservations, serviceAvailable: true };
     } catch (error) {
       console.error("Error fetching reservations:", error);
       // Return empty array on network errors to avoid breaking the UI
-      return [];
+      return { reservations: [], serviceAvailable: false };
     }
   };
 
