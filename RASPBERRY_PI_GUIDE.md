@@ -60,7 +60,7 @@ git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
 cd pickleball-rotation-kiosk
 
 # Run the installer
-./install.sh
+./scripts/install.sh
 
 # Follow the prompts
 ```
@@ -74,7 +74,7 @@ ssh pi@pickleball.local
 # Clone and install
 git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
 cd pickleball-rotation-kiosk
-./install.sh
+./scripts/install.sh
 ```
 
 ### 4. Reboot
@@ -117,7 +117,8 @@ After installation:
 | **Admin**        | `http://pickleball.local/`            | Manage games, enter scores, add players   |
 | **Spectator**    | `http://pickleball.local/spectator`   | Full-screen display (auto-launches on Pi) |
 | **Backend API**  | `http://pickleball.local:3001/api`    | REST API endpoints                        |
-| **Health Check** | `http://pickleball.local:3001/health` | Service health status                     |
+| **Email Parser** | `http://pickleball.local:3002/health` | Email parsing service health              |
+| **Health Check** | `http://pickleball.local:3001/health` | Backend health status                     |
 
 Replace `pickleball` with your chosen hostname.
 
@@ -230,7 +231,7 @@ make clean
 
    ```bash
    cd ~/pickleball-rotation-kiosk
-   ./install.sh
+   ./scripts/install.sh
    ```
 
 4. **Reboot:**
@@ -255,7 +256,7 @@ make clean
 2. **Re-run installer to fix:**
    ```bash
    cd ~/pickleball-rotation-kiosk
-   ./install.sh
+   ./scripts/install.sh
    sudo reboot
    ```
 
@@ -336,7 +337,7 @@ make clean
 
    # Re-run installer
    cd ~/pickleball-rotation-kiosk
-   ./install.sh
+   ./scripts/install.sh
    ```
 
 ---
@@ -465,7 +466,7 @@ cd ~/pickleball-rotation-kiosk
 docker-compose down -v
 
 # Re-run installer
-./install.sh
+./scripts/install.sh
 
 # Reboot
 sudo reboot

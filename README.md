@@ -117,7 +117,7 @@ make clean       # Stop and remove all containers/volumes
 
 git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
 cd pickleball-rotation-kiosk
-./install.sh
+./scripts/install.sh
 
 # 4. Reboot
 sudo reboot
@@ -519,8 +519,18 @@ pickleball-kiosk/
 │   │   ├── hooks/        # Custom hooks
 │   │   └── types/        # TypeScript types
 │   └── Dockerfile
-├── docker-compose.yml    # Docker Compose config
-└── RASPBERRY_PI_GUIDE.md # Complete Pi setup guide
+├── email-parser/          # Email parsing service
+│   ├── src/
+│   │   ├── services/     # Graph API, parsing logic
+│   │   └── types/        # TypeScript types
+│   └── Dockerfile
+├── scripts/               # Installation and utility scripts
+│   ├── install.sh        # Raspberry Pi installer
+│   ├── diagnose-kiosk.sh # Troubleshooting script
+│   └── rollback.sh       # Version rollback script
+├── e2e/                   # Playwright E2E tests
+├── docker-compose.yml     # Docker Compose config
+└── RASPBERRY_PI_GUIDE.md  # Complete Pi setup guide
 ```
 
 ### Adding Features
@@ -558,7 +568,7 @@ npm run test:ui       # Interactive UI
 npm run test:coverage # Coverage report
 
 # E2E tests (Playwright)
-npx playwright test              # Run all 16 tests
+npx playwright test              # Run all 31 tests
 npx playwright test --ui         # Interactive mode
 npx playwright test --headed     # With browser visible
 npx playwright show-report       # View HTML report
@@ -566,8 +576,8 @@ npx playwright show-report       # View HTML report
 
 **Test Coverage:**
 
-- 16 Playwright E2E tests (setup, gameplay, score validation, session recovery)
-- Vitest unit tests for components and hooks
+- 31 Playwright E2E tests (setup, gameplay, score validation, session recovery, spectator view)
+- 247 Vitest unit tests for components and hooks
 - Full TypeScript type safety
 
 See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) for detailed testing guide.

@@ -45,13 +45,15 @@ For active development with hot-reload:
 # 1. Install dependencies
 cd backend && npm install
 cd ../frontend && npm install
+cd ../email-parser && npm install
 
 # 2. Start Redis only
 docker compose up -d redis
 
 # 3. Start development servers (in separate terminals)
-cd backend && npm run dev    # Backend: http://localhost:3001
-cd frontend && npm run dev   # Frontend: http://localhost:3000
+cd backend && npm run dev       # Backend: http://localhost:3001
+cd frontend && npm run dev      # Frontend: http://localhost:3000
+cd email-parser && npm run dev  # Email Parser: http://localhost:3002
 ```
 
 ### Using Make (Alternative)
@@ -117,7 +119,7 @@ git clone https://github.com/bleemus/pickleball-rotation-kiosk.git
 cd pickleball-rotation-kiosk
 
 # 2. Run the installer
-./install.sh
+./scripts/install.sh
 
 # 3. Reboot
 sudo reboot
@@ -228,12 +230,14 @@ make up
 
 - Frontend: http://localhost:3000
 - Backend: http://localhost:3001
+- Email Parser: http://localhost:3002
 - Health: http://localhost:3001/health
 
 **Docker Compose:**
 
 - Frontend: http://localhost
 - Backend: http://localhost:3001
+- Email Parser: http://localhost:3002
 - Health: http://localhost:3001/health
 
 **Raspberry Pi:**
@@ -246,6 +250,7 @@ make up
 - Frontend (production): `80`
 - Frontend (development): `3000`
 - Backend: `3001`
+- Email Parser: `3002`
 - Redis: `6379` (internal only)
 
 ## Next Steps
@@ -273,7 +278,7 @@ make test
 cd backend && npm run typecheck    # Backend types
 cd frontend && npm run typecheck   # Frontend types
 cd frontend && npm test            # Unit tests
-npx playwright test                # E2E tests (16 tests)
+npx playwright test                # E2E tests (31 tests)
 ```
 
 See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) for detailed testing documentation.

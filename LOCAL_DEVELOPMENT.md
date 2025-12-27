@@ -19,6 +19,7 @@ cd pickleball-rotation-kiosk
 # Install dependencies
 cd backend && npm install
 cd ../frontend && npm install
+cd ../email-parser && npm install
 
 # Or use make
 make install
@@ -37,6 +38,9 @@ cd backend && npm run dev
 
 # Start frontend (in terminal 2)
 cd frontend && npm run dev
+
+# Start email parser (in terminal 3, optional)
+cd email-parser && npm run dev
 ```
 
 **Option 2: Full Docker Compose (for testing production build)**
@@ -53,6 +57,7 @@ docker compose up -d
 
 - **Frontend**: http://localhost:3000
 - **Backend**: http://localhost:3001
+- **Email Parser**: http://localhost:3002
 - **Health Check**: http://localhost:3001/health
 
 ## Development Workflow
@@ -410,6 +415,17 @@ pickleball-kiosk/
 │   │   └── main.tsx              # Entry point
 │   ├── package.json
 │   └── vite.config.ts
+├── email-parser/
+│   ├── src/
+│   │   ├── services/             # Graph API, email parsing
+│   │   └── types/                # TypeScript types
+│   ├── package.json
+│   └── tsconfig.json
+├── scripts/
+│   ├── install.sh                # Raspberry Pi installer
+│   ├── diagnose-kiosk.sh         # Troubleshooting script
+│   └── rollback.sh               # Version rollback script
+├── e2e/                          # Playwright E2E tests
 └── docker-compose.yml
 ```
 
