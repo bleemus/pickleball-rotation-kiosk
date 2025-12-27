@@ -37,12 +37,14 @@ jobs:
           source venv/bin/activate
 
       - name: Install dependencies
-        run: pip install -r ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/requirements.txt
+        run: |
+          cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          pip install --target=".python_packages/lib/site-packages" -r requirements.txt
 
       - name: Zip artifact for deployment
         run: |
           cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          zip -r ../../release.zip . -x "*.pyc" -x "__pycache__/*" -x ".venv/*" -x "venv/*"
+          zip -r ../../release.zip . -x "*.pyc" -x "__pycache__/*" -x ".venv/*" -x "venv/*" -x "scripts/*" -x "test-fixtures/*"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
