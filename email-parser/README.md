@@ -356,9 +356,10 @@ If reservations are being found but not parsed correctly:
    - Players section must have "Players" on its own line
    - Player names must be 2+ words, alphabetic characters only
 
-3. **Update regex patterns:**
-   - Edit `src/services/emailParser.ts` if Pickle Planner email format changes
-   - Regex patterns are documented in code comments
+3. **AI Parser issues:**
+   - Check Azure Function health: `curl https://pickleballkiosk-ai-email.azurewebsites.net/api/health`
+   - Verify AI_PARSER_URL and AI_PARSER_KEY are configured
+   - Check Azure Function logs in Azure Portal
 
 ### Service won't start
 
@@ -441,8 +442,8 @@ email-parser/
 │   ├── services/
 │   │   ├── redis.ts                       # Redis client connection
 │   │   ├── reservationStorage.redis.ts    # Redis-based storage with TTL
-│   │   ├── emailParser.ts                 # Email parsing logic
-│   │   └── emailChecker.graph.ts          # Microsoft Graph API client
+│   │   ├── keyVault.ts                    # Azure Key Vault config loader
+│   │   └── emailChecker.graph.ts          # Microsoft Graph API + AI parser client
 │   └── routes/
 │       └── reservations.ts                # REST API endpoints
 ├── create-test-reservation.sh             # Test data script

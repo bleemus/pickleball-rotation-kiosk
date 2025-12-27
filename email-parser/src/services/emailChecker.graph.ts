@@ -1,6 +1,5 @@
 import { Client, type AuthenticationProvider } from "@microsoft/microsoft-graph-client";
 import { ClientSecretCredential } from "@azure/identity";
-import { EmailParser } from "./emailParser.js";
 import { Reservation } from "../types/reservation.js";
 import sanitizeHtml from "sanitize-html";
 
@@ -20,6 +19,18 @@ interface Message {
     };
   };
   receivedDateTime?: string;
+}
+
+// AI Parser response type
+interface AIParserResponse {
+  is_reservation: boolean;
+  date?: string; // ISO format: YYYY-MM-DD
+  start_time?: string;
+  end_time?: string;
+  court?: string;
+  organizer?: string;
+  players?: string[];
+  error?: string;
 }
 
 const timestamp = () => new Date().toISOString();
@@ -48,9 +59,10 @@ class AzureIdentityAuthProvider implements AuthenticationProvider {
 
 export class GraphEmailChecker {
   private client: Client;
-  private parser: EmailParser;
   private onReservationFound: (reservation: Reservation) => Promise<void>;
   private userId: string;
+  private aiParserUrl: string;
+  private aiParserKey: string;
 
   constructor(
     config: {
@@ -58,6 +70,8 @@ export class GraphEmailChecker {
       clientId: string;
       clientSecret: string;
       userId: string; // Email address of the account to monitor
+      aiParserUrl: string; // Azure Function URL for AI parsing
+      aiParserKey: string; // Azure Function key
     },
     onReservationFound: (reservation: Reservation) => Promise<void>
   ) {
@@ -78,9 +92,66 @@ export class GraphEmailChecker {
       authProvider,
     });
 
-    this.parser = new EmailParser();
     this.onReservationFound = onReservationFound;
     this.userId = config.userId;
+    this.aiParserUrl = config.aiParserUrl;
+    this.aiParserKey = config.aiParserKey;
+  }
+
+  /**
+   * Parse email using Azure Function AI parser
+   */
+  private async parseEmailWithAI(
+    emailText: string,
+    emailSubject: string
+  ): Promise<Reservation | null> {
+    try {
+      const response = await fetch(this.aiParserUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-functions-key": this.aiParserKey,
+        },
+        body: JSON.stringify({
+          email_text: emailText,
+          email_subject: emailSubject,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(`[${timestamp()}] AI parser returned status ${response.status}`);
+        return null;
+      }
+
+      const result = (await response.json()) as AIParserResponse;
+
+      if (!result.is_reservation) {
+        return null;
+      }
+
+      // Convert AI response to Reservation object
+      if (!result.date || !result.start_time || !result.players || result.players.length === 0) {
+        console.warn(`[${timestamp()}] AI parser returned incomplete reservation data`);
+        return null;
+      }
+
+      const reservation: Reservation = {
+        id: `res_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        date: new Date(result.date),
+        startTime: result.start_time,
+        endTime: result.end_time || result.start_time,
+        court: result.court || "Unknown",
+        organizer: result.organizer || result.players[0],
+        players: result.players,
+        createdAt: new Date(),
+        rawEmail: emailText,
+      };
+
+      return reservation;
+    } catch (error) {
+      console.error(`[${timestamp()}] Error calling AI parser:`, error);
+      return null;
+    }
   }
 
   /**
@@ -123,8 +194,8 @@ export class GraphEmailChecker {
           // Convert HTML to plain text if needed
           const text = this.htmlToText(bodyContent);
 
-          // Parse reservation
-          const reservation = this.parser.parseReservation(text, subject);
+          // Parse reservation using AI
+          const reservation = await this.parseEmailWithAI(text, subject);
 
           if (reservation) {
             console.log(`[${timestamp()}] ✓ Reservation found:`, {
@@ -181,7 +252,7 @@ export class GraphEmailChecker {
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .replace(/&apos;/g, "'")
-      .replace(/&#(\d+);/g, (match: string, dec: string) => String.fromCharCode(parseInt(dec, 10)))
+      .replace(/&#(\d+);/g, (_match: string, dec: string) => String.fromCharCode(parseInt(dec, 10)))
       .replace(/&amp;/g, "&");
 
     // Clean up whitespace while preserving newlines where present

@@ -36,12 +36,14 @@ function initializeEmailChecker(config: EmailParserConfig): void {
     return;
   }
 
-  // Check for Microsoft Graph API configuration
+  // Check for Microsoft Graph API configuration and AI parser configuration
   if (
     config.graphTenantId &&
     config.graphClientId &&
     config.graphClientSecret &&
-    config.graphUserId
+    config.graphUserId &&
+    config.aiParserUrl &&
+    config.aiParserKey
   ) {
     emailChecker = new GraphEmailChecker(
       {
@@ -49,12 +51,15 @@ function initializeEmailChecker(config: EmailParserConfig): void {
         clientId: config.graphClientId,
         clientSecret: config.graphClientSecret,
         userId: config.graphUserId,
+        aiParserUrl: config.aiParserUrl,
+        aiParserKey: config.aiParserKey,
       },
       async (reservation: Reservation) => {
         await storage.addReservation(reservation);
       }
     );
     console.log("✅ Using Microsoft Graph API for email checking");
+    console.log("✅ Using AI Azure Function for email parsing");
 
     // Schedule email checks
     const checkInterval = parseInt(process.env.EMAIL_CHECK_INTERVAL || "5");
@@ -70,13 +75,14 @@ function initializeEmailChecker(config: EmailParserConfig): void {
     console.log(`Email checking scheduled every ${checkInterval} minutes`);
     console.log("First email check will run at the next scheduled interval");
   } else {
-    console.warn("⚠️  Email polling enabled but Graph API credentials not configured");
+    console.warn("⚠️  Email polling enabled but required configuration not complete");
     console.warn(
-      "Set secrets in Key Vault (graph-tenant-id, graph-client-id, graph-client-secret, graph-user-id)"
+      "Graph API: Set secrets in Key Vault (graph-tenant-id, graph-client-id, graph-client-secret, graph-user-id)"
     );
     console.warn(
-      "Or set environment variables: GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET, GRAPH_USER_ID"
+      "  Or env vars: GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET, GRAPH_USER_ID"
     );
+    console.warn("AI Parser: Set env vars: AI_PARSER_URL, AI_PARSER_KEY");
   }
 }
 

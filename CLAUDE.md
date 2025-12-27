@@ -380,6 +380,10 @@ GRAPH_CLIENT_ID=your-client-id
 GRAPH_CLIENT_SECRET=your-client-secret
 GRAPH_USER_ID=your-email@example.com
 
+# AI Email Parser Azure Function
+AI_PARSER_URL=https://pickleballkiosk-ai-email.azurewebsites.net/api/parse-email
+AI_PARSER_KEY=your-function-api-key
+
 # Check interval in minutes
 EMAIL_CHECK_INTERVAL=1
 
