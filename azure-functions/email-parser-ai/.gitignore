@@ -22,5 +22,8 @@ local.settings.json
 htmlcov/
 .coverage
 
+# Scripts env file (contains function keys)
+scripts/.env
+
 # Azure config (contains secrets)
 .azure-config

@@ -10,6 +10,9 @@ export interface EmailParserConfig {
   graphClientId?: string;
   graphClientSecret?: string;
   graphUserId?: string;
+  // AI Parser Azure Function configuration
+  aiParserUrl?: string;
+  aiParserKey?: string;
 }
 
 /**
@@ -20,6 +23,8 @@ const SECRET_MAPPING: Record<string, keyof EmailParserConfig> = {
   "graph-client-id": "graphClientId",
   "graph-client-secret": "graphClientSecret",
   "graph-user-id": "graphUserId",
+  "ai-parser-url": "aiParserUrl",
+  "ai-parser-key": "aiParserKey",
 };
 
 /**
@@ -98,6 +103,8 @@ function loadFromEnv(): EmailParserConfig {
     graphClientId: process.env.GRAPH_CLIENT_ID,
     graphClientSecret: process.env.GRAPH_CLIENT_SECRET,
     graphUserId: process.env.GRAPH_USER_ID,
+    aiParserUrl: process.env.AI_PARSER_URL,
+    aiParserKey: process.env.AI_PARSER_KEY,
   };
 }
 
@@ -110,6 +117,8 @@ function mergeWithEnvFallback(config: EmailParserConfig): EmailParserConfig {
     graphClientId: config.graphClientId ?? process.env.GRAPH_CLIENT_ID,
     graphClientSecret: config.graphClientSecret ?? process.env.GRAPH_CLIENT_SECRET,
     graphUserId: config.graphUserId ?? process.env.GRAPH_USER_ID,
+    aiParserUrl: config.aiParserUrl ?? process.env.AI_PARSER_URL,
+    aiParserKey: config.aiParserKey ?? process.env.AI_PARSER_KEY,
   };
 }
 

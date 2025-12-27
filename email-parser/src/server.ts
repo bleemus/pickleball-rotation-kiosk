@@ -36,25 +36,36 @@ function initializeEmailChecker(config: EmailParserConfig): void {
     return;
   }
 
-  // Check for Microsoft Graph API configuration
+  // Check for Microsoft Graph API and AI Parser configuration
   if (
     config.graphTenantId &&
     config.graphClientId &&
     config.graphClientSecret &&
     config.graphUserId
   ) {
+    // Check if AI Parser is configured
+    if (!config.aiParserUrl || !config.aiParserKey) {
+      console.warn("⚠️  AI Parser not configured - email parsing will be disabled");
+      console.warn("Set secrets in Key Vault (ai-parser-url, ai-parser-key)");
+      console.warn("Or set environment variables: AI_PARSER_URL, AI_PARSER_KEY");
+      return;
+    }
+
     emailChecker = new GraphEmailChecker(
       {
         tenantId: config.graphTenantId,
         clientId: config.graphClientId,
         clientSecret: config.graphClientSecret,
         userId: config.graphUserId,
+        aiParserUrl: config.aiParserUrl,
+        aiParserKey: config.aiParserKey,
       },
       async (reservation: Reservation) => {
         await storage.addReservation(reservation);
       }
     );
     console.log("✅ Using Microsoft Graph API for email checking");
+    console.log("✅ Using AI Parser for email parsing");
 
     // Schedule email checks
     const checkInterval = parseInt(process.env.EMAIL_CHECK_INTERVAL || "5");

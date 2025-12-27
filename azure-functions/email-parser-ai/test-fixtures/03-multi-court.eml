@@ -1,0 +1,32 @@
+From: notifications@pickleplanner.com
+To: user@example.com
+Subject: Rally Club Reservation Confirmation
+Date: Mon, 27 Dec 2025 12:00:00 -0500
+Content-Type: text/plain; charset="UTF-8"
+
+Rally Club Reservation Confirmation
+
+Your reservations have been confirmed!
+
+Reservation 1:
+Date: December 29, 2025
+Time: 3:00pm - 5:00pm
+Court: Court 1
+
+Reservation 2:
+Date: December 29, 2025
+Time: 3:00pm - 5:00pm
+Court: Court 2
+
+Organizer: Chris Taylor
+Players:
+- Chris Taylor
+- Pat Anderson
+- Jordan Lee
+- Sam Martinez
+- Alex Kim
+- Casey Jones
+- Riley Parker
+- Morgan Davis
+
+See you on the court!

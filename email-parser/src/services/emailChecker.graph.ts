@@ -1,6 +1,5 @@
 import { Client, type AuthenticationProvider } from "@microsoft/microsoft-graph-client";
 import { ClientSecretCredential } from "@azure/identity";
-import { EmailParser } from "./emailParser.js";
 import { Reservation } from "../types/reservation.js";
 import sanitizeHtml from "sanitize-html";
 
@@ -20,6 +19,18 @@ interface Message {
     };
   };
   receivedDateTime?: string;
+}
+
+// AI Parser response type
+interface AIParserResponse {
+  is_reservation: boolean;
+  date?: string; // ISO format: YYYY-MM-DD
+  start_time?: string;
+  end_time?: string;
+  court?: string;
+  organizer?: string;
+  players?: string[];
+  error?: string;
 }
 
 const timestamp = () => new Date().toISOString();
@@ -48,9 +59,10 @@ class AzureIdentityAuthProvider implements AuthenticationProvider {
 
 export class GraphEmailChecker {
   private client: Client;
-  private parser: EmailParser;
   private onReservationFound: (reservation: Reservation) => Promise<void>;
   private userId: string;
+  private aiParserUrl: string | null;
+  private aiParserKey: string | null;
 
   constructor(
     config: {
@@ -58,6 +70,8 @@ export class GraphEmailChecker {
       clientId: string;
       clientSecret: string;
       userId: string; // Email address of the account to monitor
+      aiParserUrl?: string; // Azure Function URL
+      aiParserKey?: string; // Azure Function key
     },
     onReservationFound: (reservation: Reservation) => Promise<void>
   ) {
@@ -78,9 +92,10 @@ export class GraphEmailChecker {
       authProvider,
     });
 
-    this.parser = new EmailParser();
     this.onReservationFound = onReservationFound;
     this.userId = config.userId;
+    this.aiParserUrl = config.aiParserUrl || null;
+    this.aiParserKey = config.aiParserKey || null;
   }
 
   /**
@@ -88,6 +103,11 @@ export class GraphEmailChecker {
    */
   async checkEmails(): Promise<void> {
     console.log(`[${timestamp()}] Checking for new reservation emails via Microsoft Graph...`);
+
+    if (!this.aiParserUrl || !this.aiParserKey) {
+      console.warn(`[${timestamp()}] AI Parser not configured - skipping email check`);
+      return;
+    }
 
     try {
       // Get unread messages from inbox
@@ -123,8 +143,8 @@ export class GraphEmailChecker {
           // Convert HTML to plain text if needed
           const text = this.htmlToText(bodyContent);
 
-          // Parse reservation
-          const reservation = this.parser.parseReservation(text, subject);
+          // Parse reservation using AI
+          const reservation = await this.parseWithAI(text, subject);
 
           if (reservation) {
             console.log(`[${timestamp()}] ✓ Reservation found:`, {
@@ -153,6 +173,65 @@ export class GraphEmailChecker {
     } catch (error) {
       console.error(`[${timestamp()}] Microsoft Graph API error:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Parse email using the AI Azure Function
+   */
+  private async parseWithAI(emailText: string, emailSubject: string): Promise<Reservation | null> {
+    if (!this.aiParserUrl || !this.aiParserKey) {
+      return null;
+    }
+
+    try {
+      const url = `${this.aiParserUrl}?code=${this.aiParserKey}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email_text: emailText,
+          email_subject: emailSubject,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          `[${timestamp()}] AI Parser error: ${response.status} ${response.statusText}`
+        );
+        return null;
+      }
+
+      const result = (await response.json()) as AIParserResponse;
+
+      if (!result.is_reservation) {
+        return null;
+      }
+
+      if (!result.date || !result.start_time || !result.players || result.players.length === 0) {
+        console.warn(`[${timestamp()}] AI Parser returned incomplete reservation data`);
+        return null;
+      }
+
+      // Convert AI response to Reservation object
+      const reservation: Reservation = {
+        id: `res_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        date: new Date(result.date),
+        startTime: result.start_time,
+        endTime: result.end_time || "",
+        court: result.court,
+        organizer: result.organizer,
+        players: result.players,
+        createdAt: new Date(),
+        rawEmail: emailText,
+      };
+
+      return reservation;
+    } catch (error) {
+      console.error(`[${timestamp()}] Error calling AI Parser:`, error);
+      return null;
     }
   }
 
