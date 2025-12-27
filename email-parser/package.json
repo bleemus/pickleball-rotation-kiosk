@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@azure/identity": "^4.13.0",
+    "@azure/keyvault-secrets": "^4.10.0",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  PYTHON_VERSION: '3.13' # set this to the python version to use (supports 3.6, 3.7, 3.8)
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: "azure-functions/email-parser-ai"
+  PYTHON_VERSION: "3.11"
 
 jobs:
   build:
@@ -35,12 +35,14 @@ jobs:
           source venv/bin/activate
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/requirements.txt
 
       # Optional: Add step to run tests here
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: |
+          cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          zip -r ../../release.zip . -x "*.pyc" -x "__pycache__/*" -x ".venv/*" -x "venv/*"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -67,7 +69,7 @@ jobs:
         run: |
           unzip release.zip
           rm release.zip
-        
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -75,11 +77,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_00100F1F2F6241199D1713F96C9CBE46 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2777770882F04206BBA50C25B561CDC3 }}
 
-      - name: 'Deploy to Azure Functions'
+      - name: "Deploy to Azure Functions"
         uses: Azure/functions-action@v1
         id: deploy-to-function
         with:
-          app-name: 'pickleballkiosk-ai-email'
-          slot-name: 'Production'
+          app-name: "pickleballkiosk-ai-email"
+          slot-name: "Production"
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          

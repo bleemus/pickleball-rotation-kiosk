@@ -105,7 +105,7 @@ router.get("/wifi-info", (req: Request, res: Response) => {
 
   if (!ssid) {
     res.status(404).json({
-      error: "WiFi not configured. Set WIFI_SSID and WIFI_PASSWORD environment variables.",
+      error: "WiFi not configured. Set WIFI_SSID environment variable.",
     });
     return;
   }

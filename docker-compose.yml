@@ -24,6 +24,11 @@ services:
     environment:
       - ENABLE_EMAIL_POLLING=${ENABLE_EMAIL_POLLING:-true}
       - REDIS_URL=redis://redis:6379
+      # Azure Key Vault configuration (recommended for production)
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-}
+      - AZURE_KEYVAULT_URL=${AZURE_KEYVAULT_URL:-}
     env_file:
       - ./email-parser/.env
     volumes:
@@ -48,9 +53,15 @@ services:
       - PORT=${PORT:-3001}
       - NODE_ENV=${NODE_ENV:-production}
       - HOST_IP=${HOST_IP:-}
+      - EMAIL_PARSER_URL=${EMAIL_PARSER_URL:-http://email-parser:3002}
+      # Azure Key Vault configuration (recommended for production)
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-}
+      - AZURE_KEYVAULT_URL=${AZURE_KEYVAULT_URL:-}
+      # Fallback WiFi configuration (used if Key Vault not configured)
       - WIFI_SSID=${WIFI_SSID:-}
       - WIFI_PASSWORD=${WIFI_PASSWORD:-}
-      - EMAIL_PARSER_URL=${EMAIL_PARSER_URL:-http://email-parser:3002}
     depends_on:
       redis:
         condition: service_healthy

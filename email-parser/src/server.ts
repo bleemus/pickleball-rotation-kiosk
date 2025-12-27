@@ -6,6 +6,7 @@ import { GraphEmailChecker } from "./services/emailChecker.graph.js";
 import { ReservationStorage } from "./services/reservationStorage.redis.js";
 import { Reservation } from "./types/reservation.js";
 import { connectRedis } from "./services/redis.js";
+import { initConfig, type EmailParserConfig } from "./services/keyVault.js";
 
 dotenv.config();
 
@@ -20,53 +21,63 @@ app.use(express.json());
 const storage = new ReservationStorage();
 
 // Initialize email checker - Microsoft Graph API only
+// This will be set up after config is loaded in startServer()
 let emailChecker: GraphEmailChecker | null = null;
 
 // Check if email polling is enabled via feature flag
 const emailPollingEnabled = process.env.ENABLE_EMAIL_POLLING !== "false";
 
-if (emailPollingEnabled) {
+/**
+ * Initialize email checker with configuration from Key Vault or environment
+ */
+function initializeEmailChecker(config: EmailParserConfig): void {
+  if (!emailPollingEnabled) {
+    console.log("📧 Email polling disabled via ENABLE_EMAIL_POLLING=false");
+    return;
+  }
+
   // Check for Microsoft Graph API configuration
   if (
-    process.env.GRAPH_TENANT_ID &&
-    process.env.GRAPH_CLIENT_ID &&
-    process.env.GRAPH_CLIENT_SECRET &&
-    process.env.GRAPH_USER_ID
+    config.graphTenantId &&
+    config.graphClientId &&
+    config.graphClientSecret &&
+    config.graphUserId
   ) {
     emailChecker = new GraphEmailChecker(
       {
-        tenantId: process.env.GRAPH_TENANT_ID,
-        clientId: process.env.GRAPH_CLIENT_ID,
-        clientSecret: process.env.GRAPH_CLIENT_SECRET,
-        userId: process.env.GRAPH_USER_ID,
+        tenantId: config.graphTenantId,
+        clientId: config.graphClientId,
+        clientSecret: config.graphClientSecret,
+        userId: config.graphUserId,
       },
       async (reservation: Reservation) => {
         await storage.addReservation(reservation);
       }
     );
     console.log("✅ Using Microsoft Graph API for email checking");
+
+    // Schedule email checks
+    const checkInterval = parseInt(process.env.EMAIL_CHECK_INTERVAL || "5");
+    cron.schedule(`*/${checkInterval} * * * *`, async () => {
+      console.log("Checking for new reservation emails...");
+      try {
+        await emailChecker!.checkEmails();
+      } catch (error) {
+        console.error("Error checking emails:", error);
+      }
+    });
+
+    console.log(`Email checking scheduled every ${checkInterval} minutes`);
+    console.log("First email check will run at the next scheduled interval");
   } else {
     console.warn("⚠️  Email polling enabled but Graph API credentials not configured");
-    console.warn("Set: GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET, GRAPH_USER_ID");
+    console.warn(
+      "Set secrets in Key Vault (graph-tenant-id, graph-client-id, graph-client-secret, graph-user-id)"
+    );
+    console.warn(
+      "Or set environment variables: GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET, GRAPH_USER_ID"
+    );
   }
-} else {
-  console.log("📧 Email polling disabled via ENABLE_EMAIL_POLLING=false");
-}
-
-if (emailChecker) {
-  // Schedule email checks
-  const checkInterval = parseInt(process.env.EMAIL_CHECK_INTERVAL || "5");
-  cron.schedule(`*/${checkInterval} * * * *`, async () => {
-    console.log("Checking for new reservation emails...");
-    try {
-      await emailChecker!.checkEmails();
-    } catch (error) {
-      console.error("Error checking emails:", error);
-    }
-  });
-
-  console.log(`Email checking scheduled every ${checkInterval} minutes`);
-  console.log("First email check will run at the next scheduled interval");
 }
 
 // Routes
@@ -267,8 +278,14 @@ function parseTime(timeStr: string): { hours: number; minutes: number } | null {
 // Start server
 async function startServer() {
   try {
+    // Load configuration from Key Vault (with .env fallback)
+    const config = await initConfig();
+
     // Connect to Redis
     await connectRedis();
+
+    // Initialize email checker with loaded configuration
+    initializeEmailChecker(config);
 
     // Start Express server
     app.listen(port, () => {

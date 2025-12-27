@@ -23,15 +23,39 @@ export class EmailParser {
         rawEmail: emailText,
       };
 
-      // Extract date (e.g., "December 17")
-      const dateMatch = emailText.match(
-        /(?:December|January|February|March|April|May|June|July|August|September|October|November)\s+(\d{1,2})/i
+      // Extract date (e.g., "December 17" or "December 23TUESDAY")
+      // Look for date pattern followed by day of week (MONDAY, TUESDAY, etc.) to find the reservation date
+      // This helps distinguish from forwarded email header dates
+      const dateWithDayMatch = emailText.match(
+        /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})\s*(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)/i
       );
-      if (dateMatch) {
-        const month = dateMatch[0].split(" ")[0];
-        const day = parseInt(dateMatch[1]);
+      if (dateWithDayMatch) {
+        const month = dateWithDayMatch[1];
+        const day = parseInt(dateWithDayMatch[2]);
         const year = new Date().getFullYear();
         reservation.date = this.parseDate(month, day, year);
+      } else {
+        // Fallback: look for date pattern after "following event:" which indicates actual reservation
+        const afterEventMatch = emailText.match(
+          /following event:[\s\S]*?(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})/i
+        );
+        if (afterEventMatch) {
+          const month = afterEventMatch[1];
+          const day = parseInt(afterEventMatch[2]);
+          const year = new Date().getFullYear();
+          reservation.date = this.parseDate(month, day, year);
+        } else {
+          // Last fallback: first date match (original behavior)
+          const dateMatch = emailText.match(
+            /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})/i
+          );
+          if (dateMatch) {
+            const month = dateMatch[1];
+            const day = parseInt(dateMatch[2]);
+            const year = new Date().getFullYear();
+            reservation.date = this.parseDate(month, day, year);
+          }
+        }
       }
 
       // Extract time (e.g., "5:30 - 7:00am")
@@ -41,28 +65,92 @@ export class EmailParser {
         reservation.endTime = timeMatch[2] + timeMatch[3].toLowerCase();
       }
 
-      // Extract court location (e.g., "North", "South")
-      const courtMatch = emailText.match(/\d{1,2}:\d{2}(am|pm)\s*\n\s*([A-Za-z]+)/i);
-      if (courtMatch) {
-        reservation.court = courtMatch[2].trim();
+      // Extract court location (e.g., "North", "South", "North, South")
+      // Try multiple patterns:
+      // 1. Time followed by newline then court: "7:00pm\nNorth"
+      // 2. Time followed by newline then courts: "3:30pm\nNorth, South"
+      // 3. Time on same line as court: "3:30pmNorth, South" (no space/newline)
+      // Courts are typically: North, South, East, West, Center (and combinations)
+      const courtPatterns = [
+        /\d{1,2}:\d{2}(am|pm)\s*\n\s*((?:North|South|East|West|Center)(?:,\s*(?:North|South|East|West|Center))*)/i, // time\ncourt(s) with newline
+        /\d{1,2}:\d{2}(am|pm)\s*((?:North|South|East|West|Center)(?:,\s*(?:North|South|East|West|Center))*)/i, // time + court(s) no newline
+      ];
+      for (const pattern of courtPatterns) {
+        const courtMatch = emailText.match(pattern);
+        if (courtMatch) {
+          reservation.court = courtMatch[2].trim();
+          break;
+        }
       }
 
-      // Extract organizer (e.g., "Joseph Arcilla's Reservation")
-      // Look for pattern after court line: Court\n\nOrganizer's Reservation
-      const organizerMatch = emailText.match(/\n\n([A-Za-z\s\-\']+)'s Reservation/i);
+      // Extract organizer (e.g., "Joseph Arcilla's Reservation", "Mary-Jane O'Brien's Reservation")
+      // Look for pattern: "Name's Reservation"
+      // Name can include hyphens, apostrophes, and spaces
+      // Pattern: Start with capital, then letters/hyphens, followed by one or more additional name parts
+      const organizerMatch = emailText.match(
+        /([A-Z][a-zA-Z'-]+(?:[\s]+[A-Z]?[a-zA-Z'-]+)+)'s Reservation/
+      );
       if (organizerMatch) {
-        reservation.organizer = organizerMatch[1].trim();
+        // Filter out court names and day names that might have been captured
+        let name = organizerMatch[1].trim();
+        const prefixesToRemove = [
+          "North",
+          "South",
+          "East",
+          "West",
+          "Center",
+          "MONDAY",
+          "TUESDAY",
+          "WEDNESDAY",
+          "THURSDAY",
+          "FRIDAY",
+          "SATURDAY",
+          "SUNDAY",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ];
+        // Remove any prefixes
+        for (const prefix of prefixesToRemove) {
+          if (name.startsWith(prefix)) {
+            name = name.substring(prefix.length).trim();
+          }
+        }
+        if (name && name.split(/\s+/).length >= 2) {
+          reservation.organizer = name;
+        }
       }
 
       // Extract players
-      // Look for "Players" on its own line followed by player names
-      // Match "Players" followed by newlines and bullet points
+      // Look for "Players" followed by player names
+      // Handle both newline-separated and concatenated formats
       const playersSection = emailText.match(
-        /Players\s*\n[\s\S]*?(?=\n\s*(?:Reservation Fee|Fee Breakdown|Total:|Status:|The door code))/i
+        /Players\s*[\n]?([\s\S]*?)(?=Reservation Fee|Fee Breakdown|Total:|Status:|The door code)/i
       );
       if (playersSection) {
         const playerNames: string[] = [];
-        const lines = playersSection[0].split("\n");
+        const playerText = playersSection[1];
+
+        // Try splitting by newlines first
+        let lines = playerText
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
+
+        // If we only got one "line" (text is concatenated), try splitting by known patterns
+        // Player names are typically "FirstName LastName" format
+        if (lines.length <= 1 && playerText.length > 20) {
+          // Split on capital letter that starts a new name (FirstnameLastname pattern)
+          // Match: capital letter followed by lowercase, then eventually another capital
+          const nameMatches = playerText.match(/[A-Z][a-z]+\s+[A-Z][a-z'-]+/g);
+          if (nameMatches) {
+            lines = nameMatches;
+          }
+        }
 
         for (const line of lines) {
           // Match lines that look like player names

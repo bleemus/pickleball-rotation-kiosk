@@ -1,6 +1,5 @@
-import { Client } from "@microsoft/microsoft-graph-client";
+import { Client, type AuthenticationProvider } from "@microsoft/microsoft-graph-client";
 import { ClientSecretCredential } from "@azure/identity";
-import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
 import { EmailParser } from "./emailParser.js";
 import { Reservation } from "../types/reservation.js";
 import sanitizeHtml from "sanitize-html";
@@ -25,6 +24,28 @@ interface Message {
 
 const timestamp = () => new Date().toISOString();
 
+/**
+ * Custom authentication provider that uses Azure Identity ClientSecretCredential
+ * This avoids ESM compatibility issues with the Graph client's built-in auth providers
+ */
+class AzureIdentityAuthProvider implements AuthenticationProvider {
+  private credential: ClientSecretCredential;
+  private scopes: string[];
+
+  constructor(credential: ClientSecretCredential, scopes: string[]) {
+    this.credential = credential;
+    this.scopes = scopes;
+  }
+
+  async getAccessToken(): Promise<string> {
+    const token = await this.credential.getToken(this.scopes);
+    if (!token) {
+      throw new Error("Failed to acquire access token");
+    }
+    return token.token;
+  }
+}
+
 export class GraphEmailChecker {
   private client: Client;
   private parser: EmailParser;
@@ -47,10 +68,10 @@ export class GraphEmailChecker {
       config.clientSecret
     );
 
-    // Create authentication provider
-    const authProvider = new TokenCredentialAuthenticationProvider(credential, {
-      scopes: ["https://graph.microsoft.com/.default"],
-    });
+    // Create custom authentication provider
+    const authProvider = new AzureIdentityAuthProvider(credential, [
+      "https://graph.microsoft.com/.default",
+    ]);
 
     // Initialize Graph client
     this.client = Client.initWithMiddleware({
