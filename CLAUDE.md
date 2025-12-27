@@ -405,10 +405,7 @@ The application supports Azure Key Vault for secure secret management. Secrets a
 
 1. Create an Azure Key Vault
 2. Create an App Registration (Service Principal) with **Key Vault Secrets User** role
-3. Add secrets to Key Vault using the setup script:
-   ```bash
-   ./scripts/azure-keyvault-setup.sh
-   ```
+3. Add secrets to Key Vault via Azure Portal or CLI
 4. Configure the Key Vault credentials on your deployment machine
 
 **Required Environment Variables** (on Raspberry Pi or deployment host):

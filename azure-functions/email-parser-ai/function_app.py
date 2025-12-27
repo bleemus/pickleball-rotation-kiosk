@@ -21,10 +21,10 @@ class ReservationResponse(BaseModel):
     error: Optional[str] = None
 
 
-SYSTEM_PROMPT = """You are a specialized email parser for pickleball court reservations from Pickle Planner / Rally Club.
+SYSTEM_PROMPT = """You are a specialized email parser for pickleball court reservations.
 
 Your task is to extract reservation details from email text. The emails may be:
-- Direct reservation confirmations
+- Direct reservation confirmations from booking systems (Pickle Planner, CourtReserve, etc.)
 - Forwarded emails (with headers like "Begin forwarded message:")
 - Various formats with or without proper line breaks
 
@@ -32,16 +32,15 @@ Extract the following information:
 1. **date**: The reservation date (not the email sent date if forwarded). Format as YYYY-MM-DD.
 2. **start_time**: Start time (e.g., "5:30pm", "8:00am")
 3. **end_time**: End time (e.g., "7:00pm", "9:30am")
-4. **court**: Court location (e.g., "North", "South", "North, South", "East", "West", "Center")
-5. **organizer**: The person whose reservation it is (from "Name's Reservation")
+4. **court**: Court location (e.g., "North", "South", "North, South", "East", "West", "Center", "Court 1", etc.)
+5. **organizer**: The person whose reservation it is (from "Name's Reservation" or similar)
 6. **players**: List of all player names
 
 Important parsing rules:
 - For forwarded emails, look for the ACTUAL reservation date (often followed by a day like "TUESDAY") not the forwarding date
-- Look for "following event:" as a marker for the actual reservation content
-- Player names appear after "Players" and before "Reservation Fee", "Fee Breakdown", "Total:", "Status:", or "The door code"
-- Courts are typically: North, South, East, West, Center (or combinations like "North, South")
-- If it's not a Rally Club / Pickle Planner reservation email, set is_reservation to false
+- Look for markers like "following event:", "reservation details:", "booking confirmation" for the actual content
+- Player names typically appear after "Players" and before fee/payment information
+- If it's not a pickleball court reservation email, set is_reservation to false
 
 Respond with valid JSON only, no markdown formatting."""
 
@@ -100,14 +99,6 @@ def parse_email(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(
             json.dumps({"error": "email_text is required"}),
             status_code=400,
-            mimetype="application/json"
-        )
-
-    # Quick check - if it doesn't look like a reservation email, skip AI
-    if "Rally Club" not in email_text and "Rally Club" not in email_subject:
-        return func.HttpResponse(
-            json.dumps({"is_reservation": False}),
-            status_code=200,
             mimetype="application/json"
         )
 

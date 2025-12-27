@@ -1,0 +1,144 @@
+Received: from mail.example.com (mail.example.com [192.168.1.1])
+ by recipient.example.com with HTTPS; Tue, 16 Dec 2025
+ 00:49:50 +0000
+Subject: Rally Club Reservation
+Content-Type: multipart/alternative;
+	boundary="----=_Part_532090_1702022722.1765846182844"
+Date: Tue, 16 Dec 2025 00:49:42 +0000
+From: Pickle Planner <automated@pickleplanner.com>
+To: user@example.com
+Message-ID: <test-reservation-4@email.amazonses.com>
+MIME-Version: 1.0
+
+------=_Part_532090_1702022722.1765846182844
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Hi Alex,
+Rally Club Reservation
+When: Monday, December 15, 2025 8:00 - 10:00pm
+Courts: South
+Name: Scott Baker's Reservation
+Players: Scott Baker, Jeff Harrison, Alex Robinson, Nathan Jensen
+Guests: 0
+------=_Part_532090_1702022722.1765846182844
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html><html lang=3D"en"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">
+  <meta name=3D"viewport" content=3D"width=3Ddevice-width,initial-scale=3D1=
+">
+  <title>Pickle Planner</title>
+  <style>
+    html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMa=
+cSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #ffffff; co=
+lor: #333; font-size: 18px; }
+    .email-wrap { background: #efefef; padding: 40px 20px; }
+    .email-container { max-width: 720px; margin: 0 auto; border-radius: 12p=
+x; overflow: hidden; }
+    .card { background: #fff; border-radius: 20px; padding: 38px 48px; }
+    .greeting { font-size: 22px; margin: 8px 0 12px 0; color: #333; font-we=
+ight: 600; }
+    .lead { font-size: 20px; line-height: 1.45; color: #333; margin: 0 0 22=
+px 0; }
+    .day-card { background: #fff; border-radius: 12px; padding: 0px; max-wi=
+dth: 400px; margin: 0 auto; }
+    .day-header { font-size: 20px; font-weight: 700; margin-bottom: 6px; co=
+lor: #333; }
+    .day-sub { font-size: 13px; font-weight: 700; color: #f26a21; margin-bo=
+ttom: 14px; }
+    .event-card { border: 2px solid #078DEE; border-radius: 12px; padding: =
+14px; }
+    .event-title { font-weight: 700; font-size: 20px; color: #078DEE; margi=
+n: 0; }
+    .event-time { font-size: 16px; color: #444; margin-top: 2px; }
+    .event-court { font-size: 16px; color: #444; margin-top: 2px; }
+    .players { font-size: 16px; margin-top: 16px; margin-bottom: 4px; }
+    .players span { color: #078DEE; font-weight: 600; }
+    .player-list { margin: 6px 0 0 0; padding: 0; list-style: none; }
+    .player-list li { font-size: 16px; color: #333; margin: 5px 0; }
+    .fee-card { background: #e8f5e9; border: 2px solid #4caf50; border-radi=
+us: 12px; padding: 20px 24px; max-width: 400px; margin: 16px auto; }
+    .body-container { background-color: #F4F6F8; padding: 18px 20px; border=
+: 1px solid #D1D8DE; border-radius: 10px; margin-top: 18px; font-size: 18px=
+; }
+    .body-list-item { color: #637381; display: block; line-height: 1.45; fo=
+nt-size: 18px; }
+  </style>
+</head>
+
+<body>
+  <div class=3D"email-wrap" role=3D"main">
+    <div class=3D"email-container">
+      <div class=3D"card">
+        <p class=3D"greeting">Hi Alex,</p>
+
+        <p class=3D"lead">
+          You have the following reservation:
+        </p>
+
+        <div class=3D"day-card">
+          <div class=3D"day-header">December 15</div>
+          <div class=3D"day-sub">MONDAY</div>
+
+          <div class=3D"event-card">
+            <p class=3D"event-title">Scott Baker's Reservation</p>
+            <p class=3D"event-time">8:00 - 10:00pm</p>
+            <p class=3D"event-court">South</p>
+
+            <div class=3D"players">
+              <span>Players</span>
+              <ul class=3D"player-list">
+                <li>Scott Baker</li>
+                <li>Jeff Harrison</li>
+                <li>Alex Robinson</li>
+                <li>Nathan Jensen</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class=3D"fee-card">
+            <div style=3D"font-size:18px; font-weight:bold; color:#333;">Re=
+servation Fee</div>
+            <div style=3D"margin-top:8px; font-size:16px; color:#333;">Tota=
+l: $31.20</div>
+            <div style=3D"margin-top:4px; font-size:16px; font-weight:bold;=
+ color:#388e3c;">Status: Paid</div>
+
+            <div style=3D"margin-top:15px; padding:10px; background:#ffffff=
+; border:1px solid #c8e6c9; border-radius:6px">
+              <div style=3D"font-size:16px; font-weight:bold; margin-bottom=
+:6px; color:#333;">Fee Breakdown:</div>
+              <div style=3D"font-size:16px; color:#333;">
+                <div>Alex Robinson - $0.00</div>
+                <div>Jeff Harrison - $10.00</div>
+                <div>Nathan Jensen - $10.00</div>
+                <div>Scott Baker - $10.00</div>
+              </div>
+            </div>
+          </div>
+
+          <div class=3D"body-container">
+            <div class=3D"body-list-item">The door code is 1234<br><br>If t=
+he gate and/or door is locked, please text 555-123-4567 for the lock box co=
+de.<br><br>All players must have a registered account and be included on th=
+e reservation time!
+            </div>
+          </div>
+
+          <div style=3D"clear:both;margin-top:10px;text-align:center;width:=
+100%">
+            <p style=3D"color:#999999;font-size:12px;text-align:center">
+              Powered by <a href=3D"https://pickleplanner.com" style=3D"col=
+or:#999999;font-size:12px;text-decoration:none">Pickle Planner</a> =C2=A9 2=
+025
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body></html>
+
+------=_Part_532090_1702022722.1765846182844--

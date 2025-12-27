@@ -1,0 +1,90 @@
+Received: from mail.example.com (mail.example.com [192.168.1.1])
+ by recipient.example.com with HTTPS; Mon, 23 Dec 2024
+ 08:00:00 +0000
+Subject: Weekly Sports Newsletter
+Content-Type: multipart/alternative;
+	boundary="----=_Part_456789_012345678.1703321600000"
+Date: Mon, 23 Dec 2024 08:00:00 +0000
+From: Sports Weekly <newsletter@sportsweekly.example.com>
+To: user@example.com
+Message-ID: <test-not-a-reservation@email.example.com>
+MIME-Version: 1.0
+
+------=_Part_456789_012345678.1703321600000
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Hello!
+
+This week's top sports stories:
+
+1. Local basketball team wins championship
+2. New tennis courts opening downtown
+3. Swimming pool hours extended for holidays
+
+Thanks for reading!
+
+Unsubscribe: https://example.com/unsubscribe
+------=_Part_456789_012345678.1703321600000
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html><html lang=3D"en"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">
+  <meta name=3D"viewport" content=3D"width=3Ddevice-width,initial-scale=3D1=
+">
+  <title>Weekly Sports Newsletter</title>
+  <style>
+    html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMa=
+cSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #ffffff; co=
+lor: #111; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    h1 { color: #333; font-size: 24px; }
+    .story { margin: 20px 0; padding: 15px; background: #f5f5f5; border-rad=
+ius: 8px; }
+    .story h2 { font-size: 18px; color: #444; margin: 0 0 10px 0; }
+    .story p { font-size: 14px; color: #666; margin: 0; }
+    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #d=
+dd; font-size: 12px; color: #999; text-align: center; }
+    .footer a { color: #666; }
+  </style>
+</head>
+
+<body>
+  <div class=3D"container">
+    <h1>Weekly Sports Newsletter</h1>
+
+    <p>Hello!</p>
+
+    <p>This week's top sports stories:</p>
+
+    <div class=3D"story">
+      <h2>1. Local basketball team wins championship</h2>
+      <p>The downtown Eagles clinched their first title in 10 years with a =
+thrilling overtime victory.</p>
+    </div>
+
+    <div class=3D"story">
+      <h2>2. New tennis courts opening downtown</h2>
+      <p>The city's new recreational facility will feature 6 championship-s=
+tyle courts.</p>
+    </div>
+
+    <div class=3D"story">
+      <h2>3. Swimming pool hours extended for holidays</h2>
+      <p>Community pools will stay open late through the new year celebrati=
+ons.</p>
+    </div>
+
+    <p>Thanks for reading!</p>
+
+    <div class=3D"footer">
+      <p>You received this email because you subscribed to Sports Weekly.</=
+p>
+      <p><a href=3D"https://example.com/unsubscribe">Unsubscribe</a> | <a h=
+ref=3D"https://example.com/preferences">Update Preferences</a></p>
+    </div>
+  </div>
+</body></html>
+
+------=_Part_456789_012345678.1703321600000--

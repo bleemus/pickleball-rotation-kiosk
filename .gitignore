@@ -48,6 +48,3 @@ test-results/
 .vitest/
 
 .claude/*
-
-# Local scripts
-scripts/

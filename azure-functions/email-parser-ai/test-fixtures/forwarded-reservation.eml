@@ -1,0 +1,139 @@
+Received: from mail.example.com (mail.example.com [192.168.1.1])
+ by recipient.example.com with HTTPS; Mon, 23 Dec 2024
+ 14:30:00 +0000
+Subject: Fwd: Rally Club Reservation
+Content-Type: multipart/alternative;
+	boundary="----=_Part_234567_890123456.1703345400000"
+Date: Mon, 23 Dec 2024 14:30:00 +0000
+From: Chris Parker <chris.parker@example.com>
+To: user@example.com
+Message-ID: <test-forwarded-reservation@email.example.com>
+MIME-Version: 1.0
+
+------=_Part_234567_890123456.1703345400000
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Hey, here's the reservation info!
+
+Begin forwarded message:
+
+From: Pickle Planner <automated@pickleplanner.com>
+Date: December 22, 2024 at 8:00 AM
+To: sarah.miller@example.com
+Subject: Rally Club Reservation
+
+Hi Sarah,
+Rally Club Reservation
+When: Tuesday, December 24, 2024 5:30 - 7:00pm
+Courts: South
+Name: Sarah Miller's Reservation
+Players: Sarah Miller, Tom Brown, Chris Davis, Pat Lee
+Guests: 0
+------=_Part_234567_890123456.1703345400000
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html><html lang=3D"en"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">
+  <meta name=3D"viewport" content=3D"width=3Ddevice-width,initial-scale=3D1=
+">
+  <title>Forwarded Email</title>
+</head>
+
+<body style=3D"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', =
+Roboto, Arial, sans-serif; margin: 0; padding: 20px; background: #ffffff; c=
+olor: #111;">
+  <p>Hey, here's the reservation info!</p>
+
+  <div style=3D"border-left: 3px solid #ccc; padding-left: 15px; margin-top=
+: 20px;">
+    <p style=3D"color: #666; font-size: 14px;">
+      <strong>Begin forwarded message:</strong><br><br>
+      <strong>From:</strong> Pickle Planner &lt;automated@pickleplanner.com=
+&gt;<br>
+      <strong>Date:</strong> December 22, 2024 at 8:00 AM<br>
+      <strong>To:</strong> sarah.miller@example.com<br>
+      <strong>Subject:</strong> Rally Club Reservation
+    </p>
+
+    <div style=3D"background: #efefef; padding: 40px 20px; margin-top: 20px=
+;">
+      <div style=3D"max-width: 720px; margin: 0 auto; border-radius: 12px; =
+overflow: hidden;">
+        <div style=3D"background: #fff; border-radius: 20px; padding: 38px =
+48px;">
+          <p style=3D"font-size: 20px; margin: 8px 0 12px 0; color: #111; f=
+ont-weight: 600;">Hi Sarah,</p>
+
+          <p style=3D"font-size: 18px; line-height: 1.45; color: #111; marg=
+in: 0 0 26px 0;">
+            You have the following reservation:
+          </p>
+
+          <div style=3D"background: #fff; border-radius: 12px; padding: 20p=
+x 0px; max-width: 400px; margin: 0 auto;">
+            <div style=3D"font-size: 20px; font-weight: 700; margin-bottom:=
+ 6px; color: #111;">December 24</div>
+            <div style=3D"font-size: 13px; font-weight: 700; color: #f26a21=
+; margin-bottom: 14px;">TUESDAY</div>
+            <div style=3D"border: 2px solid #078DEE; border-radius: 12px; p=
+adding: 14px;">
+              <div>
+                <p style=3D"font-weight: 700; font-size: 18px; color: #078D=
+EE; margin: 0;">Sarah Miller's Reservation</p>
+                <p style=3D"font-size: 15px; color: #212121; margin-top: 2p=
+x;">5:30 - 7:00pm</p>
+                <p style=3D"font-size: 15px; color: #212121; margin-top: 2p=
+x;">South</p>
+              </div>
+              <div style=3D"font-size: 15px; margin-top: 12px;">
+                <span style=3D"color: #078DEE; text-decoration: underline; =
+font-weight: 600;">Players</span>
+                <ul style=3D"margin: 6px 0 0 0; padding: 0; list-style: non=
+e;">
+                  <li style=3D"font-size: 15px; color: #333; margin: 5px 0;=
+">Sarah Miller</li>
+                  <li style=3D"font-size: 15px; color: #333; margin: 5px 0;=
+"> Tom Brown</li>
+                  <li style=3D"font-size: 15px; color: #333; margin: 5px 0;=
+"> Chris Davis</li>
+                  <li style=3D"font-size: 15px; color: #333; margin: 5px 0;=
+"> Pat Lee</li>
+                </ul>
+              </div>
+            </div>
+
+            <div style=3D"background: #e8f5e9; border: 2px solid #4caf50; b=
+order-radius: 12px; padding: 20px 24px; max-width: 400px; margin: 16px auto=
+;">
+              <div style=3D"font-size:16px; font-weight:bold; color:#333;">=
+Reservation Fee</div>
+              <div style=3D"margin-top:8px; font-size:14px; color:#333;">To=
+tal: $15.00</div>
+              <div style=3D"margin-top:4px; font-size:14px; font-weight:bol=
+d; color:#388e3c;">Status: Confirmed</div>
+            </div>
+
+            <div style=3D"background-color:#F4F6F8; padding:16px 20px; bord=
+er-radius:10px; margin-top:16px;">
+              <div style=3D"color:#637381; margin:10px 0; line-height:1.5;"=
+>The door code is 5678</div>
+            </div>
+
+            <div style=3D"clear:both;margin-top:10px;text-align:center;widt=
+h:100%">
+              <p style=3D"color:#999999;font-size:12px;text-align:center">
+                Powered by <a href=3D"https://pickleplanner.com" style=3D"c=
+olor:#999999;font-size:12px;text-align:center;text-decoration:none">Pickle =
+Planner</a> =C2=A9 2024
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body></html>
+
+------=_Part_234567_890123456.1703345400000--
