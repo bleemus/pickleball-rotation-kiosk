@@ -11,6 +11,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - The user will manually commit when ready
 - Exception: Only commit if the user explicitly asks you to commit
 
+**IMPORTANT: Before committing, ALWAYS run formatting and type checks:**
+
+```bash
+# Run format check (from root directory)
+npm run format:check
+
+# Run type checking for all services
+make test
+
+# Or run both:
+npm run format:check && make test
+```
+
+If format check fails, fix with: `npm run format`
+
+Do not commit code that fails formatting or type checking.
+
 ## Project Overview
 
 A kiosk application for managing round-robin pickleball games across 2 courts with intelligent player rotation and score tracking. Built with React + TypeScript frontend, Express + TypeScript backend, and Redis for session state.
@@ -274,15 +291,23 @@ Types are duplicated between frontend and backend (must be kept in sync):
 
 ### Modifying Round-Robin Algorithm
 
-Edit penalty constants in `backend/src/services/roundRobinService.ts:11-13`:
+Edit penalty constants in `backend/src/services/roundRobinService.ts:12-17`:
 
 ```typescript
 const PARTNERSHIP_PENALTY = 10; // Avoid repeated partnerships
 const OPPONENT_PENALTY = 5; // Variety in opponents
-const BENCH_BONUS = -20; // Priority for benched players
+const COURT_PENALTY = 7; // Avoid same court pairings (teammate or opponent)
+const BENCH_BONUS = -20; // Priority for benched players (negative = better)
+const GAMES_PLAYED_PENALTY = 8; // Encourages less-played players, prioritizes new players
+const CONSECUTIVE_BENCH_BONUS = -100; // Strong priority for players who sat out last round
 ```
 
-Higher penalties = stronger avoidance. Bench bonus is negative (lower score = better matchup).
+Higher penalties = stronger avoidance. Negative values (bonuses) = higher priority for selection.
+
+**Bench behavior**: All benched players are treated equally regardless of how they ended up on the bench (voluntary sit-out via `forceSitOut` toggle vs algorithm placement). Two counters track bench time:
+
+- `roundsSatOut`: Total cumulative rounds sat out (used with `BENCH_BONUS`)
+- `consecutiveRoundsSatOut`: Consecutive rounds sat out, resets when playing (used with `CONSECUTIVE_BENCH_BONUS`)
 
 ### Testing Changes
 
@@ -371,6 +396,57 @@ REDIS_URL=redis://localhost:6379
 ```
 
 For network access (other devices on LAN), use machine's IP in `VITE_API_URL`.
+
+### Azure Key Vault Integration (Recommended for Production)
+
+The application supports Azure Key Vault for secure secret management. Secrets are loaded at startup with automatic fallback to environment variables.
+
+**Setup Steps**:
+
+1. Create an Azure Key Vault
+2. Create an App Registration (Service Principal) with **Key Vault Secrets User** role
+3. Add secrets to Key Vault using the setup script:
+   ```bash
+   ./scripts/azure-keyvault-setup.sh
+   ```
+4. Configure the Key Vault credentials on your deployment machine
+
+**Required Environment Variables** (on Raspberry Pi or deployment host):
+
+```env
+AZURE_TENANT_ID=d5d907fc-f592-4dfc-b9ab-c3e058091aaf
+AZURE_CLIENT_ID=07e5683f-6db2-4d3c-bb4e-dd0cab73e20e
+AZURE_CLIENT_SECRET=<your-service-principal-secret>
+AZURE_KEYVAULT_URL=https://pickleballkioskvault.vault.azure.net/
+```
+
+**Secrets Stored in Key Vault**:
+
+| Secret Name           | Service      | Description                             |
+| --------------------- | ------------ | --------------------------------------- |
+| `graph-tenant-id`     | email-parser | Microsoft Graph API Tenant ID           |
+| `graph-client-id`     | email-parser | Microsoft Graph API Client ID           |
+| `graph-client-secret` | email-parser | Microsoft Graph API Client Secret       |
+| `graph-user-id`       | email-parser | Email address to check for reservations |
+
+**Fallback Behavior**:
+
+- If Key Vault credentials are not configured, secrets are loaded from environment variables
+- If Key Vault is unreachable, the application falls back to environment variables
+- Startup logs indicate which source is being used (`🔐 Key Vault` or `📋 environment variables`)
+
+**Docker Deployment with Key Vault**:
+
+```bash
+# Set Key Vault credentials before starting
+export AZURE_TENANT_ID=d5d907fc-f592-4dfc-b9ab-c3e058091aaf
+export AZURE_CLIENT_ID=07e5683f-6db2-4d3c-bb4e-dd0cab73e20e
+export AZURE_CLIENT_SECRET=<your-secret>
+export AZURE_KEYVAULT_URL=https://pickleballkioskvault.vault.azure.net/
+
+# Start services
+make build && make up
+```
 
 **WiFi Configuration**:
 

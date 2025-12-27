@@ -424,5 +424,79 @@ Reservation Fee: $40.00`;
 
       expect(result?.rawEmail).toBe(emailText);
     });
+
+    it("should parse forwarded email with day of week (e.g., December 23TUESDAY)", () => {
+      const emailText = `Begin forwarded message:From: Pickle Planner <automated_at_pickleplanner.com>Subject: Rally Club ReservationDate: December 14, 2025 at 7:43:48 PM CSTTo: user@example.comHi Michael,You have the following event:December 23TUESDAYMacy Russell's Reservation1:30 - 3:30pmNorth, SouthPlayersMacy RussellMichael HellrichAnn JacksonTom PaoliDave RomoserShelly RomoserKevin JaklevicReggie ResperReservation FeeTotal: $31.20Status: PaidFee Breakdown:Dave Romoser    $0.00Macy Russell    $0.00Michael Hellrich    $0.00The door code is 6407`;
+
+      const result = parser.parseReservation(emailText, "Rally Club Reservation");
+
+      expect(result).toBeDefined();
+      // Should extract December 23 (from reservation) not December 14 (from forwarded header)
+      expect(result?.date?.getDate()).toBe(23);
+      expect(result?.date?.getMonth()).toBe(11); // December is month 11
+      expect(result?.startTime).toBe("1:30pm");
+      expect(result?.endTime).toBe("3:30pm");
+      expect(result?.court).toBe("North, South");
+      expect(result?.organizer).toBe("Macy Russell");
+      expect(result?.players).toContain("Macy Russell");
+      expect(result?.players).toContain("Michael Hellrich");
+      expect(result?.players?.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it("should parse multi-court reservations (North, South)", () => {
+      const emailText = `
+Rally Club Reservation
+
+December 15
+1:00 - 3:00pm
+North, South
+
+Team Event's Reservation
+
+Players
+Alice Johnson
+Bob Smith
+Charlie Brown
+Diana Prince
+Eve Williams
+Frank Miller
+
+Reservation Fee: $60.00
+`;
+
+      const result = parser.parseReservation(emailText, "Rally Club Reservation");
+
+      expect(result).toBeDefined();
+      expect(result?.court).toBe("North, South");
+      expect(result?.players?.length).toBe(6);
+    });
+
+    it("should handle 'following event:' pattern to find reservation date", () => {
+      const emailText = `From: Pickle Planner
+Subject: Rally Club Reservation
+Date: November 1, 2025
+
+Hi User,
+You have the following event:December 10
+5:00 - 6:30pm
+North
+
+John Doe's Reservation
+
+Players
+Player One
+Player Two
+Player Three
+Player Four
+
+Reservation Fee: $40.00`;
+
+      const result = parser.parseReservation(emailText, "Rally Club Reservation");
+
+      expect(result).toBeDefined();
+      // Should extract December 10 (after "following event:") not November 1 (from header)
+      expect(result?.date?.getDate()).toBe(10);
+      expect(result?.date?.getMonth()).toBe(11); // December
+    });
   });
 });

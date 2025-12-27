@@ -10,6 +10,10 @@ build/
 .env.*
 !.env.example
 
+# Azure Key Vault credentials (never commit these)
+azure-credentials.json
+**/azure-secrets.json
+
 # Logs
 *.log
 npm-debug.log*
@@ -44,3 +48,6 @@ test-results/
 .vitest/
 
 .claude/*
+
+# Local scripts
+scripts/

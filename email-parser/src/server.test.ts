@@ -16,6 +16,21 @@ vi.mock("./services/redis.js", () => ({
   connectRedis: vi.fn(),
 }));
 
+vi.mock("./services/keyVault.js", () => ({
+  initConfig: vi.fn().mockResolvedValue({
+    graphTenantId: "test-tenant-id",
+    graphClientId: "test-client-id",
+    graphClientSecret: "test-client-secret",
+    graphUserId: "test@example.com",
+  }),
+  getConfig: vi.fn().mockReturnValue({
+    graphTenantId: "test-tenant-id",
+    graphClientId: "test-client-id",
+    graphClientSecret: "test-client-secret",
+    graphUserId: "test@example.com",
+  }),
+}));
+
 vi.mock("node-cron", () => ({
   default: {
     schedule: vi.fn(),

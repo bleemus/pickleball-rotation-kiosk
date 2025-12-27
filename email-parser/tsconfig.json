@@ -13,7 +13,9 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials": ["./node_modules/@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials/index.d.ts"]
+      "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials": [
+        "./node_modules/@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials/index.d.ts"
+      ]
     }
   },
   "include": ["src/**/*"],
