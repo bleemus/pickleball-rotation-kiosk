@@ -235,10 +235,7 @@ test.describe("Player Management During Gameplay", () => {
       await expect(page.locator("text=0 Sitting")).toBeVisible();
     });
 
-    test("prevents round start when too many players sitting out", async ({
-      page,
-      cleanState,
-    }) => {
+    test("prevents round start when too many players sitting out", async ({ page, cleanState }) => {
       const game = new GamePage(page);
       await game.goto();
 
@@ -271,10 +268,7 @@ test.describe("Player Management During Gameplay", () => {
       ).toBeVisible();
     });
 
-    test("sitting out player is excluded from match generation", async ({
-      page,
-      cleanState,
-    }) => {
+    test("sitting out player is excluded from match generation", async ({ page, cleanState }) => {
       const game = new GamePage(page);
       await game.goto();
 

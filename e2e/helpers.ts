@@ -279,7 +279,7 @@ export class GamePage {
     await saveButton.waitFor({ state: "visible", timeout: 5000 });
     // The edit input is the sibling of the buttons container
     // Find it by looking for the input that's focused (autoFocus)
-    const editInput = this.page.locator('input:focus');
+    const editInput = this.page.locator("input:focus");
     await editInput.clear();
     await editInput.fill(newName);
     await saveButton.click();
