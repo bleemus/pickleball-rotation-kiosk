@@ -214,10 +214,22 @@ app.get("/api/reservations/:id", async (req: Request, res: Response) => {
  */
 app.post("/api/reservations", async (req: Request, res: Response) => {
   try {
+    // Validate required fields
+    if (!req.body.date) {
+      res.status(400).json({ error: "Missing required field: date" });
+      return;
+    }
+
+    const parsedDate = new Date(req.body.date);
+    if (isNaN(parsedDate.getTime())) {
+      res.status(400).json({ error: "Invalid date format" });
+      return;
+    }
+
     const reservation: Reservation = {
       ...req.body,
       id: req.body.id || `res_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-      date: new Date(req.body.date),
+      date: parsedDate,
       createdAt: new Date(),
     };
 

@@ -26,18 +26,10 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
   const darkMode = SPECTATOR_DARK_MODE;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Track mobile screen size
+  // Track window size for responsive behavior (combined to avoid duplicate listeners)
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Track window size for auto-scroll behavior
-  useEffect(() => {
-    const handleResize = () => {
       setIsDesktop(window.innerWidth >= 1024);
     };
     window.addEventListener("resize", handleResize);
@@ -99,7 +91,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         setSession(data);
         setError(null);
       } catch (err) {
-        setError((err as Error).message);
+        setError(err instanceof Error ? err.message : String(err));
       }
     };
 
@@ -118,6 +110,8 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     const STEP_INTERVAL = 16; // milliseconds between steps (~60fps, Safari-friendly)
     const PAUSE_AT_TOP = 2000; // 2 second pause at top
     const PAUSE_AT_BOTTOM = 2000; // 2 second pause at bottom
+    // Use larger threshold for edge detection to handle browser zoom/DPI scaling
+    const EDGE_THRESHOLD = 10;
 
     let pauseUntil = 0;
     let scrollingDown = true;
@@ -143,7 +137,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         const maxScroll = scrollHeight - clientHeight;
 
         // Only scroll if there's content to scroll
-        if (maxScroll <= 10) {
+        if (maxScroll <= EDGE_THRESHOLD) {
           isScrolling = false;
           return; // Not enough content to scroll
         }
@@ -152,7 +146,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
 
         if (scrollingDown) {
           // Scroll down
-          if (currentScroll < maxScroll - SCROLL_SPEED * 2) {
+          if (currentScroll < maxScroll - EDGE_THRESHOLD) {
             // Use scrollBy for better Safari zoom compatibility
             container.scrollBy(0, SCROLL_SPEED);
           } else {
@@ -162,7 +156,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
           }
         } else {
           // Scroll up
-          if (currentScroll > SCROLL_SPEED * 2) {
+          if (currentScroll > EDGE_THRESHOLD) {
             // Use scrollBy for better Safari zoom compatibility
             container.scrollBy(0, -SCROLL_SPEED);
           } else {
@@ -192,6 +186,8 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
     const STEP_INTERVAL = 16; // milliseconds between steps (~60fps, Safari-friendly)
     const PAUSE_AT_TOP = 500; // Reduced from 3000 to start scrolling faster
     const PAUSE_AT_BOTTOM = 500; // Reduced from 3000
+    // Use larger threshold for edge detection to handle browser zoom/DPI scaling
+    const EDGE_THRESHOLD = 10;
 
     let pauseUntil = Date.now() + PAUSE_AT_TOP; // Start with initial pause
     let scrollingDown = true; // Track direction
@@ -217,7 +213,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         const maxScroll = scrollHeight - clientHeight;
 
         // If content doesn't overflow, no need to scroll
-        if (maxScroll <= 10) {
+        if (maxScroll <= EDGE_THRESHOLD) {
           isScrolling = false;
           return;
         }
@@ -226,7 +222,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
 
         if (scrollingDown) {
           // Scroll down
-          if (currentScroll < maxScroll - SCROLL_SPEED * 2) {
+          if (currentScroll < maxScroll - EDGE_THRESHOLD) {
             // Use scrollBy for better Safari zoom compatibility
             container.scrollBy(0, SCROLL_SPEED);
           } else {
@@ -236,7 +232,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
           }
         } else {
           // Scroll up
-          if (currentScroll > SCROLL_SPEED * 2) {
+          if (currentScroll > EDGE_THRESHOLD) {
             // Use scrollBy for better Safari zoom compatibility
             container.scrollBy(0, -SCROLL_SPEED);
           } else {

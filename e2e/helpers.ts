@@ -240,4 +240,49 @@ export class GamePage {
       await expect(button).not.toBeVisible();
     }
   }
+
+  // Player management helpers
+  getPlayerCard(playerName: string) {
+    // Player cards have bg-gray-100 or bg-orange-100 (sitting out) backgrounds
+    const playerCards = this.page.locator(".bg-gray-100, .bg-orange-100");
+    return playerCards.filter({ hasText: playerName }).first();
+  }
+
+  async clickPlayerEdit(playerName: string) {
+    const card = this.getPlayerCard(playerName);
+    await card.locator('button:has-text("Edit")').click();
+    await this.page.waitForTimeout(100);
+  }
+
+  async clickPlayerSitOut(playerName: string) {
+    const card = this.getPlayerCard(playerName);
+    await card.locator('button:has-text("Sit")').click();
+    await this.page.waitForTimeout(100);
+  }
+
+  async clickPlayerPlay(playerName: string) {
+    const card = this.getPlayerCard(playerName);
+    await card.locator('button:has-text("Play")').click();
+    await this.page.waitForTimeout(100);
+  }
+
+  async clickPlayerRemove(playerName: string) {
+    const card = this.getPlayerCard(playerName);
+    await card.locator('button:has-text("✕")').click();
+    await this.page.waitForTimeout(100);
+  }
+
+  async renamePlayer(oldName: string, newName: string) {
+    await this.clickPlayerEdit(oldName);
+    // Wait for the edit mode to appear (Save button becomes visible)
+    const saveButton = this.page.locator('button:text("Save")');
+    await saveButton.waitFor({ state: "visible", timeout: 5000 });
+    // The edit input is the sibling of the buttons container
+    // Find it by looking for the input that's focused (autoFocus)
+    const editInput = this.page.locator('input:focus');
+    await editInput.clear();
+    await editInput.fill(newName);
+    await saveButton.click();
+    await this.page.waitForTimeout(200);
+  }
 }

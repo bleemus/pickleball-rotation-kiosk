@@ -477,8 +477,10 @@ export async function completeCurrentRound(
 
       // If match was previously completed with different scores, reverse the stats
       if (match.completed && scoresChanged) {
-        const oldTeam1Won = match.team1Score! > match.team2Score!;
-        const oldPointDiff = match.team1Score! - match.team2Score!;
+        const oldTeam1Score = match.team1Score ?? 0;
+        const oldTeam2Score = match.team2Score ?? 0;
+        const oldTeam1Won = oldTeam1Score > oldTeam2Score;
+        const oldPointDiff = oldTeam1Score - oldTeam2Score;
 
         const team1PlayerIds = [match.team1.player1.id, match.team1.player2.id];
         const team2PlayerIds = [match.team2.player1.id, match.team2.player2.id];

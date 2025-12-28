@@ -71,18 +71,22 @@ export function useApi() {
   };
 
   const updateNumCourts = async (sessionId: string, numCourts: number): Promise<Session> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}/courts`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ numCourts }),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/courts`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ numCourts }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to update number of courts");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to update number of courts");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to update number of courts (Network error)");
     }
-
-    return response.json();
   };
 
   const getSession = async (sessionId: string): Promise<Session> => {
@@ -120,42 +124,54 @@ export function useApi() {
   };
 
   const deleteSession = async (sessionId: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}`, {
-      method: "DELETE",
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}`, {
+        method: "DELETE",
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to delete session");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to delete session");
+      }
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to delete session (Network error)");
     }
   };
 
   const addPlayer = async (sessionId: string, name: string): Promise<Session> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}/players`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name } as AddPlayerRequest),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/players`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name } as AddPlayerRequest),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to add player");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to add player");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to add player (Network error)");
     }
-
-    return response.json();
   };
 
   const removePlayer = async (sessionId: string, playerId: string): Promise<Session> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}/players/${playerId}`, {
-      method: "DELETE",
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/players/${playerId}`, {
+        method: "DELETE",
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to remove player");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to remove player");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to remove player (Network error)");
     }
-
-    return response.json();
   };
 
   const renamePlayer = async (
@@ -163,83 +179,107 @@ export function useApi() {
     playerId: string,
     name: string
   ): Promise<Session> => {
-    const response = await fetch(
-      `${API_BASE_URL}/session/${sessionId}/players/${playerId}/rename`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name } as RenamePlayerRequest),
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/session/${sessionId}/players/${playerId}/rename`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name } as RenamePlayerRequest),
+        }
+      );
+
+      if (!response.ok) {
+        await handleApiError(response, "Failed to rename player");
       }
-    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to rename player");
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to rename player (Network error)");
     }
-
-    return response.json();
   };
 
   const getPlayers = async (sessionId: string): Promise<Player[]> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}/players`);
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/players`);
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to get players");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to get players");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to get players (Network error)");
     }
-
-    return response.json();
   };
 
   const togglePlayerSitOut = async (sessionId: string, playerId: string): Promise<Session> => {
-    const response = await fetch(
-      `${API_BASE_URL}/session/${sessionId}/players/${playerId}/sitout`,
-      { method: "PATCH" }
-    );
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/session/${sessionId}/players/${playerId}/sitout`,
+        { method: "PATCH" }
+      );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to toggle sit out");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to toggle sit out");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to toggle sit out (Network error)");
     }
-
-    return response.json();
   };
 
   const startNextRound = async (sessionId: string): Promise<Session> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}/round`, {
-      method: "POST",
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/round`, {
+        method: "POST",
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to start next round");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to start next round");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to start next round (Network error)");
     }
-
-    return response.json();
   };
 
   const cancelCurrentRound = async (sessionId: string): Promise<Session> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}/round`, {
-      method: "DELETE",
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/round`, {
+        method: "DELETE",
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to cancel round");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to cancel round");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to cancel round (Network error)");
     }
-
-    return response.json();
   };
 
   const getCurrentRound = async (sessionId: string): Promise<Round | null> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}/round/current`);
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/round/current`);
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to get current round");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to get current round");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to get current round (Network error)");
     }
-
-    return response.json();
   };
 
   const completeRound = async (
@@ -265,27 +305,35 @@ export function useApi() {
   };
 
   const getGameHistory = async (sessionId: string): Promise<GameHistory[]> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}/history`);
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/history`);
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to get game history");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to get game history");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to get game history (Network error)");
     }
-
-    return response.json();
   };
 
   const endSession = async (sessionId: string): Promise<Session> => {
-    const response = await fetch(`${API_BASE_URL}/session/${sessionId}/end`, {
-      method: "POST",
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/end`, {
+        method: "POST",
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to end session");
+      if (!response.ok) {
+        await handleApiError(response, "Failed to end session");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) throw error;
+      throw new Error("Failed to end session (Network error)");
     }
-
-    return response.json();
   };
 
   const getCurrentReservations = async (): Promise<{

@@ -8,6 +8,7 @@ const mockGameService = vi.hoisted(() => ({
   getActiveSession: vi.fn(),
   addPlayer: vi.fn(),
   removePlayer: vi.fn(),
+  renamePlayer: vi.fn(),
   togglePlayerSitOut: vi.fn(),
   updateNumCourts: vi.fn(),
   startNextRound: vi.fn(),
@@ -409,6 +410,86 @@ describe("Game Routes", () => {
 
       expect(mockGameService.removePlayer).toHaveBeenCalledWith("session-123", "4");
       expect(res.json).toHaveBeenCalledWith(updatedSession);
+    });
+  });
+
+  describe("PATCH /session/:id/players/:playerId/rename", () => {
+    it("should rename player in session", async () => {
+      const updatedSession = {
+        ...mockSession,
+        players: mockSession.players.map((p) => (p.id === "1" ? { ...p, name: "Alicia" } : p)),
+      };
+      mockGameService.renamePlayer.mockResolvedValue(updatedSession);
+
+      const handler = getRouteHandler("PATCH", "/session/:id/players/:playerId/rename");
+      const { req, res } = createMockReqRes({
+        params: { id: "session-123", playerId: "1" },
+        body: { name: "Alicia" },
+      });
+
+      const next = vi.fn();
+      await handler(req, res, next);
+
+      expect(mockGameService.renamePlayer).toHaveBeenCalledWith("session-123", "1", {
+        name: "Alicia",
+      });
+      expect(res.json).toHaveBeenCalledWith(updatedSession);
+    });
+
+    it("should return 400 when player not found", async () => {
+      mockGameService.renamePlayer.mockRejectedValue(
+        new Error("Player non-existent not found in session")
+      );
+
+      const handler = getRouteHandler("PATCH", "/session/:id/players/:playerId/rename");
+      const { req, res } = createMockReqRes({
+        params: { id: "session-123", playerId: "non-existent" },
+        body: { name: "NewName" },
+      });
+
+      const next = vi.fn();
+      await handler(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "Player non-existent not found in session",
+      });
+    });
+
+    it("should return 400 when name is empty", async () => {
+      mockGameService.renamePlayer.mockRejectedValue(new Error("Player name cannot be empty"));
+
+      const handler = getRouteHandler("PATCH", "/session/:id/players/:playerId/rename");
+      const { req, res } = createMockReqRes({
+        params: { id: "session-123", playerId: "1" },
+        body: { name: "   " },
+      });
+
+      const next = vi.fn();
+      await handler(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: "Player name cannot be empty" });
+    });
+
+    it("should return 400 when name already exists", async () => {
+      mockGameService.renamePlayer.mockRejectedValue(
+        new Error("Player Bob already exists in this session")
+      );
+
+      const handler = getRouteHandler("PATCH", "/session/:id/players/:playerId/rename");
+      const { req, res } = createMockReqRes({
+        params: { id: "session-123", playerId: "1" },
+        body: { name: "Bob" },
+      });
+
+      const next = vi.fn();
+      await handler(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "Player Bob already exists in this session",
+      });
     });
   });
 

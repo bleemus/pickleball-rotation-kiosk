@@ -209,14 +209,20 @@ export class GraphEmailChecker {
             console.log(`[${timestamp()}] No valid reservation found in email from ${fromDisplay}`);
           }
 
-          // Mark message as read
+          // Mark message as read with retry to prevent duplicate processing
           if (message.id) {
-            await this.client.api(`/users/${this.userId}/messages/${message.id}`).patch({
-              isRead: true,
-            });
+            await this.markMessageAsReadWithRetry(message.id);
           }
         } catch (error) {
           console.error(`[${timestamp()}] Error processing message:`, error);
+          // Still attempt to mark as read to prevent reprocessing on error
+          if (message.id) {
+            try {
+              await this.markMessageAsReadWithRetry(message.id);
+            } catch (markError) {
+              console.error(`[${timestamp()}] Failed to mark failed message as read:`, markError);
+            }
+          }
         }
       }
 
@@ -224,6 +230,28 @@ export class GraphEmailChecker {
     } catch (error) {
       console.error(`[${timestamp()}] Microsoft Graph API error:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Mark a message as read with retry logic to prevent duplicate processing
+   */
+  private async markMessageAsReadWithRetry(messageId: string, maxRetries = 3): Promise<void> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await this.client.api(`/users/${this.userId}/messages/${messageId}`).patch({
+          isRead: true,
+        });
+        return;
+      } catch (error) {
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        console.warn(
+          `[${timestamp()}] Failed to mark message as read (attempt ${attempt}/${maxRetries}), retrying...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+      }
     }
   }
 

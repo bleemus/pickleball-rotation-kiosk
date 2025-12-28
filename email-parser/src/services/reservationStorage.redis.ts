@@ -100,7 +100,17 @@ export class ReservationStorage {
       return undefined;
     }
 
-    return JSON.parse(data) as Reservation;
+    try {
+      return JSON.parse(data) as Reservation;
+    } catch (error) {
+      console.error(
+        `Failed to parse reservation ${id} from Redis, removing corrupted data:`,
+        error
+      );
+      await redisClient.del(key);
+      await redisClient.sRem(RESERVATION_INDEX_KEY, id);
+      return undefined;
+    }
   }
 
   /**

@@ -208,7 +208,7 @@ function App() {
         setTempPlayers((prevPlayers) => [...prevPlayers, newPlayer]);
       }
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -229,7 +229,7 @@ function App() {
         setTempPlayers(tempPlayers.filter((p) => p.id !== playerId));
       }
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -250,7 +250,7 @@ function App() {
         setTempPlayers(tempPlayers.map((p) => (p.id === playerId ? { ...p, name: newName } : p)));
       }
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -266,7 +266,7 @@ function App() {
       const updatedSession = await api.togglePlayerSitOut(session.id, playerId);
       setSession(updatedSession);
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -282,7 +282,7 @@ function App() {
       const updatedSession = await api.updateNumCourts(session.id, numCourts);
       setSession(updatedSession);
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -309,7 +309,7 @@ function App() {
         setGameState(GameState.PLAYING);
       }
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -326,7 +326,7 @@ function App() {
       setSession(updatedSession);
       setGameState(GameState.PLAYING);
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -343,7 +343,7 @@ function App() {
       setSession(updatedSession);
       setGameState(GameState.PLAYING);
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -367,7 +367,7 @@ function App() {
       setSession(updatedSession);
       setGameState(GameState.PLAYING);
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -410,7 +410,7 @@ function App() {
         reset();
         setTempPlayers([]); // Clear temp players
       } catch (err) {
-        setError((err as Error).message);
+        setError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
       }
@@ -428,7 +428,7 @@ function App() {
         const updatedSession = await api.endSession(session.id);
         setSession(updatedSession);
       } catch (err) {
-        setError((err as Error).message);
+        setError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
       }
