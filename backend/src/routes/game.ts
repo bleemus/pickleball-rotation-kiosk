@@ -24,6 +24,7 @@ import {
   CompleteRoundRequest,
 } from "../types/game.js";
 import { flushAllSessions } from "../services/redis.js";
+import { logger, errorDetails } from "../services/logger.js";
 
 const router = Router();
 
@@ -130,8 +131,13 @@ router.post("/test/cleanup", async (req: Request, res: Response) => {
 
   try {
     await flushAllSessions();
+    logger.info("All session data flushed from Redis");
     res.json({ message: "All session data flushed from Redis" });
   } catch (error) {
+    logger.error("Failed to flush sessions", {
+      operation: "flushAllSessions",
+      ...errorDetails(error),
+    });
     res.status(500).json({ error: (error as Error).message });
   }
 });
@@ -143,6 +149,10 @@ router.get("/session/active", async (req: Request, res: Response) => {
     // Return null if no active session (expected state, not an error)
     res.json(session);
   } catch (error) {
+    logger.error("Failed to get active session", {
+      operation: "getActiveSession",
+      ...errorDetails(error),
+    });
     res.status(500).json({ error: (error as Error).message });
   }
 });
@@ -154,6 +164,10 @@ router.post("/session", async (req: Request, res: Response) => {
     const session = await createSession(request);
     res.status(201).json(session);
   } catch (error) {
+    logger.error("Failed to create session", {
+      operation: "createSession",
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });
@@ -164,6 +178,11 @@ router.get("/session/:id", async (req: Request, res: Response) => {
     const session = await getSessionById(req.params.id);
     res.json(session);
   } catch (error) {
+    logger.warn("Session not found", {
+      operation: "getSessionById",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(404).json({ error: (error as Error).message });
   }
 });
@@ -175,6 +194,11 @@ router.patch("/session/:id/courts", async (req: Request, res: Response) => {
     const session = await updateNumCourts(req.params.id, numCourts);
     res.json(session);
   } catch (error) {
+    logger.error("Failed to update courts", {
+      operation: "updateNumCourts",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });
@@ -185,6 +209,11 @@ router.delete("/session/:id", async (req: Request, res: Response) => {
     await deleteSessionById(req.params.id);
     res.status(204).send();
   } catch (error) {
+    logger.warn("Failed to delete session", {
+      operation: "deleteSessionById",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(404).json({ error: (error as Error).message });
   }
 });
@@ -196,6 +225,12 @@ router.post("/session/:id/players", async (req: Request, res: Response) => {
     const session = await addPlayer(req.params.id, request);
     res.json(session);
   } catch (error) {
+    logger.error("Failed to add player", {
+      operation: "addPlayer",
+      sessionId: req.params.id,
+      playerName: req.body.name,
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });
@@ -206,6 +241,12 @@ router.delete("/session/:id/players/:playerId", async (req: Request, res: Respon
     const session = await removePlayer(req.params.id, req.params.playerId);
     res.json(session);
   } catch (error) {
+    logger.error("Failed to remove player", {
+      operation: "removePlayer",
+      sessionId: req.params.id,
+      playerId: req.params.playerId,
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });
@@ -217,6 +258,12 @@ router.patch("/session/:id/players/:playerId/rename", async (req: Request, res: 
     const session = await renamePlayer(req.params.id, req.params.playerId, request);
     res.json(session);
   } catch (error) {
+    logger.error("Failed to rename player", {
+      operation: "renamePlayer",
+      sessionId: req.params.id,
+      playerId: req.params.playerId,
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });
@@ -227,6 +274,11 @@ router.get("/session/:id/players", async (req: Request, res: Response) => {
     const session = await getSessionById(req.params.id);
     res.json(session.players);
   } catch (error) {
+    logger.warn("Failed to get players", {
+      operation: "getPlayers",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(404).json({ error: (error as Error).message });
   }
 });
@@ -237,6 +289,12 @@ router.patch("/session/:id/players/:playerId/sitout", async (req: Request, res: 
     const session = await togglePlayerSitOut(req.params.id, req.params.playerId);
     res.json(session);
   } catch (error) {
+    logger.error("Failed to toggle sitout", {
+      operation: "togglePlayerSitOut",
+      sessionId: req.params.id,
+      playerId: req.params.playerId,
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });
@@ -247,6 +305,11 @@ router.post("/session/:id/round", async (req: Request, res: Response) => {
     const session = await startNextRound(req.params.id);
     res.json(session);
   } catch (error) {
+    logger.error("Failed to start round", {
+      operation: "startNextRound",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });
@@ -259,6 +322,11 @@ router.get("/session/:id/round/current", async (req: Request, res: Response) => 
     res.json(round);
   } catch (error) {
     // Session not found is an actual error
+    logger.warn("Failed to get current round", {
+      operation: "getCurrentRound",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(404).json({ error: (error as Error).message });
   }
 });
@@ -269,6 +337,11 @@ router.delete("/session/:id/round", async (req: Request, res: Response) => {
     const session = await cancelCurrentRound(req.params.id);
     res.json(session);
   } catch (error) {
+    logger.error("Failed to cancel round", {
+      operation: "cancelCurrentRound",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });
@@ -280,6 +353,11 @@ router.post("/session/:id/round/complete", async (req: Request, res: Response) =
     const session = await completeCurrentRound(req.params.id, request);
     res.json(session);
   } catch (error) {
+    logger.error("Failed to complete round", {
+      operation: "completeCurrentRound",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });
@@ -290,6 +368,11 @@ router.get("/session/:id/history", async (req: Request, res: Response) => {
     const history = await getGameHistory(req.params.id);
     res.json(history);
   } catch (error) {
+    logger.warn("Failed to get game history", {
+      operation: "getGameHistory",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(404).json({ error: (error as Error).message });
   }
 });
@@ -300,6 +383,11 @@ router.post("/session/:id/end", async (req: Request, res: Response) => {
     const session = await endSession(req.params.id);
     res.json(session);
   } catch (error) {
+    logger.error("Failed to end session", {
+      operation: "endSession",
+      sessionId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(400).json({ error: (error as Error).message });
   }
 });

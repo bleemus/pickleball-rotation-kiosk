@@ -18,6 +18,7 @@ import {
   updateSessionAtomic,
 } from "./redis.js";
 import { generateNextRound, updateHistory, reverseHistory } from "./roundRobinService.js";
+import { logger } from "./logger.js";
 
 /**
  * Shuffles an array using Fisher-Yates algorithm
@@ -97,6 +98,8 @@ export async function createSession(request: CreateSessionRequest): Promise<Sess
   // Set this as the active session (single-kiosk mode)
   await setActiveSession(session.id);
 
+  logger.info("Session created", { sessionId: session.id, playerCount: players.length, numCourts });
+
   return session;
 }
 
@@ -167,6 +170,9 @@ export async function addPlayer(sessionId: string, request: AddPlayerRequest): P
   session.players.push(newPlayer);
 
   await saveSession(session);
+
+  logger.info("Player added", { sessionId, playerName: newPlayer.name, playerId: newPlayer.id });
+
   return session;
 }
 
@@ -197,6 +203,9 @@ export async function removePlayer(sessionId: string, playerId: string): Promise
   session.players = session.players.filter((p) => p.id !== playerId);
 
   await saveSession(session);
+
+  logger.info("Player removed", { sessionId, playerId });
+
   return session;
 }
 
@@ -321,6 +330,14 @@ export async function startNextRound(sessionId: string): Promise<Session> {
   };
 
   await saveSession(session);
+
+  logger.info("Round started", {
+    sessionId,
+    roundNumber,
+    matchCount: matches.length,
+    benchedCount: benchedPlayers.length,
+  });
+
   return session;
 }
 
@@ -355,6 +372,9 @@ export async function cancelCurrentRound(sessionId: string): Promise<Session> {
   session.currentRound = null;
 
   await saveSession(session);
+
+  logger.info("Round cancelled", { sessionId });
+
   return session;
 }
 
@@ -601,6 +621,13 @@ export async function completeCurrentRound(
     const allMatchesCompleted = session.currentRound.matches.every((m) => m.completed);
     session.currentRound.completed = allMatchesCompleted;
 
+    if (allMatchesCompleted) {
+      logger.info("Round completed", {
+        sessionId,
+        roundNumber: session.currentRound.roundNumber,
+      });
+    }
+
     // Return modified session (will be saved atomically by updateSessionAtomic)
     return session;
   });
@@ -644,5 +671,8 @@ export async function endSession(sessionId: string): Promise<Session> {
 
   session.ended = true;
   await saveSession(session);
+
+  logger.info("Session ended", { sessionId, playerCount: session.players.length });
+
   return session;
 }

@@ -1,5 +1,6 @@
 import { createClient, RedisClientType } from "redis";
 import { Session } from "../types/game.js";
+import { logger, errorDetails } from "./logger.js";
 
 let redisClient: RedisClientType | null = null;
 
@@ -11,11 +12,11 @@ export async function initRedis(): Promise<void> {
   });
 
   redisClient.on("error", (err) => {
-    console.error("Redis Client Error:", err);
+    logger.error("Redis client error", errorDetails(err));
   });
 
   redisClient.on("connect", () => {
-    console.log("Connected to Redis");
+    logger.info("Connected to Redis");
   });
 
   await redisClient.connect();
@@ -81,7 +82,7 @@ export async function setActiveSession(sessionId: string): Promise<void> {
   const client = getRedisClient();
   await client.set("active-session-id", sessionId);
   await client.expire("active-session-id", 86400);
-  console.log(`Set active session ID to: ${sessionId}`);
+  logger.info("Set active session", { sessionId });
 }
 
 export async function getActiveSessionId(): Promise<string | null> {
@@ -102,7 +103,7 @@ export async function getSession(sessionId: string): Promise<Session | null> {
   try {
     return JSON.parse(data) as Session;
   } catch (error) {
-    console.error("Failed to parse session data for session", sessionId, error);
+    logger.error("Failed to parse session data", { sessionId, ...errorDetails(error) });
     // Delete corrupted session data
     await client.del(key);
     throw new Error(`Session data corrupted for ${sessionId}. Session has been removed.`);
@@ -118,7 +119,7 @@ export async function deleteSession(sessionId: string): Promise<void> {
   const activeSessionId = await client.get("active-session-id");
   if (activeSessionId === sessionId) {
     await client.del("active-session-id");
-    console.log(`Cleared active session ID for deleted session: ${sessionId}`);
+    logger.info("Cleared active session ID for deleted session", { sessionId });
   }
 }
 
@@ -246,7 +247,7 @@ export async function flushAllSessions(): Promise<void> {
   // Delete all keys
   if (sessionKeys.length > 0) {
     await client.del(sessionKeys);
-    console.log(`Flushed ${sessionKeys.length} keys from Redis`);
+    logger.info("Flushed keys from Redis", { count: sessionKeys.length });
   }
 }
 

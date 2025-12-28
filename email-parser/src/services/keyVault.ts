@@ -1,5 +1,6 @@
 import { SecretClient } from "@azure/keyvault-secrets";
 import { ClientSecretCredential } from "@azure/identity";
+import { logger, errorDetails } from "./logger.js";
 
 /**
  * Configuration loaded from Azure Key Vault with .env fallback
@@ -52,7 +53,7 @@ export async function loadConfig(): Promise<EmailParserConfig> {
 
   if (tenantId && clientId && clientSecret && vaultUrl) {
     try {
-      console.log("🔐 Loading configuration from Azure Key Vault...");
+      logger.info("Loading configuration from Azure Key Vault");
 
       const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
       const client = new SecretClient(vaultUrl, credential);
@@ -63,29 +64,32 @@ export async function loadConfig(): Promise<EmailParserConfig> {
           const secret = await client.getSecret(secretName);
           if (secret.value) {
             config[configKey] = secret.value;
-            console.log(`  ✅ Loaded secret: ${secretName}`);
+            logger.debug("Loaded secret from Key Vault", { secretName });
           }
         } catch (error: unknown) {
           // Secret might not exist - that's OK for optional secrets
           const errorMessage = error instanceof Error ? error.message : String(error);
           if (errorMessage.includes("SecretNotFound")) {
-            console.log(`  ⚠️  Secret not found: ${secretName}`);
+            logger.debug("Secret not found in Key Vault", { secretName });
           } else {
-            console.warn(`  ⚠️  Failed to load secret ${secretName}:`, errorMessage);
+            logger.warn("Failed to load secret from Key Vault", {
+              secretName,
+              error: errorMessage,
+            });
           }
         }
       }
 
-      console.log("🔐 Key Vault configuration loaded successfully");
+      logger.info("Key Vault configuration loaded successfully");
     } catch (error) {
-      console.warn(
-        "⚠️  Failed to connect to Azure Key Vault, falling back to environment variables"
+      logger.warn(
+        "Failed to connect to Azure Key Vault, falling back to environment variables",
+        errorDetails(error)
       );
-      console.warn("   Error:", error instanceof Error ? error.message : String(error));
       return loadFromEnv();
     }
   } else {
-    console.log("📋 Azure Key Vault not configured, using environment variables");
+    logger.info("Azure Key Vault not configured, using environment variables");
     return loadFromEnv();
   }
 

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { logger, errorDetails } from "../services/logger.js";
 
 const router = Router();
 
@@ -19,7 +20,10 @@ router.get("/health", async (req: Request, res: Response) => {
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    console.error("Error checking email service health:", error);
+    logger.warn("Email service health check failed", {
+      operation: "reservationsHealth",
+      ...errorDetails(error),
+    });
     res.json({ status: "unavailable", emailPollingEnabled: false, emailEnabled: false });
   }
 });
@@ -39,7 +43,10 @@ router.get("/current", async (req: Request, res: Response) => {
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    console.error("Error fetching current reservations:", error);
+    logger.error("Failed to fetch current reservations", {
+      operation: "getCurrentReservations",
+      ...errorDetails(error),
+    });
     res.status(503).json({ error: "Failed to fetch reservations from email parser service" });
   }
 });
@@ -59,7 +66,10 @@ router.get("/today", async (req: Request, res: Response) => {
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    console.error("Error fetching today's reservations:", error);
+    logger.error("Failed to fetch today's reservations", {
+      operation: "getTodayReservations",
+      ...errorDetails(error),
+    });
     res.status(503).json({ error: "Failed to fetch reservations from email parser service" });
   }
 });
@@ -82,7 +92,10 @@ router.get("/", async (req: Request, res: Response) => {
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    console.error("Error fetching reservations:", error);
+    logger.error("Failed to fetch reservations", {
+      operation: "getReservations",
+      ...errorDetails(error),
+    });
     res.status(503).json({ error: "Failed to fetch reservations from email parser service" });
   }
 });

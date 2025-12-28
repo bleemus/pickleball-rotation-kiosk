@@ -1,4 +1,5 @@
 import { createClient } from "redis";
+import { logger, errorDetails } from "./logger.js";
 
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
@@ -9,29 +10,29 @@ const redisClient = createClient({
 
 // Error handling
 redisClient.on("error", (err: Error) => {
-  console.error("Redis Client Error:", err);
+  logger.error("Redis client error", errorDetails(err));
 });
 
 // Connect to Redis
 export async function connectRedis() {
   try {
     await redisClient.connect();
-    console.log("✅ Connected to Redis");
+    logger.info("Connected to Redis");
   } catch (error) {
-    console.error("Failed to connect to Redis:", error);
+    logger.error("Failed to connect to Redis", errorDetails(error));
     throw error;
   }
 }
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
-  console.log("SIGTERM received, closing Redis connection...");
+  logger.info("SIGTERM received, closing Redis connection");
   await redisClient.quit();
   process.exit(0);
 });
 
 process.on("SIGINT", async () => {
-  console.log("SIGINT received, closing Redis connection...");
+  logger.info("SIGINT received, closing Redis connection");
   await redisClient.quit();
   process.exit(0);
 });

@@ -7,6 +7,7 @@ import { ReservationStorage } from "./services/reservationStorage.redis.js";
 import { Reservation } from "./types/reservation.js";
 import { connectRedis } from "./services/redis.js";
 import { initConfig, type EmailParserConfig } from "./services/keyVault.js";
+import { logger, errorDetails } from "./services/logger.js";
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ const emailPollingEnabled = process.env.ENABLE_EMAIL_POLLING !== "false";
  */
 function initializeEmailChecker(config: EmailParserConfig): void {
   if (!emailPollingEnabled) {
-    console.log("📧 Email polling disabled via ENABLE_EMAIL_POLLING=false");
+    logger.info("Email polling disabled via ENABLE_EMAIL_POLLING=false");
     return;
   }
 
@@ -58,31 +59,23 @@ function initializeEmailChecker(config: EmailParserConfig): void {
         await storage.addReservation(reservation);
       }
     );
-    console.log("✅ Using Microsoft Graph API for email checking");
-    console.log("✅ Using AI Azure Function for email parsing");
+    logger.info("Using Microsoft Graph API for email checking");
+    logger.info("Using AI Azure Function for email parsing");
 
     // Schedule email checks
     const checkInterval = parseInt(process.env.EMAIL_CHECK_INTERVAL || "5");
     cron.schedule(`*/${checkInterval} * * * *`, async () => {
-      console.log("Checking for new reservation emails...");
+      logger.info("Scheduled email check starting");
       try {
         await emailChecker!.checkEmails();
       } catch (error) {
-        console.error("Error checking emails:", error);
+        logger.error("Error checking emails", errorDetails(error));
       }
     });
 
-    console.log(`Email checking scheduled every ${checkInterval} minutes`);
-    console.log("First email check will run at the next scheduled interval");
+    logger.info("Email checking scheduled", { intervalMinutes: checkInterval });
   } else {
-    console.warn("⚠️  Email polling enabled but required configuration not complete");
-    console.warn(
-      "Graph API: Set secrets in Key Vault (graph-tenant-id, graph-client-id, graph-client-secret, graph-user-id)"
-    );
-    console.warn(
-      "  Or env vars: GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET, GRAPH_USER_ID"
-    );
-    console.warn("AI Parser: Set env vars: AI_PARSER_URL, AI_PARSER_KEY");
+    logger.warn("Email polling enabled but required configuration not complete");
   }
 }
 
@@ -127,7 +120,7 @@ app.get("/api/reservations", async (req: Request, res: Response) => {
       res.json(results);
     }
   } catch (error) {
-    console.error("Error querying reservations:", error);
+    logger.error("Error querying reservations", errorDetails(error));
     res.status(500).json({ error: "Failed to query reservations" });
   }
 });
@@ -147,7 +140,7 @@ app.get("/api/reservations/today", async (req: Request, res: Response) => {
     const results = await storage.getTodayReservations();
     res.json(results);
   } catch (error) {
-    console.error("Error getting today's reservations:", error);
+    logger.error("Error getting today's reservations", errorDetails(error));
     res.status(500).json({ error: "Failed to get today's reservations" });
   }
 });
@@ -185,7 +178,7 @@ app.get("/api/reservations/current", async (req: Request, res: Response) => {
 
     res.json(currentReservations);
   } catch (error) {
-    console.error("Error getting current reservations:", error);
+    logger.error("Error getting current reservations", errorDetails(error));
     res.status(500).json({ error: "Failed to get current reservations" });
   }
 });
@@ -203,7 +196,10 @@ app.get("/api/reservations/:id", async (req: Request, res: Response) => {
       res.status(404).json({ error: "Reservation not found" });
     }
   } catch (error) {
-    console.error("Error getting reservation:", error);
+    logger.error("Error getting reservation", {
+      reservationId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(500).json({ error: "Failed to get reservation" });
   }
 });
@@ -236,7 +232,7 @@ app.post("/api/reservations", async (req: Request, res: Response) => {
     await storage.addReservation(reservation);
     res.status(201).json(reservation);
   } catch (error) {
-    console.error("Error adding reservation:", error);
+    logger.error("Error adding reservation", errorDetails(error));
     res.status(500).json({ error: "Failed to add reservation" });
   }
 });
@@ -254,7 +250,10 @@ app.delete("/api/reservations/:id", async (req: Request, res: Response) => {
       res.status(404).json({ error: "Reservation not found" });
     }
   } catch (error) {
-    console.error("Error deleting reservation:", error);
+    logger.error("Error deleting reservation", {
+      reservationId: req.params.id,
+      ...errorDetails(error),
+    });
     res.status(500).json({ error: "Failed to delete reservation" });
   }
 });
@@ -273,7 +272,7 @@ app.post("/api/check-emails", async (req: Request, res: Response) => {
     await emailChecker.checkEmails();
     res.json({ success: true, message: "Email check completed" });
   } catch (error) {
-    console.error("Error checking emails:", error);
+    logger.error("Error checking emails", errorDetails(error));
     res.status(500).json({ error: "Failed to check emails" });
   }
 });
@@ -307,11 +306,10 @@ async function startServer() {
 
     // Start Express server
     app.listen(port, () => {
-      console.log(`Email parser service listening on port ${port}`);
-      console.log(`Email checking: ${emailChecker ? "enabled" : "disabled"}`);
+      logger.info("Email parser service started", { port, emailEnabled: emailChecker !== null });
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    logger.error("Failed to start server", errorDetails(error));
     process.exit(1);
   }
 }

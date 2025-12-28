@@ -2,6 +2,7 @@ import { Client, type AuthenticationProvider } from "@microsoft/microsoft-graph-
 import { ClientSecretCredential } from "@azure/identity";
 import { Reservation } from "../types/reservation.js";
 import sanitizeHtml from "sanitize-html";
+import { logger, errorDetails } from "./logger.js";
 
 // Microsoft Graph types
 interface Message {
@@ -32,8 +33,6 @@ interface AIParserResponse {
   players?: string[];
   error?: string;
 }
-
-const timestamp = () => new Date().toISOString();
 
 /**
  * Custom authentication provider that uses Azure Identity ClientSecretCredential
@@ -119,7 +118,7 @@ export class GraphEmailChecker {
       });
 
       if (!response.ok) {
-        console.error(`[${timestamp()}] AI parser returned status ${response.status}`);
+        logger.error("AI parser returned error status", { status: response.status });
         return null;
       }
 
@@ -131,7 +130,7 @@ export class GraphEmailChecker {
 
       // Convert AI response to Reservation object
       if (!result.date || !result.start_time || !result.players || result.players.length === 0) {
-        console.warn(`[${timestamp()}] AI parser returned incomplete reservation data`);
+        logger.warn("AI parser returned incomplete reservation data");
         return null;
       }
 
@@ -149,7 +148,7 @@ export class GraphEmailChecker {
 
       return reservation;
     } catch (error) {
-      console.error(`[${timestamp()}] Error calling AI parser:`, error);
+      logger.error("Error calling AI parser", errorDetails(error));
       return null;
     }
   }
@@ -158,7 +157,7 @@ export class GraphEmailChecker {
    * Check for new reservation emails using Microsoft Graph API
    */
   async checkEmails(): Promise<void> {
-    console.log(`[${timestamp()}] Checking for new reservation emails via Microsoft Graph...`);
+    logger.info("Checking for new reservation emails via Microsoft Graph");
 
     try {
       // Get unread messages from inbox
@@ -171,10 +170,10 @@ export class GraphEmailChecker {
         .get();
 
       const messageList = messages.value as Message[];
-      console.log(`[${timestamp()}] Total unread emails: ${messageList.length}`);
+      logger.info("Unread emails found", { count: messageList.length });
 
       if (messageList.length === 0) {
-        console.log(`[${timestamp()}] No new emails to process`);
+        logger.debug("No new emails to process");
         return;
       }
 
@@ -186,7 +185,7 @@ export class GraphEmailChecker {
           const fromName = message.from?.emailAddress?.name || "";
           const fromDisplay = fromName ? `${fromName} <${from}>` : from;
 
-          console.log(`[${timestamp()}] Processing email from ${fromDisplay}: ${subject}`);
+          logger.info("Processing email", { from: fromDisplay, subject });
 
           // Get email body text
           const bodyContent = message.body?.content || message.bodyPreview || "";
@@ -198,15 +197,15 @@ export class GraphEmailChecker {
           const reservation = await this.parseEmailWithAI(text, subject);
 
           if (reservation) {
-            console.log(`[${timestamp()}] ✓ Reservation found:`, {
+            logger.info("Reservation found", {
               date: reservation.date,
               time: `${reservation.startTime} - ${reservation.endTime}`,
               court: reservation.court,
-              players: reservation.players.join(", "),
+              playerCount: reservation.players.length,
             });
             await this.onReservationFound(reservation);
           } else {
-            console.log(`[${timestamp()}] No valid reservation found in email from ${fromDisplay}`);
+            logger.debug("No valid reservation found in email", { from: fromDisplay });
           }
 
           // Mark message as read with retry to prevent duplicate processing
@@ -214,21 +213,21 @@ export class GraphEmailChecker {
             await this.markMessageAsReadWithRetry(message.id);
           }
         } catch (error) {
-          console.error(`[${timestamp()}] Error processing message:`, error);
+          logger.error("Error processing message", errorDetails(error));
           // Still attempt to mark as read to prevent reprocessing on error
           if (message.id) {
             try {
               await this.markMessageAsReadWithRetry(message.id);
             } catch (markError) {
-              console.error(`[${timestamp()}] Failed to mark failed message as read:`, markError);
+              logger.error("Failed to mark failed message as read", errorDetails(markError));
             }
           }
         }
       }
 
-      console.log(`[${timestamp()}] Done processing emails`);
+      logger.info("Done processing emails");
     } catch (error) {
-      console.error(`[${timestamp()}] Microsoft Graph API error:`, error);
+      logger.error("Microsoft Graph API error", errorDetails(error));
       throw error;
     }
   }
@@ -247,9 +246,7 @@ export class GraphEmailChecker {
         if (attempt === maxRetries) {
           throw error;
         }
-        console.warn(
-          `[${timestamp()}] Failed to mark message as read (attempt ${attempt}/${maxRetries}), retrying...`
-        );
+        logger.warn("Failed to mark message as read, retrying", { attempt, maxRetries });
         await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
       }
     }

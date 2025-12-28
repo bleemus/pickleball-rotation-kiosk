@@ -1,5 +1,6 @@
 import { Reservation, ReservationQuery } from "../types/reservation.js";
 import redisClient from "./redis.js";
+import { logger, errorDetails } from "./logger.js";
 
 const RESERVATION_KEY_PREFIX = "reservation:";
 const RESERVATION_INDEX_KEY = "reservation:index";
@@ -22,7 +23,7 @@ export class ReservationStorage {
     // Check if this reservation already exists (based on date, time, and players)
     const existing = await this.findDuplicate(reservation);
     if (existing) {
-      console.log("Duplicate reservation found, skipping:", reservation.id);
+      logger.debug("Duplicate reservation found, skipping", { reservationId: reservation.id });
       return;
     }
 
@@ -36,7 +37,11 @@ export class ReservationStorage {
     // Add to index
     await redisClient.sAdd(RESERVATION_INDEX_KEY, reservation.id);
 
-    console.log(`Reservation ${reservation.id} added successfully to Redis`);
+    logger.info("Reservation added", {
+      reservationId: reservation.id,
+      date: reservation.date,
+      startTime: reservation.startTime,
+    });
   }
 
   /**
@@ -103,10 +108,10 @@ export class ReservationStorage {
     try {
       return JSON.parse(data) as Reservation;
     } catch (error) {
-      console.error(
-        `Failed to parse reservation ${id} from Redis, removing corrupted data:`,
-        error
-      );
+      logger.error("Failed to parse reservation, removing corrupted data", {
+        reservationId: id,
+        ...errorDetails(error),
+      });
       await redisClient.del(key);
       await redisClient.sRem(RESERVATION_INDEX_KEY, id);
       return undefined;
@@ -149,7 +154,7 @@ export class ReservationStorage {
     }
 
     if (cleaned > 0) {
-      console.log(`Cleaned up ${cleaned} old reservation(s)`);
+      logger.info("Cleaned up old reservations", { count: cleaned });
     }
   }
 
