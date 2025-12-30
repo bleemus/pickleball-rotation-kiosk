@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:parse": "tsx scripts/test-email-parser.ts"
   },
   "dependencies": {
     "@azure/identity": "^4.13.0",
