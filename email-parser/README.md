@@ -357,9 +357,9 @@ If reservations are being found but not parsed correctly:
    - Player names must be 2+ words, alphabetic characters only
 
 3. **AI Parser issues:**
-   - Check Azure Function health: `curl https://pickleballkiosk-ai-email.azurewebsites.net/api/health`
-   - Verify AI_PARSER_URL and AI_PARSER_KEY are configured
-   - Check Azure Function logs in Azure Portal
+   - Verify Azure OpenAI credentials are configured (via Key Vault or environment variables)
+   - Check logs for Azure OpenAI errors: `make email-logs | grep -i openai`
+   - Test Azure OpenAI connection: check health endpoint for `openAIConnected: true`
 
 ### Service won't start
 

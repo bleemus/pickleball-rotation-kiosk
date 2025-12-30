@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+// Mock the OpenAI completion response
+const mockCreate = vi.fn();
+
 // Mock external dependencies before importing the module
 vi.mock("@microsoft/microsoft-graph-client", () => ({
   Client: {
@@ -22,9 +25,15 @@ vi.mock("@azure/identity", () => ({
   })),
 }));
 
-// Mock fetch globally
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+vi.mock("openai", () => ({
+  AzureOpenAI: vi.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: mockCreate,
+      },
+    },
+  })),
+}));
 
 import { GraphEmailChecker } from "./emailChecker.graph.js";
 import { Client } from "@microsoft/microsoft-graph-client";
@@ -35,8 +44,9 @@ describe("GraphEmailChecker", () => {
     clientId: "test-client",
     clientSecret: "test-secret",
     userId: "test@example.com",
-    aiParserUrl: "https://test-function.azurewebsites.net/api/parse",
-    aiParserKey: "test-api-key",
+    azureOpenaiEndpoint: "https://test.openai.azure.com/",
+    azureOpenaiApiKey: "test-api-key",
+    azureOpenaiDeployment: "gpt-4o-mini",
   };
 
   let mockOnReservationFound: ReturnType<typeof vi.fn>;
@@ -121,31 +131,31 @@ describe("GraphEmailChecker", () => {
         patch: mockPatch,
       });
 
-      // Mock AI parser response
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            is_reservation: true,
-            date: "2024-01-15",
-            start_time: "10:00am",
-            end_time: "12:00pm",
-            court: "Court 1",
-            players: ["Alice", "Bob"],
-          }),
+      // Mock Azure OpenAI response
+      mockCreate.mockResolvedValue({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                is_reservation: true,
+                date: "2024-01-15",
+                start_time: "10:00am",
+                end_time: "12:00pm",
+                court: "Court 1",
+                players: ["Alice", "Bob"],
+              }),
+            },
+          },
+        ],
       });
 
       await checker.checkEmails();
 
-      // Should call AI parser
-      expect(mockFetch).toHaveBeenCalledWith(
-        mockConfig.aiParserUrl,
+      // Should call Azure OpenAI
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: "POST",
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-            "x-functions-key": mockConfig.aiParserKey,
-          }),
+          model: mockConfig.azureOpenaiDeployment,
+          response_format: { type: "json_object" },
         })
       );
 
@@ -175,10 +185,9 @@ describe("GraphEmailChecker", () => {
         patch: mockPatch,
       });
 
-      // Mock AI parser to return no reservation
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ is_reservation: false }),
+      // Mock Azure OpenAI to return no reservation
+      mockCreate.mockResolvedValue({
+        choices: [{ message: { content: JSON.stringify({ is_reservation: false }) } }],
       });
 
       await checker.checkEmails();
@@ -198,7 +207,7 @@ describe("GraphEmailChecker", () => {
       });
 
       await expect(checker.checkEmails()).resolves.not.toThrow();
-      expect(mockFetch).not.toHaveBeenCalled();
+      expect(mockCreate).not.toHaveBeenCalled();
     });
 
     it("continues processing other messages when one fails", async () => {
@@ -230,15 +239,14 @@ describe("GraphEmailChecker", () => {
       });
 
       // First call fails, second succeeds
-      mockFetch.mockRejectedValueOnce(new Error("Network error")).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ is_reservation: false }),
+      mockCreate.mockRejectedValueOnce(new Error("OpenAI error")).mockResolvedValueOnce({
+        choices: [{ message: { content: JSON.stringify({ is_reservation: false }) } }],
       });
 
       await expect(checker.checkEmails()).resolves.not.toThrow();
 
       // Both messages should be processed (2 AI parser calls attempted)
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockCreate).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -264,9 +272,8 @@ describe("GraphEmailChecker", () => {
     });
 
     it("handles AI parser returning non-reservation", async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ is_reservation: false }),
+      mockCreate.mockResolvedValue({
+        choices: [{ message: { content: JSON.stringify({ is_reservation: false }) } }],
       });
 
       await checker.checkEmails();
@@ -275,14 +282,18 @@ describe("GraphEmailChecker", () => {
     });
 
     it("handles AI parser returning incomplete data", async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            is_reservation: true,
-            date: "2024-01-15",
-            // Missing start_time and players
-          }),
+      mockCreate.mockResolvedValue({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                is_reservation: true,
+                date: "2024-01-15",
+                // Missing start_time and players
+              }),
+            },
+          },
+        ],
       });
 
       await checker.checkEmails();
@@ -290,10 +301,9 @@ describe("GraphEmailChecker", () => {
       expect(mockOnReservationFound).not.toHaveBeenCalled();
     });
 
-    it("handles AI parser returning error status", async () => {
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 500,
+    it("handles AI parser returning empty response", async () => {
+      mockCreate.mockResolvedValue({
+        choices: [{ message: { content: null } }],
       });
 
       await checker.checkEmails();
@@ -302,23 +312,27 @@ describe("GraphEmailChecker", () => {
     });
 
     it("handles AI parser network error", async () => {
-      mockFetch.mockRejectedValue(new Error("Network error"));
+      mockCreate.mockRejectedValue(new Error("OpenAI API error"));
 
       await expect(checker.checkEmails()).resolves.not.toThrow();
       expect(mockOnReservationFound).not.toHaveBeenCalled();
     });
 
     it("creates reservation with default values for missing fields", async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            is_reservation: true,
-            date: "2024-01-15",
-            start_time: "10:00am",
-            players: ["Alice"],
-            // Missing end_time, court, organizer
-          }),
+      mockCreate.mockResolvedValue({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                is_reservation: true,
+                date: "2024-01-15",
+                start_time: "10:00am",
+                players: ["Alice"],
+                // Missing end_time, court, organizer
+              }),
+            },
+          },
+        ],
       });
 
       await checker.checkEmails();

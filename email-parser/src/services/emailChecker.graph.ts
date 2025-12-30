@@ -1,5 +1,6 @@
 import { Client, type AuthenticationProvider } from "@microsoft/microsoft-graph-client";
 import { ClientSecretCredential } from "@azure/identity";
+import { AzureOpenAI } from "openai";
 import { Reservation } from "../types/reservation.js";
 import sanitizeHtml from "sanitize-html";
 import { logger, errorDetails } from "./logger.js";
@@ -34,6 +35,30 @@ interface AIParserResponse {
   error?: string;
 }
 
+// System prompt for AI email parsing
+const SYSTEM_PROMPT = `You are a specialized email parser for pickleball court reservations.
+
+Your task is to extract reservation details from email text. The emails may be:
+- Direct reservation confirmations from booking systems (Pickle Planner, CourtReserve, etc.)
+- Forwarded emails (with headers like "Begin forwarded message:")
+- Various formats with or without proper line breaks
+
+Extract the following information:
+1. **date**: The reservation date (not the email sent date if forwarded). Format as YYYY-MM-DD.
+2. **start_time**: Start time (e.g., "5:30pm", "8:00am")
+3. **end_time**: End time (e.g., "7:00pm", "9:30am")
+4. **court**: Court location (e.g., "North", "South", "North, South", "East", "West", "Center", "Court 1", etc.)
+5. **organizer**: The person whose reservation it is (from "Name's Reservation" or similar)
+6. **players**: List of all player names
+
+Important parsing rules:
+- For forwarded emails, look for the ACTUAL reservation date (often followed by a day like "TUESDAY") not the forwarding date
+- Look for markers like "following event:", "reservation details:", "booking confirmation" for the actual content
+- Player names typically appear after "Players" and before fee/payment information
+- If it's not a pickleball court reservation email, set is_reservation to false
+
+Respond with valid JSON only, no markdown formatting.`;
+
 /**
  * Custom authentication provider that uses Azure Identity ClientSecretCredential
  * This avoids ESM compatibility issues with the Graph client's built-in auth providers
@@ -60,8 +85,8 @@ export class GraphEmailChecker {
   private client: Client;
   private onReservationFound: (reservation: Reservation) => Promise<void>;
   private userId: string;
-  private aiParserUrl: string;
-  private aiParserKey: string;
+  private openaiClient: AzureOpenAI;
+  private openaiDeployment: string;
 
   constructor(
     config: {
@@ -69,8 +94,9 @@ export class GraphEmailChecker {
       clientId: string;
       clientSecret: string;
       userId: string; // Email address of the account to monitor
-      aiParserUrl: string; // Azure Function URL for AI parsing
-      aiParserKey: string; // Azure Function key
+      azureOpenaiEndpoint: string; // Azure OpenAI endpoint URL
+      azureOpenaiApiKey: string; // Azure OpenAI API key
+      azureOpenaiDeployment: string; // Azure OpenAI deployment name
     },
     onReservationFound: (reservation: Reservation) => Promise<void>
   ) {
@@ -91,38 +117,73 @@ export class GraphEmailChecker {
       authProvider,
     });
 
+    // Initialize Azure OpenAI client
+    this.openaiClient = new AzureOpenAI({
+      endpoint: config.azureOpenaiEndpoint,
+      apiKey: config.azureOpenaiApiKey,
+      apiVersion: "2024-02-01",
+    });
+    this.openaiDeployment = config.azureOpenaiDeployment;
+
     this.onReservationFound = onReservationFound;
     this.userId = config.userId;
-    this.aiParserUrl = config.aiParserUrl;
-    this.aiParserKey = config.aiParserKey;
   }
 
   /**
-   * Parse email using Azure Function AI parser
+   * Test Azure OpenAI connection with a minimal request.
+   * Returns true if the connection works, false otherwise.
+   */
+  async testOpenAIConnection(): Promise<boolean> {
+    try {
+      const response = await this.openaiClient.chat.completions.create({
+        model: this.openaiDeployment,
+        messages: [{ role: "user", content: "test" }],
+        max_tokens: 1,
+      });
+      return response.choices.length > 0;
+    } catch (error) {
+      logger.error("Azure OpenAI health check failed", errorDetails(error));
+      return false;
+    }
+  }
+
+  /**
+   * Parse email using Azure OpenAI
    */
   private async parseEmailWithAI(
     emailText: string,
     emailSubject: string
   ): Promise<Reservation | null> {
     try {
-      const response = await fetch(this.aiParserUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-functions-key": this.aiParserKey,
-        },
-        body: JSON.stringify({
-          email_text: emailText,
-          email_subject: emailSubject,
-        }),
+      const userMessage = `Parse this reservation email:
+
+Subject: ${emailSubject}
+
+Body:
+${emailText}
+
+Extract the reservation details and respond with JSON.`;
+
+      const response = await this.openaiClient.chat.completions.create({
+        model: this.openaiDeployment,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userMessage },
+        ],
+        temperature: 0, // Deterministic output
+        max_tokens: 500,
+        response_format: { type: "json_object" },
       });
 
-      if (!response.ok) {
-        logger.error("AI parser returned error status", { status: response.status });
+      const resultText = response.choices[0]?.message?.content;
+      if (!resultText) {
+        logger.error("Azure OpenAI returned empty response");
         return null;
       }
 
-      const result = (await response.json()) as AIParserResponse;
+      logger.debug("Azure OpenAI response", { response: resultText });
+
+      const result = JSON.parse(resultText) as AIParserResponse;
 
       if (!result.is_reservation) {
         return null;
@@ -148,7 +209,7 @@ export class GraphEmailChecker {
 
       return reservation;
     } catch (error) {
-      logger.error("Error calling AI parser", errorDetails(error));
+      logger.error("Error calling Azure OpenAI", errorDetails(error));
       return null;
     }
   }

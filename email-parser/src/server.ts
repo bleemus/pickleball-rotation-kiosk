@@ -1,3 +1,9 @@
+// Application Insights - must initialize early to instrument dependencies
+import appInsights from "applicationinsights";
+if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
+  appInsights.setup().start();
+}
+
 import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -31,36 +37,54 @@ const emailPollingEnabled = process.env.ENABLE_EMAIL_POLLING !== "false";
 /**
  * Initialize email checker with configuration from Key Vault or environment
  */
-function initializeEmailChecker(config: EmailParserConfig): void {
+async function initializeEmailChecker(config: EmailParserConfig): Promise<void> {
   if (!emailPollingEnabled) {
     logger.info("Email polling disabled via ENABLE_EMAIL_POLLING=false");
     return;
   }
 
-  // Check for Microsoft Graph API configuration and AI parser configuration
+  // Check for Microsoft Graph API configuration and Azure OpenAI configuration
   if (
     config.graphTenantId &&
     config.graphClientId &&
     config.graphClientSecret &&
     config.graphUserId &&
-    config.aiParserUrl &&
-    config.aiParserKey
+    config.azureOpenaiEndpoint &&
+    config.azureOpenaiApiKey
   ) {
-    emailChecker = new GraphEmailChecker(
+    const checker = new GraphEmailChecker(
       {
         tenantId: config.graphTenantId,
         clientId: config.graphClientId,
         clientSecret: config.graphClientSecret,
         userId: config.graphUserId,
-        aiParserUrl: config.aiParserUrl,
-        aiParserKey: config.aiParserKey,
+        azureOpenaiEndpoint: config.azureOpenaiEndpoint,
+        azureOpenaiApiKey: config.azureOpenaiApiKey,
+        azureOpenaiDeployment: config.azureOpenaiDeployment || "gpt-4o-mini",
       },
       async (reservation: Reservation) => {
         await storage.addReservation(reservation);
       }
     );
+
+    // Test Azure OpenAI connection before enabling email checking
+    logger.info("Testing Azure OpenAI connection...");
+    const openaiHealthy = await checker.testOpenAIConnection();
+
+    if (!openaiHealthy) {
+      logger.error(
+        "Azure OpenAI health check failed - email parsing disabled. Check your Azure OpenAI credentials."
+      );
+      return;
+    }
+
+    logger.info("Azure OpenAI connection verified successfully");
+    emailChecker = checker;
+
     logger.info("Using Microsoft Graph API for email checking");
-    logger.info("Using AI Azure Function for email parsing");
+    logger.info("Using Azure OpenAI for email parsing", {
+      deployment: config.azureOpenaiDeployment || "gpt-4o-mini",
+    });
 
     // Schedule email checks
     const checkInterval = parseInt(process.env.EMAIL_CHECK_INTERVAL || "5");
@@ -302,7 +326,7 @@ async function startServer() {
     await connectRedis();
 
     // Initialize email checker with loaded configuration
-    initializeEmailChecker(config);
+    await initializeEmailChecker(config);
 
     // Start Express server
     app.listen(port, () => {

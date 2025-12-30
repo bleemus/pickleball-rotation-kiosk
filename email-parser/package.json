@@ -12,18 +12,21 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:parse": "tsx scripts/test-email-parser.ts"
   },
   "dependencies": {
     "@azure/identity": "^4.13.0",
     "@azure/keyvault-secrets": "^4.10.0",
     "@microsoft/microsoft-graph-client": "^3.0.7",
+    "applicationinsights": "^3.12.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "imapflow": "^1.0.163",
     "mailparser": "^3.6.5",
     "node-cron": "^3.0.3",
+    "openai": "^6.15.0",
     "redis": "^5.10.0",
     "sanitize-html": "^2.17.0",
     "winston": "^3.19.0"

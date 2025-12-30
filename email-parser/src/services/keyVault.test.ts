@@ -39,8 +39,9 @@ describe("keyVault", () => {
     delete process.env.GRAPH_CLIENT_ID;
     delete process.env.GRAPH_CLIENT_SECRET;
     delete process.env.GRAPH_USER_ID;
-    delete process.env.AI_PARSER_URL;
-    delete process.env.AI_PARSER_KEY;
+    delete process.env.AZURE_OPENAI_ENDPOINT;
+    delete process.env.AZURE_OPENAI_API_KEY;
+    delete process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
   });
 
   afterEach(() => {
@@ -55,8 +56,9 @@ describe("keyVault", () => {
         process.env.GRAPH_CLIENT_ID = "env-client";
         process.env.GRAPH_CLIENT_SECRET = "env-secret";
         process.env.GRAPH_USER_ID = "env-user@example.com";
-        process.env.AI_PARSER_URL = "https://parser.example.com";
-        process.env.AI_PARSER_KEY = "parser-key";
+        process.env.AZURE_OPENAI_ENDPOINT = "https://openai.example.com";
+        process.env.AZURE_OPENAI_API_KEY = "openai-key";
+        process.env.AZURE_OPENAI_DEPLOYMENT_NAME = "gpt-4o-mini";
 
         const config = await loadConfig();
 
@@ -64,20 +66,22 @@ describe("keyVault", () => {
         expect(config.graphClientId).toBe("env-client");
         expect(config.graphClientSecret).toBe("env-secret");
         expect(config.graphUserId).toBe("env-user@example.com");
-        expect(config.aiParserUrl).toBe("https://parser.example.com");
-        expect(config.aiParserKey).toBe("parser-key");
+        expect(config.azureOpenaiEndpoint).toBe("https://openai.example.com");
+        expect(config.azureOpenaiApiKey).toBe("openai-key");
+        expect(config.azureOpenaiDeployment).toBe("gpt-4o-mini");
         expect(SecretClient).not.toHaveBeenCalled();
       });
 
-      it("returns undefined for missing environment variables", async () => {
+      it("returns undefined for missing environment variables (except deployment default)", async () => {
         const config = await loadConfig();
 
         expect(config.graphTenantId).toBeUndefined();
         expect(config.graphClientId).toBeUndefined();
         expect(config.graphClientSecret).toBeUndefined();
         expect(config.graphUserId).toBeUndefined();
-        expect(config.aiParserUrl).toBeUndefined();
-        expect(config.aiParserKey).toBeUndefined();
+        expect(config.azureOpenaiEndpoint).toBeUndefined();
+        expect(config.azureOpenaiApiKey).toBeUndefined();
+        expect(config.azureOpenaiDeployment).toBe("gpt-4o-mini"); // Has default
       });
     });
 
@@ -142,21 +146,24 @@ describe("keyVault", () => {
 
       it("merges Key Vault config with env fallback for missing values", async () => {
         process.env.GRAPH_CLIENT_ID = "env-fallback-client";
-        process.env.AI_PARSER_URL = "https://parser.example.com";
-        process.env.AI_PARSER_KEY = "parser-key";
+        process.env.AZURE_OPENAI_ENDPOINT = "https://openai.example.com";
+        process.env.AZURE_OPENAI_API_KEY = "openai-key";
 
         mockGetSecret
           .mockResolvedValueOnce({ value: "kv-tenant" })
-          .mockResolvedValueOnce({ value: null }) // Empty value
+          .mockResolvedValueOnce({ value: null }) // Empty value for client id
           .mockResolvedValueOnce({ value: "kv-secret" })
-          .mockResolvedValueOnce({ value: "kv-user@example.com" });
+          .mockResolvedValueOnce({ value: "kv-user@example.com" })
+          .mockResolvedValueOnce({ value: null }) // Empty value for openai endpoint
+          .mockResolvedValueOnce({ value: null }) // Empty value for openai key
+          .mockResolvedValueOnce({ value: null }); // Empty value for openai deployment
 
         const config = await loadConfig();
 
         expect(config.graphTenantId).toBe("kv-tenant");
         expect(config.graphClientId).toBe("env-fallback-client"); // Falls back to env
-        expect(config.aiParserUrl).toBe("https://parser.example.com"); // From env (not in KV)
-        expect(config.aiParserKey).toBe("parser-key"); // From env (not in KV)
+        expect(config.azureOpenaiEndpoint).toBe("https://openai.example.com"); // From env (fallback)
+        expect(config.azureOpenaiApiKey).toBe("openai-key"); // From env (fallback)
       });
 
       it("falls back to environment variables when Key Vault connection fails", async () => {

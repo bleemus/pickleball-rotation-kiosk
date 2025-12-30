@@ -1,3 +1,9 @@
+// Application Insights must be initialized before other imports
+import appInsights from "applicationinsights";
+if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
+  appInsights.setup().start();
+}
+
 import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
@@ -8,6 +14,28 @@ import { logger } from "./services/logger.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+/**
+ * Log which configuration keys are set at startup
+ */
+function logConfiguration(): void {
+  const status = (value: string | undefined): string => (value ? "✓" : "✗");
+
+  logger.info("Backend configuration:");
+  logger.info(`  PORT: ${status(String(PORT))} | NODE_ENV: ${status(process.env.NODE_ENV)}`);
+  logger.info(
+    `  REDIS_URL: ${status(process.env.REDIS_URL)} | LOG_LEVEL: ${status(process.env.LOG_LEVEL)}`
+  );
+  logger.info(
+    `  WIFI_SSID: ${status(process.env.WIFI_SSID)} | WIFI_PASSWORD: ${status(process.env.WIFI_PASSWORD)}`
+  );
+  logger.info(
+    `  APPLICATIONINSIGHTS: ${status(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING)}`
+  );
+}
+
+// Disable ETag to prevent 304 responses - this is a real-time app that needs fresh data
+app.set("etag", false);
 
 // Middleware
 // CORS configuration - restrict to known origins in production, allow all in development/test
@@ -87,6 +115,9 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
 // Start server
 async function startServer() {
   try {
+    // Log configuration at startup
+    logConfiguration();
+
     // Initialize Redis connection
     await initRedis();
     logger.info("Redis initialized");
