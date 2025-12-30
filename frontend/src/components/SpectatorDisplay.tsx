@@ -464,18 +464,22 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
         </div>
 
         {/* Scrollable Rankings Table */}
-        <div
-          ref={summaryScrollRef}
-          className="flex-1 px-6 pb-6 overflow-y-auto"
-          style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
-        >
-          <div className="max-w-6xl mx-auto">
-            <div className={`rounded-3xl shadow-2xl p-8 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+        <div className="flex-1 px-6 pb-6 overflow-hidden flex flex-col">
+          <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col min-h-0">
+            <div
+              ref={summaryScrollRef}
+              className={`rounded-3xl shadow-2xl flex-1 overflow-y-auto p-8 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+              style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+            >
               <table className="w-full">
-                <thead>
+                <thead
+                  className={`sticky -top-8 z-10 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+                  style={{ boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
+                >
                   <tr className={`border-b-2 ${darkMode ? "border-gray-600" : "border-gray-300"}`}>
+                    <th className="w-24 min-w-24 py-6 px-2"></th>
                     <th
-                      className={`text-left py-6 px-4 text-3xl font-bold ${darkMode ? "text-gray-200" : "text-gray-800"}`}
+                      className={`text-center py-6 px-4 text-3xl font-bold ${darkMode ? "text-gray-200" : "text-gray-800"}`}
                     >
                       Rank
                     </th>
@@ -504,6 +508,7 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                     >
                       +/-
                     </th>
+                    <th className="w-24 min-w-24 py-6 px-2"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -517,10 +522,13 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                         key={player.id}
                         className={`border-b ${darkMode ? "border-gray-700" : "border-gray-200"} ${isTopThree ? (darkMode ? "bg-yellow-900 bg-opacity-20" : "bg-yellow-50") : ""}`}
                       >
+                        <td className="w-24 min-w-24 py-6 px-2 text-4xl text-center">
+                          {medalEmoji}
+                        </td>
                         <td
-                          className={`py-6 px-4 text-2xl font-bold ${darkMode ? "text-gray-200" : "text-gray-800"}`}
+                          className={`py-6 px-4 text-2xl font-bold text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}
                         >
-                          {medalEmoji} {index + 1}
+                          {index + 1}
                         </td>
                         <td
                           className={`py-6 px-4 text-2xl font-bold ${darkMode ? "text-gray-200" : "text-gray-800"}`}
@@ -551,6 +559,9 @@ export function SpectatorDisplay({ apiUrl }: SpectatorDisplayProps) {
                         >
                           {player.pointDifferential > 0 ? "+" : ""}
                           {player.pointDifferential}
+                        </td>
+                        <td className="w-24 min-w-24 py-6 px-2 text-4xl text-center">
+                          {medalEmoji}
                         </td>
                       </tr>
                     );

@@ -31,6 +31,8 @@ services:
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
       - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-}
       - AZURE_KEYVAULT_URL=${AZURE_KEYVAULT_URL:-}
+      # Application Insights (for logging to Azure)
+      - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING:-}
     env_file:
       - ./email-parser/.env
     volumes:
@@ -63,14 +65,11 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - HOST_IP=${HOST_IP:-}
       - EMAIL_PARSER_URL=${EMAIL_PARSER_URL:-http://email-parser:3002}
-      # Azure Key Vault configuration (recommended for production)
-      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
-      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
-      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-}
-      - AZURE_KEYVAULT_URL=${AZURE_KEYVAULT_URL:-}
-      # Fallback WiFi configuration (used if Key Vault not configured)
+      # Fallback WiFi configuration
       - WIFI_SSID=${WIFI_SSID:-}
       - WIFI_PASSWORD=${WIFI_PASSWORD:-}
+      # Application Insights (for logging to Azure)
+      - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING:-}
     depends_on:
       redis:
         condition: service_healthy
@@ -98,6 +97,7 @@ services:
         - VITE_DEBUG_MODE=${VITE_DEBUG_MODE:-false}
         - VITE_APP_NAME=${VITE_APP_NAME:-Pickleball Kiosk}
         - VITE_SPECTATOR_DARK_MODE=${VITE_SPECTATOR_DARK_MODE:-false}
+        - VITE_APPLICATIONINSIGHTS_CONNECTION_STRING=${VITE_APPLICATIONINSIGHTS_CONNECTION_STRING:-}
     container_name: pickleball-frontend
     restart: unless-stopped
     ports:

@@ -11,21 +11,43 @@ export interface EmailParserConfig {
   graphClientId?: string;
   graphClientSecret?: string;
   graphUserId?: string;
-  // AI Parser Azure Function configuration
-  aiParserUrl?: string;
-  aiParserKey?: string;
+  // Azure OpenAI configuration
+  azureOpenaiEndpoint?: string;
+  azureOpenaiApiKey?: string;
+  azureOpenaiDeployment?: string;
 }
 
 /**
  * Maps Key Vault secret names (kebab-case) to config property names (camelCase)
- * Note: AI parser URL/key are not in Key Vault - they're environment variables
  */
 const SECRET_MAPPING: Record<string, keyof EmailParserConfig> = {
   "graph-tenant-id": "graphTenantId",
   "graph-client-id": "graphClientId",
   "graph-client-secret": "graphClientSecret",
   "graph-user-id": "graphUserId",
+  "azure-openai-endpoint": "azureOpenaiEndpoint",
+  "azure-openai-api-key": "azureOpenaiApiKey",
+  "azure-openai-deployment": "azureOpenaiDeployment",
 };
+
+/**
+ * Log which configuration keys are set
+ */
+function logConfig(config: EmailParserConfig, source: string): void {
+  const status = (value: string | undefined): string => (value ? "✓" : "✗");
+
+  logger.info(`Configuration loaded from ${source}:`);
+  logger.info(
+    `  graphTenantId: ${status(config.graphTenantId)} | graphClientId: ${status(config.graphClientId)}`
+  );
+  logger.info(
+    `  graphClientSecret: ${status(config.graphClientSecret)} | graphUserId: ${status(config.graphUserId)}`
+  );
+  logger.info(
+    `  azureOpenaiEndpoint: ${status(config.azureOpenaiEndpoint)} | azureOpenaiApiKey: ${status(config.azureOpenaiApiKey)}`
+  );
+  logger.info(`  azureOpenaiDeployment: ${status(config.azureOpenaiDeployment)}`);
+}
 
 /**
  * Loads configuration from Azure Key Vault with fallback to environment variables.
@@ -86,15 +108,21 @@ export async function loadConfig(): Promise<EmailParserConfig> {
         "Failed to connect to Azure Key Vault, falling back to environment variables",
         errorDetails(error)
       );
-      return loadFromEnv();
+      const envConfig = loadFromEnv();
+      logConfig(envConfig, "environment variables (Key Vault fallback)");
+      return envConfig;
     }
   } else {
     logger.info("Azure Key Vault not configured, using environment variables");
-    return loadFromEnv();
+    const envConfig = loadFromEnv();
+    logConfig(envConfig, "environment variables");
+    return envConfig;
   }
 
   // Merge with env vars as fallback for any missing values
-  return mergeWithEnvFallback(config);
+  const finalConfig = mergeWithEnvFallback(config);
+  logConfig(finalConfig, "Key Vault (with env fallback)");
+  return finalConfig;
 }
 
 /**
@@ -106,8 +134,9 @@ function loadFromEnv(): EmailParserConfig {
     graphClientId: process.env.GRAPH_CLIENT_ID,
     graphClientSecret: process.env.GRAPH_CLIENT_SECRET,
     graphUserId: process.env.GRAPH_USER_ID,
-    aiParserUrl: process.env.AI_PARSER_URL,
-    aiParserKey: process.env.AI_PARSER_KEY,
+    azureOpenaiEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
+    azureOpenaiApiKey: process.env.AZURE_OPENAI_API_KEY,
+    azureOpenaiDeployment: process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4o-mini",
   };
 }
 
@@ -120,8 +149,10 @@ function mergeWithEnvFallback(config: EmailParserConfig): EmailParserConfig {
     graphClientId: config.graphClientId ?? process.env.GRAPH_CLIENT_ID,
     graphClientSecret: config.graphClientSecret ?? process.env.GRAPH_CLIENT_SECRET,
     graphUserId: config.graphUserId ?? process.env.GRAPH_USER_ID,
-    aiParserUrl: config.aiParserUrl ?? process.env.AI_PARSER_URL,
-    aiParserKey: config.aiParserKey ?? process.env.AI_PARSER_KEY,
+    azureOpenaiEndpoint: config.azureOpenaiEndpoint ?? process.env.AZURE_OPENAI_ENDPOINT,
+    azureOpenaiApiKey: config.azureOpenaiApiKey ?? process.env.AZURE_OPENAI_API_KEY,
+    azureOpenaiDeployment:
+      config.azureOpenaiDeployment ?? process.env.AZURE_OPENAI_DEPLOYMENT_NAME ?? "gpt-4o-mini",
   };
 }
 

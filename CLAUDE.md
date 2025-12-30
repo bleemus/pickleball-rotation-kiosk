@@ -357,18 +357,25 @@ Parallel E2E testing with isolated Docker stacks was explored but removed becaus
 PORT=3001
 REDIS_URL=redis://localhost:6379
 NODE_ENV=development
+LOG_LEVEL=info
 EMAIL_PARSER_URL=http://localhost:3002
 
 # WiFi credentials to display in QR code on spectator screen
 # Both SSID and PASSWORD are required for WiFi QR code to appear
 # WIFI_SSID=MyNetwork
 # WIFI_PASSWORD=MyPassword123
+
+# Azure Application Insights (optional)
+# APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=xxx;IngestionEndpoint=https://xxx.in.applicationinsights.azure.com/
 ```
 
 **Frontend** (frontend/.env):
 
 ```env
 VITE_API_URL=http://localhost:3001/api
+
+# Azure Application Insights (optional)
+# VITE_APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=xxx;IngestionEndpoint=https://xxx.in.applicationinsights.azure.com/
 ```
 
 **Email Parser** (email-parser/.env):
@@ -380,9 +387,10 @@ GRAPH_CLIENT_ID=your-client-id
 GRAPH_CLIENT_SECRET=your-client-secret
 GRAPH_USER_ID=your-email@example.com
 
-# AI Email Parser Azure Function
-AI_PARSER_URL=https://pickleballkiosk-ai-email.azurewebsites.net/api/parse-email
-AI_PARSER_KEY=your-function-api-key
+# Azure OpenAI Configuration (for AI email parsing)
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-api-key
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o-mini
 
 # Check interval in minutes
 EMAIL_CHECK_INTERVAL=1
@@ -394,9 +402,13 @@ ENABLE_EMAIL_POLLING=true
 
 # Service Configuration
 PORT=3002
+LOG_LEVEL=info
 
 # Redis Configuration
 REDIS_URL=redis://localhost:6379
+
+# Azure Application Insights (optional)
+# APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=xxx;IngestionEndpoint=https://xxx.in.applicationinsights.azure.com/
 ```
 
 For network access (other devices on LAN), use machine's IP in `VITE_API_URL`.
@@ -423,12 +435,15 @@ AZURE_KEYVAULT_URL=https://pickleballkioskvault.vault.azure.net/
 
 **Secrets Stored in Key Vault**:
 
-| Secret Name           | Service      | Description                             |
-| --------------------- | ------------ | --------------------------------------- |
-| `graph-tenant-id`     | email-parser | Microsoft Graph API Tenant ID           |
-| `graph-client-id`     | email-parser | Microsoft Graph API Client ID           |
-| `graph-client-secret` | email-parser | Microsoft Graph API Client Secret       |
-| `graph-user-id`       | email-parser | Email address to check for reservations |
+| Secret Name               | Service      | Description                                           |
+| ------------------------- | ------------ | ----------------------------------------------------- |
+| `graph-tenant-id`         | email-parser | Microsoft Graph API Tenant ID                         |
+| `graph-client-id`         | email-parser | Microsoft Graph API Client ID                         |
+| `graph-client-secret`     | email-parser | Microsoft Graph API Client Secret                     |
+| `graph-user-id`           | email-parser | Email address to check for reservations               |
+| `azure-openai-endpoint`   | email-parser | Azure OpenAI resource endpoint URL                    |
+| `azure-openai-api-key`    | email-parser | Azure OpenAI API key                                  |
+| `azure-openai-deployment` | email-parser | Model deployment name (optional, default gpt-4o-mini) |
 
 **Fallback Behavior**:
 
@@ -476,6 +491,74 @@ The email polling feature can be disabled if it stops working or causes issues:
   - Pickle Planner message is hidden when `emailEnabled: false`
 - Check status: `curl http://localhost:3002/health` (look for `emailPollingEnabled: false`)
 - **Startup behavior**: Email checks are scheduled (cron) and do NOT run immediately on startup - first check happens at the scheduled interval to avoid hammering the API during E2E tests
+
+### Application Insights Integration
+
+Azure Application Insights provides centralized logging, telemetry, and monitoring for all services. When configured, logs are sent to both stdout (for local debugging) and Azure Log Analytics (for production monitoring).
+
+**Setup**:
+
+1. Create an Application Insights resource in Azure Portal
+2. Copy the Connection String from Overview > Connection String
+3. Set the environment variable in each service's `.env` file
+
+**Environment Variables**:
+
+| Service      | Variable                                     | Description                    |
+| ------------ | -------------------------------------------- | ------------------------------ |
+| Backend      | `APPLICATIONINSIGHTS_CONNECTION_STRING`      | Sends server logs and traces   |
+| Email Parser | `APPLICATIONINSIGHTS_CONNECTION_STRING`      | Sends server logs and traces   |
+| Frontend     | `VITE_APPLICATIONINSIGHTS_CONNECTION_STRING` | Sends page views and JS errors |
+
+**What Gets Logged**:
+
+- **Backend & Email Parser**:
+  - All winston log messages (info, warn, error, debug)
+  - HTTP request/response telemetry (auto-instrumented)
+  - Dependencies (Redis, external API calls)
+  - Exceptions and stack traces
+
+- **Frontend**:
+  - Page views with route tracking
+  - JavaScript exceptions
+  - Custom events and metrics
+  - CORS-correlated requests to backend
+
+**Log Severity Mapping**:
+
+| Winston Level | App Insights Severity |
+| ------------- | --------------------- |
+| error         | Error                 |
+| warn          | Warning               |
+| info          | Information           |
+| debug         | Verbose               |
+
+**Querying Logs in Azure**:
+
+```kusto
+// View all traces from backend
+traces
+| where customDimensions.service == "backend"
+| order by timestamp desc
+
+// View errors from all services
+traces
+| where severityLevel >= 3
+| order by timestamp desc
+
+// View frontend page views
+pageViews
+| order by timestamp desc
+```
+
+**Docker Deployment**:
+
+```bash
+# Set before running make up
+export APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=xxx;..."
+export VITE_APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=xxx;..."
+make build && make up
+```
 
 ### Debugging
 
