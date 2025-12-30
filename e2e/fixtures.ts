@@ -39,8 +39,11 @@ export const test = base.extend<Fixtures>({
     // Reload to ensure clean state
     await page.reload();
 
-    // Wait for app to be ready (check for setup screen or loading to finish)
-    await page.waitForLoadState("networkidle");
+    // Wait for app to be ready by checking for the setup screen
+    // Note: We can't use networkidle because the app polls every 2 seconds
+    await page.waitForSelector('input[placeholder="Enter player name"]', {
+      timeout: 10000,
+    });
 
     await use();
   },

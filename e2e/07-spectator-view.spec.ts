@@ -9,6 +9,9 @@ test.describe("Spectator View", () => {
     // Navigate directly to spectator view
     await page.goto("/spectator");
 
+    // Wait for page to load
+    await page.waitForTimeout(2000);
+
     // Should show welcome/setup message when no session
     // Either "No active game session" or welcome instructions
     const hasWelcome = await page

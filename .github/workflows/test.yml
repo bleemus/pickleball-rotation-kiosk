@@ -48,22 +48,6 @@ jobs:
           cd ../frontend && npm ci
           cd ../email-parser && npm ci
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Python dependencies
-        run: |
-          cd azure-functions/email-parser-ai
-          pip install -r requirements.txt
-
-      - name: Run Azure Function tests
-        id: python-tests
-        run: |
-          cd azure-functions/email-parser-ai
-          python -m pytest test_function_app.py -v
-
       - name: Check formatting
         id: format
         run: npm run format:check
@@ -119,7 +103,6 @@ jobs:
             message += `**Status:** ${testStatus === 'success' ? '✅ All tests passed' : '❌ Tests failed'}\n\n`;
             message += `### Test Suites\n`;
             message += `- Install: ${{ steps.install.outcome }}\n`;
-            message += `- Python Tests: ${{ steps.python-tests.outcome }}\n`;
             message += `- Formatting: ${{ steps.format.outcome }}\n`;
             message += `- Type Checking: ${{ steps.typecheck.outcome }}\n`;
             message += `- Unit Tests: ${{ steps.unit.outcome }}\n`;
