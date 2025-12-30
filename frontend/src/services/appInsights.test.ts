@@ -1,11 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  initAppInsights,
-  trackEvent,
-  trackException,
-  trackPageView,
-  getAppInsights,
-} from "./appInsights";
+
+// Mock the environment variable before importing the module
+vi.stubEnv("VITE_APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=test-key");
 
 // Mock the ApplicationInsights module with a proper class
 vi.mock("@microsoft/applicationinsights-web", () => {
@@ -21,9 +17,20 @@ vi.mock("@microsoft/applicationinsights-web", () => {
   };
 });
 
+// Import after mocks are set up
+import {
+  initAppInsights,
+  trackEvent,
+  trackException,
+  trackPageView,
+  getAppInsights,
+} from "./appInsights";
+
 describe("Application Insights Service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset the module to clear the appInsights instance between tests
+    vi.resetModules();
   });
 
   describe("initAppInsights", () => {
