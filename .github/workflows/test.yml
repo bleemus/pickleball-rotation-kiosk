@@ -62,7 +62,7 @@ jobs:
 
       - name: Install Playwright browsers
         id: playwright
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps firefox
 
       - name: Run E2E tests
         id: e2e

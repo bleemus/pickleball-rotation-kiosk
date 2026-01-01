@@ -46,13 +46,18 @@ export class GamePage {
   }
 
   async decrementCourts() {
-    // Get all decrement buttons and click the visible one (handles responsive design)
-    const decrementButtons = await this.page.locator('button:has-text("−")').all();
-    for (const button of decrementButtons) {
+    // Find any visible button with minus-like characters (there's only one on the page)
+    const buttons = await this.page.locator("button").all();
+
+    for (const button of buttons) {
       if (await button.isVisible()) {
-        await button.click();
-        await this.page.waitForTimeout(100);
-        return;
+        const text = await button.textContent();
+        // Match various minus-like characters (Unicode minus, hyphen, en-dash, em-dash)
+        if (text && /^[\-−–—]$/.test(text.trim())) {
+          await button.click();
+          await this.page.waitForTimeout(100);
+          return;
+        }
       }
     }
     throw new Error("No visible decrement button found");
